@@ -1,0 +1,219 @@
+User has approved your plan. You can now start coding. Start with updating your todo list if applicable
+
+Your plan has been saved to: ~/.claude/plans/pasted-content-id-8997-eneba-internship-atomic-stroustrup.md
+You can refer back to it if needed during implementation.
+
+## Approved Plan:
+# Eneba Intern Assignment 2027 — Master Plan (revision 2)
+
+## Context
+
+Build an Eneba-style digital-key marketplace (React+TS frontend, Go REST backend, PostgreSQL), deployed publicly on free tiers, with a GitHub repo and the **full** AI conversation history. Assignment received **2026-11-16 16:48 EET** → latest submission **2026-11-23 16:48 EET** (subject to Eneba's interpretation). Working dir `~/Documents/Projects/EnebaTask` holds only `Eneba Internship Assignment.pdf` (not a git repo).
+
+Plan mode allows writing only this file, so the 8 planning docs (`docs/requirements.md`, `eneba-design-reference.md`, `architecture.md`, `scope-decisions.md`, `implementation-plan.md`, `testing-plan.md`, `deployment-plan.md`, `agent-logging-plan.md`) are generated from this plan right after approval.
+
+## Changes in revision 2 (from review)
+
+1. **Transcript:** no truncation of any prompt, assistant reply or tool call; tool results kept in full (very large ones moved verbatim to linked files, never cut); only binary payloads excluded, each listed in an exclusions manifest. Raw JSONL stays **out of the public repo** (private backups only). Verifier checks exact-text integrity (hashes), not just counts. Session discovery covers all sessions, subagents and relocated cwd. Privacy redaction of email/home path/secrets, logged. ChatGPT acknowledged with a link slot.
+2. **Schedule:** feature-complete and deployed by 11-21; 11-22 hardening/visual/docs/audit; 11-23 is a short morning verification + submission window (target submit ≤ 12:00 EET).
+3. **Checkout:** redesigned around one invariant (key status ⇔ order status), compare-and-set state transitions, keys linked to `order_item_id` with CHECK constraints, deterministic lock order, inline + periodic expiry sweeps, payment attempts table, per-request idempotency with payload hash, cancel endpoint, fault-injection and invariant tests.
+4. **Auth:** Go stdlib `http.CrossOriginProtection` (Sec-Fetch-Site/Origin) + explicit trusted-origin allowlist + SameSite=Lax `__Host-` cookie; session rotation, idle+absolute expiry, bcrypt length cap, constant-time unknown-user path, verified proxy header behaviour, security tests.
+5. **Payment:** no card-like fields. A clearly labelled "Demo payment — no real money" step with **Simulate successful payment** / **Simulate declined payment** buttons, backed by a real payment-attempt lifecycle.
+6. **Images:** I wrongly treated the earlier question-card answer as usage authorization; that is withdrawn. New strategy: **fictional game catalog** + **our own cover/banner art** composed from permissively licensed photos (Unsplash/Pexels licence, per-image credits) with our typographic treatment, self-hosted; no third-party game art, no platform/Eneba logos; own wordmark + "not affiliated with Eneba" footer.
+7. **Design verification:** formal acceptance procedure (reference vs app screenshots, per-screen checklist from measured values, discrepancy log with severity, "no open high" gate) plus automated computed-style assertions and token lint to stop drift.
+8. Everything else (architecture, homepage design, search, offers, deployment, testing philosophy) unchanged.
+
+---
+
+## A. Requirement audit against the 2-page PDF (re-done for rev 2)
+
+Becomes `docs/requirements.md` (columns: exact text · page/section · interpretation · implementation · acceptance · verification · status · ambiguity). Status of all rows: *planned*.
+
+| ID | PDF requirement (abridged) | Pg | Implementation | Verification |
+|---|---|---|---|---|
+| R0 | Complete within 7 days; reply to registration email with results | 1 intro | Schedule G; submission email draft | User sends before 11-23 16:48 EET |
+| R1 | Agent saves **full** log of conversations; required for submission | 1 | Section B | `verify_transcript.py` integrity checks + manual read-through |
+| R1b | Non-agentic approach → link to conversation | 1 | ChatGPT planning conversation link in `docs/agent-logging-plan.md` + README | Link opens logged-out |
+| R2 | Understand how you use AI | 1 | README "How AI was used", `docs/decisions.md`, unedited transcript | Reviewer can trace prompt→decision→commit |
+| R3 | Must be able to explain code | 1 | `docs/interview-preparation.md`; small explicit code | Walkthrough before submission |
+| R4 | Specs vague; decide scope and justify | 1 | `docs/scope-decisions.md` | Every omission justified |
+| R5 | Marketplace in Eneba's style matching eneba.com | 1 | Design system (C) | Visual acceptance gate (C) |
+| R6 | Store: browse **every** product; filters (platform, region, price…); change order; search by name | 1 | `/store` + `GET /api/products` server-side filter/sort/paginate + facet counts | Go tests per filter combo & totals; E2E |
+| R7 | Homepage: several blocks (banner, best sellers, deals); each block from its own backend service/DB; nothing hardcoded in FE | 1 | Section registry + one provider per block type + one endpoint per section | DB-mutation tests (API + E2E) |
+| R8 | Search by name from anywhere; matching results; copes with typos/partial | 1 | Header search on every page, suggest dropdown + results page; pg_trgm ranking | Search test matrix; E2E from 3 pages |
+| R9 | Product page: details + offers from several sellers; compare & choose | 1 | `/p/:slug` offer list; chosen `offer_id` carried through | E2E buys non-cheapest offer, order shows that seller |
+| R10 | Checkout: cart, pay, receive bought digital key; simulated payment OK; no real money | 1 | Section D checkout | Concurrency/idempotency/invariant tests; E2E reveals key |
+| R11 | Auth: create account, sign in; checkout & order history signed-in only | 1 | Sessions + protected endpoints + route guards | 401/403/404 tests; E2E redirect & return |
+| R12 | Eneba styling: colors, typography, spacing, components follow reference | 1 | Tokens from measured values | Visual gate + style assertions |
+| R13 | Diagram: Homepage/Search → Product → Cart → Checkout (sign-in) → Payment → Order and key; styling on every screen | 1 | Routes mirror diagram exactly | Primary E2E, local and production |
+| T1 | React (TypeScript preferred) | 2 | React 19 + TS strict + Vite | `tsc --noEmit` in CI |
+| T2 | Backend PHP (or Go), REST/GraphQL | 2 | Go REST | — |
+| T3 | Any DB, decide data | 2 | PostgreSQL + migrations | Migrations run in CI |
+| T4 | Architecture/data/scope ours; few features done extensively | 2 | Modular monolith; deep purchase flow | Scope doc |
+| D1 | GitHub link(s) | 2 | Public repo | Opened logged-out |
+| D2 | Public URL on free tier | 2 | Vercel + Render + Neon | Clean-browser E2E on prod |
+| D3 | Agent chat history, full, prompts+responses, md or link | 2 | `docs/agent-chat-history.md` (+ linked tool-result files) + ChatGPT link | Section B verification |
+
+Ambiguities/decisions: "every product" = every product in our DB (paginated, no cap); price filter = lowest active offer price; region = activation region; filters = platform, region, product type, price range; payment = labelled simulated step; guests may build a cart, checkout requires sign-in.
+
+## B. Full AI conversation history
+
+**Verified so far (this session):** Claude Code 2.1.282 stores each session as append-only JSONL at `~/.claude/projects/-~-Documents-Projects-EnebaTask/<sessionId>.jsonl` (this one: `194e9e21-2dd5-465b-8b9e-ca7caafa8115`), with sidecar `tool-results/` and subagent transcripts. It already contains this Plan Mode session: full pasted prompt (33,642 chars), all assistant text and tool calls with inputs, tool results, timestamps. Thinking blocks are stored with **empty text** (signature only) — not recoverable; disclosed, never reconstructed. `cleanupPeriodDays` is unset → 30-day default deletion. `/export` is a terminal-CLI slash command, not usable from this desktop Code tab; the desktop equivalent is session-menu **Export** (zip of transcript + subagents + metadata to `~/Downloads`). Not yet executed (plan mode).
+
+**Workflow (first implementation task, before app code):**
+1. Retention: set `"cleanupPeriodDays": 3650` in `~/.claude/settings.json` (asks you to approve the edit).
+2. Session discovery (`scripts/transcripts/discover.py`): every `*.jsonl` in the project transcript dir, every `subagents/*.jsonl`, plus any JSONL anywhere under `~/.claude/projects/*` whose `cwd`/`relocatedCwd` is this project (catches sessions started from other folders or worktrees). Output `sessions.json` manifest (id, first/last timestamp, prompt count, kind main/subagent).
+3. Exporter (`scripts/transcripts/export.py`, Python stdlib, run with `python3 -I`) → `docs/agent-chat-history.md`:
+   - Header: what the file is, sessions index, ChatGPT acknowledgement + link slot, list of what is excluded and why, redaction log.
+   - Chronological per session (subagent transcripts nested after the spawning tool call). **User prompts and assistant text verbatim and complete.** Tool calls: name + full input JSON. Tool results: full text inline up to 20 KB; larger results written **verbatim** to `docs/agent-chat-history/results/<toolUseId>.txt` and linked (moved, not cut).
+   - Excluded (each listed in `docs/agent-chat-history/EXCLUSIONS.md` with tool id, type, byte size, reason): binary/base64 payloads (screenshots, PDF page images), harness `<system-reminder>`/attachment entries, internal bookkeeping records (`api-request*`, `atis-latch`, `file-history-snapshot`), empty thinking blocks (marked inline as "[reasoning not stored by Claude Code]").
+   - Compaction summaries rendered and labelled; since JSONL is append-only, pre-compaction messages are still exported.
+4. Privacy & secrets (applied identically by exporter and verifier): user email → `[REDACTED:email]`, `~` → `~`, connection strings, `Bearer`/API-key/GitHub-token patterns, `.env` values, `KEY_ENCRYPTION_KEY`/`DATABASE_URL` values → `[REDACTED:<kind>]`. Every redaction counted in the header. Published demo-account password is intentionally not redacted.
+5. Raw backups (never auto-committed): copy JSONL + sidecars to `~/EnebaTask-transcripts-backup/<date>/` and keep the desktop Export zip in `~/Downloads`. Repo `.gitignore` blocks `*.jsonl` and `agent-logs/raw/`. Whether to also publish a reviewed, redacted raw copy is your call at submission.
+6. Verifier (`scripts/transcripts/verify.py`) — fails loudly on:
+   - any session in the manifest missing from the md;
+   - **content integrity**: for every user prompt, assistant text block and tool input, the redacted exact text's SHA-256 must match the corresponding block in the md (parsed back between stable markers `<!-- msg:<uuid> -->`); every relocated result file's hash matches the source;
+   - count parity (prompts, assistant texts, tool calls, tool results) per session;
+   - strict chronological order; first prompt (this planning prompt) present;
+   - any secret/email pattern surviving in md or result files;
+   - ChatGPT link still a placeholder (warning during dev, error in `--final` mode).
+7. Automation: project `.claude/settings.json` `Stop` hook runs export+verify after each turn (writes files only; committing stays a reviewed manual step, `make transcript`).
+8. Cross-checks: once per milestone compare against the desktop Export zip; once, open the session in the terminal CLI (`claude --resume <id>`) and run `/export` to confirm the CLI path works; document results in `docs/agent-logging-plan.md`.
+9. ChatGPT: README + `docs/agent-logging-plan.md` state that ChatGPT analysed the assignment and authored the original Claude Plan Mode prompt (and reviewed rev 1 of this plan), with `CHATGPT_TRANSCRIPT_URL` filled when you share it.
+
+## C. Eneba design reference & acceptance
+
+**Measured on eneba.com (desktop 1024 px, mobile 375 px) via computed styles** — preserved as the source of truth in `docs/eneba-design-reference.md`:
+- Colors: page `#4618AC`; card/panel `#1F0A4D`; offer row `rgba(0,0,0,.3)`; CTA yellow `#FAD318` + black text; region pink `#E76A8C`; muted `#B3AAC9`; discount/cashback green `#84E916`; text white / `rgba(255,255,255,.85)`.
+- Type: Metropolis 400/600/800 (SIL OFL, self-hosted after licence check); root 10px, body 16/24; product H1 26/700; section H2 30/700; card title 12/800; card price 22/800; buttons 15/800; nav 14/600.
+- Shape: radius 0 everywhere; no shadows; search box 1px white border.
+- Layout: max width 1240, 20 px gutters; header 57 px top row (logo, 379×57 search, locale, wishlist, cart, Log in | Register) + 50 px category nav with highlighted promo pill; mobile: hamburger, logo, search/wishlist/cart/user icons.
+- Homepage: hero carousel + side promo tiles, category icon strip, product rows ("Top games", "Best selling…", "Upcoming games"…).
+- Card: 2:3 cover, `#1F0A4D` info panel (padding 0 15 15), platform tag, 2-line title, pink region, "From" + price, strike-through + green -%, hover yellow 35 px "Add to cart".
+- Store: 220 px filter aside (price range, region, type w/ counts, platforms w/ counts), active chips + "Clear all", "Results found: N", sort: price ↑/↓, newest, oldest, popular, A–Z, Z–A, discounts.
+- Product: breadcrumbs, cover, H1, feature list (activation region, platform, digital key, instant delivery), featured-offer box with yellow **Buy now**, "N other offers" rows (seller 14/600, rating "9.68 Excellent", price, Buy now), "Load more offers", details.
+- 404 "Highscore! 404" with outlined button; login split layout (huge greeting left, form panel right).
+- Not inspectable: cart/checkout/orders (empty cart, login, no purchases). Day 1: add one item to Eneba's cart without paying to capture the cart view if accessible; otherwise derive from measured components and record the limitation.
+
+**Assets (legally defensible):** fictional game titles, publishers and sellers (all marked demo); covers/banners generated by `scripts/assets/build-covers` = our layout + typography over photos under the Unsplash/Pexels licence (downloaded, self-hosted, credited per image in `web/public/assets/CREDITS.md`); platform shown as text badges and ISC-licensed Lucide icons, no trademark logos; own wordmark (working name, replaceable) and footer "Demo project — not affiliated with Eneba".
+
+**Visual acceptance process:**
+1. `e2e/visual/capture-reference.ts` (Playwright) captures eneba.com home, store, product, login, 404 at 1280×800 and 375×812, cookie banner dismissed via "Customize"/reject path only if needed for view → `design/reference/` (kept local, gitignored: third-party imagery).
+2. `e2e/visual/capture-app.ts` captures our equivalent screens at the same viewports → `docs/design/app/` (committed).
+3. `docs/design/visual-review.md`: per screen × viewport, checklist from the measured values above, discrepancy table (id, description, severity high/medium/low, fix commit, status).
+4. Gate: a screen is accepted only with zero open *high* discrepancies at both widths; reviewed at end of days 3, 4, 6.
+5. Drift guards: `e2e/style.spec.ts` asserts computed styles (body bg, CTA bg/text, font family, card panel color, header heights, radius 0); stylelint forbids raw hex outside `tokens.css` and non-zero `border-radius`.
+
+## D. Architecture (unchanged except checkout/auth/payment details)
+
+```
+Browser ──► Vercel (React SPA) ── rewrite /api/* ──► Render (Go API) ──► Neon Postgres
+```
+Same-origin `/api` keeps the session cookie first-party.
+
+**Repo layout:** `web/` (React 19, TS, Vite, React Router, TanStack Query, CSS Modules + `tokens.css`) · `api/cmd/server`, `api/cmd/seed`, `api/internal/{catalog,home,auth,cart,orders,keys,httpx}` (handler → service → store per module), `api/migrations` (goose, embedded) · `e2e/` · `scripts/` · `docs/`. Go stdlib `net/http` mux, `pgx/v5` hand-written SQL, `bcrypt`, `slog`; no framework/DI.
+
+**Data model** (money = `bigint` cents, `timestamptz`):
+- `users(id uuid, email citext unique, password_hash, display_name, created_at)`
+- `sessions(id, token_hash bytea unique, user_id fk cascade, created_at, last_seen_at, expires_at, user_agent)`
+- `platforms`, `regions`, `product_types` (slug unique); `products(id, slug unique, title, description, cover_url, platform_id, region_id, type_id, release_date, developer, publisher, list_price_cents, popularity, created_at)`; GIN trigram index on `lower(title)`, btree on filters.
+- `sellers(id, slug unique, name, rating numeric(3,2), rating_count, verified)` — synthetic.
+- `offers(id, product_id, seller_id, price_cents check>0, currency, active, unique(product_id, seller_id))`
+- `orders(id uuid, user_id, status order_status, total_cents, currency, idempotency_key, request_hash, expires_at, paid_at, created_at, updated_at, unique(user_id, idempotency_key))`, `order_status = {pending_payment, paid, cancelled, expired}` (a declined attempt does not end the order; see Pay)
+- `order_items(id, order_id, offer_id, product_id, seller_id, unit_price_cents, quantity check 1..10, title_snapshot, seller_snapshot)`
+- `offer_keys(id, offer_id, code_ciphertext bytea, code_fingerprint bytea unique, status key_status{available,reserved,sold}, order_item_id fk null, updated_at)` with **CHECK** `(status='available') = (order_item_id IS NULL)`; partial index `(offer_id, id) WHERE status='available'`.
+- `payment_attempts(id, order_id, outcome {succeeded, declined}, idempotency_key, created_at, unique(order_id, idempotency_key))`
+- `cart_items(user_id, offer_id, quantity 1..10, added_at, PK(user_id, offer_id))`; guest cart in localStorage, merged on login.
+- `home_sections(id, key unique, type, title, position, enabled, config jsonb)`, `banners(id, section_id, title, subtitle, image_url, cta_label, cta_href, position, starts_at, ends_at)`.
+
+**Checkout invariant** (stated in `docs/architecture.md`, checked by tests):
+> A key is `reserved` ⇔ its order item's order is `pending_payment` and not past `expires_at` (until swept); `sold` ⇔ order `paid`; `available` ⇔ no `order_item_id`. For every order item, the number of linked keys = `quantity`.
+
+**Transactions** (READ COMMITTED + explicit row locks; every step is one DB transaction, so a crash or DB error rolls back completely):
+1. **Create order** `POST /api/orders` — headers `Idempotency-Key` (client UUID per checkout attempt, kept in sessionStorage), body `{items:[{offerId,quantity}], expectedTotalCents}`:
+   a. Sweep this user's and the requested offers' expired orders (step 4) first.
+   b. `INSERT orders … ON CONFLICT (user_id, idempotency_key) DO NOTHING RETURNING id`; on conflict load the existing order: same `request_hash` → return it (200); different payload → 422. A concurrent duplicate blocks on the unique index until the first commits, then takes the conflict path ⇒ exactly one order.
+   c. Lock offers `SELECT … FROM offers WHERE id = ANY($1) ORDER BY id FOR SHARE`; inactive/missing → 409 `offer_unavailable`; recomputed total ≠ expected → 409 `price_changed` with current prices.
+   d. Insert order items with price/title/seller snapshots.
+   e. Per item, **in ascending offer_id order** (deadlock-free): `UPDATE offer_keys SET status='reserved', order_item_id=$item WHERE id IN (SELECT id FROM offer_keys WHERE offer_id=$o AND status='available' ORDER BY id LIMIT $qty FOR UPDATE SKIP LOCKED) RETURNING id`; fewer than `qty` rows → rollback whole tx → 409 `out_of_stock` naming the offer and available count. Multi-item orders are all-or-nothing.
+   f. Cancel the user's other `pending_payment` orders (releases their keys) so one user cannot hoard stock; commit. Reservation TTL 15 min.
+2. **Pay** `POST /api/orders/{id}/payments` — header `Idempotency-Key`, body `{outcome: "success" | "decline"}` (demo control):
+   - `SELECT … FROM orders WHERE id=$1 AND user_id=$2 FOR UPDATE` (else 404).
+   - Same attempt key already recorded → return the recorded result.
+   - `paid` → 200 with order (idempotent); `cancelled`/`expired` or `expires_at < now()` → expire+release in this tx, 410 `order_expired`.
+   - decline → insert attempt `declined`; order stays `pending_payment`, keys stay reserved until expiry so the buyer can retry (realistic retry semantics).
+   - success → insert attempt `succeeded`; `UPDATE orders SET status='paid', paid_at=now() WHERE id=$1 AND status='pending_payment'` (compare-and-set, must affect 1 row); `UPDATE offer_keys SET status='sold' WHERE order_item_id = ANY(items) AND status='reserved'` must affect exactly Σquantity rows else rollback 500; delete purchased offers from cart; commit.
+3. **Cancel** `POST /api/orders/{id}/cancel`: pending → `cancelled`, keys → available (`order_item_id` NULL) in one tx.
+4. **Expiry sweep** (single statement set in one tx): `UPDATE orders SET status='expired' WHERE status='pending_payment' AND expires_at<now() RETURNING id` → release their keys. Runs inline before create/pay (so stock recovers even when the free-tier instance was asleep) and on a 1-minute ticker.
+5. Network interruption: client retries with the same idempotency keys and gets the committed result; UI shows "checking your order…" and re-fetches `GET /api/orders/{id}`.
+
+**Payment UX:** `/checkout/:orderId/pay` titled "Demo payment — no real money is charged": order summary, timer to reservation expiry, buttons **Simulate successful payment** and **Simulate declined payment**; decline shows error with retry/cancel; success → `/orders/:id` with keys (copy button).
+
+**Auth & security:**
+- Passwords: bcrypt cost 12; length 8–72 bytes (bcrypt limit) enforced; email normalised; generic "invalid email or password"; unknown-email path still runs a bcrypt compare against a dummy hash (timing).
+- Sessions: 32-byte random token; DB stores SHA-256; new session on every login/registration (no fixation); absolute expiry 14 days, idle expiry 2 days (`last_seen_at` updated at most every 5 min); logout deletes the row and clears the cookie.
+- Cookie: prod `__Host-sid` (Secure, HttpOnly, Path=/, no Domain, SameSite=Lax); dev `sid` without Secure on http://localhost — chosen by config, never by request.
+- CSRF: Go stdlib `http.CrossOriginProtection` (Go ≥1.25; local 1.27) on all non-safe methods — rejects requests whose `Sec-Fetch-Site` is cross-site or whose `Origin` doesn't match, with `AddTrustedOrigin` for the exact Vercel production origin and `http://localhost:5173`; plus SameSite=Lax and JSON-only bodies (`Content-Type: application/json` required). Day-2 deploy step **verifies** Vercel forwards `Origin`/`Sec-Fetch-Site` and records findings; if the rewrite alters them, fall back to an explicit `Origin`-against-allowlist check (`ALLOWED_ORIGINS` env).
+- Proxy: Render API trusts `X-Forwarded-For` only for logging; rate limiting (login/register: 10/min per IP + 5/min per email, in-memory token bucket) documented as best-effort on a single instance.
+- Authorization: every order/cart query includes `user_id = $session_user`; non-owned order → 404; UUID ids; product/cart/pending-order responses never include key material; keys AES-256-GCM encrypted with `KEY_ENCRYPTION_KEY`, decrypted only in `GET /api/orders/{id}` for the owner when `paid`.
+- Headers (Vercel config): CSP (self + image origins), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `frame-ancestors 'none'`.
+
+**REST API:** `GET /home`, `GET /home/sections/{key}` · `GET /products` (q, platform, region, type, min_price, max_price, sort, page, page_size → items, total, facets) · `GET /search/suggest` · `GET /products/{slug}` · `GET /platforms|regions|types` · `POST /auth/register|login|logout`, `GET /auth/me` · `GET /cart`, `PUT|DELETE /cart/items/{offerId}`, `POST /cart/merge` · `POST /orders`, `POST /orders/{id}/payments`, `POST /orders/{id}/cancel`, `GET /orders`, `GET /orders/{id}` · `GET /healthz`.
+
+**Homepage:** `GET /home` returns enabled sections ordered by position; each section's content comes from its own provider via `GET /home/sections/{key}` — banners (banners table, time-windowed), best sellers (paid order_items volume + seeded popularity), deals (largest discount of lowest active offer vs list price), new/upcoming (release_date). FE only maps `type` → component; each block loads/fails independently.
+
+**Search:** `pg_trgm` (+ `unaccent` if available on Neon); rank exact > prefix > substring (ILIKE with escaped `%_\`) > `word_similarity ≥ 0.3`, ties by popularity; empty q = catalog; q > 100 chars → 400.
+
+## E. Product experience
+
+Routes: `/` · `/store` (URL state; also search results) · `/p/:slug` · `/cart` · `/checkout` (sign-in required; `?next=` preserves intent; guest cart merged) → creates order → `/checkout/:orderId/pay` → `/orders/:id` (keys) · `/account/orders` · `/login`, `/register` · 404. Global header search with debounced, keyboard-navigable suggestions on every page. Skeletons, empty and error states; homepage blocks isolate failures; "Waking up the server…" notice for Render cold starts.
+Seed (`api/cmd/seed`, idempotent): ~48 fictional products across platforms/regions/types, 8 synthetic sellers, 2–6 offers each, 3–25 keys per offer (`DEMO-XXXXX-XXXXX-XXXXX`), some low/zero stock; demo account `demo@example.test` (password published in README).
+
+## F. Testing & deployment
+
+**Go integration tests** (real Postgres: local Homebrew `postgresql@16` — not running now, `brew services start postgresql@16`; CI: GitHub Actions Postgres service), each checkout test ends by running the **invariant checker SQL**:
+- Catalog/search: every filter combo and totals vs direct SQL count; stable sort with tie-breaker; search exact/partial/typo/case/empty/none/special chars/overlong.
+- Homepage: mutate `home_sections`/`banners`/orders → section output changes; disabled section disappears.
+- Auth: register duplicate, wrong password, idle & absolute expiry, logout invalidation, new token on login, cookie attributes, cross-origin POST → 403, missing JSON content type → 415, unauthenticated cart/order → 401, other user's order → 404, product/cart responses contain no key data.
+- Checkout: 50 goroutines racing for 3 keys ⇒ exactly 3 reserved, no duplicates; multi-item with one item short ⇒ nothing reserved; 10 concurrent identical idempotent creates ⇒ 1 order; same key different payload ⇒ 422; price change ⇒ 409; inactive offer ⇒ 409; decline then success; double success ⇒ one payment effect; pay after expiry ⇒ 410 and keys available; cancel releases; new order cancels previous pending; quantity 3 ⇒ 3 distinct keys; fault injection (store hook returning error after reservation step) ⇒ full rollback; sold keys never re-reserved.
+- **Vitest/RTL** (few, high-value): filter↔URL state, guest cart + merge, section registry, money formatting.
+- **Playwright**: full journey via homepage and via typo search, choosing a non-cheapest seller; login redirect preserves cart; decline → retry → success; order history shows same key; mobile smoke; homepage DB-change; style assertions; all runnable against prod via `BASE_URL`.
+- Discipline: implement → typecheck/lint/tests → root-cause fixes → record in `docs/testing.md` (automated vs manual separated, real output only).
+
+**Deployment** (day 2, early): re-verify current free-tier terms first (Neon free persistence; Render free web service sleeps ~15 min idle with ~1 min cold start; Render free Postgres expires → use Neon). Render Go service from `api/` (env `DATABASE_URL`, `KEY_ENCRYPTION_KEY`, `APP_ENV=prod`, `TRUSTED_ORIGINS`), migrations on boot, seed as one-off command. Vercel project root `web/`, `vercel.json` rewrite `/api/:path*` → Render + SPA fallback + security headers. You create the Vercel/Render/Neon accounts (GitHub login) at that step; I never handle passwords. Verify login/checkout/key delivery on prod in a clean browser + Playwright, and document cold-start limitation.
+
+## G. Timeline (latest submission 2026-11-23 16:48 EET)
+
+| Day | Date | Milestone |
+|---|---|---|
+| 1 | Mon 11-17 | Transcript pipeline + verify (B); 8 docs; git init + public GitHub repo (your OK); skeleton web/api; migrations; seed; cover/asset pipeline |
+| 2 | Tue 11-18 | Catalog/search/home APIs + tests; **first production deploy** end-to-end incl. cookie/CSRF proxy check |
+| 3 | Wed 11-19 | Design system, header/search/footer, homepage, store; visual review #1 |
+| 4 | Thu 11-20 | Product page + offers; auth; cart (guest/server/merge); visual review #2 |
+| 5 | Fri 11-21 | Orders/reservation/payment/keys + all checkout tests; order history; full E2E green locally **and on prod** — feature freeze |
+| 6 | Sat 11-22 | Visual review #3 and fixes, mobile polish, README/architecture/decisions/interview docs, independent requirement audit with evidence, transcript `--final` verify |
+| 7 | Sun 11-23 (≤12:00 EET) | Clean-browser prod smoke, final transcript export+verify, push, send email (you). Hard stop well before 16:48 |
+
+## H. Self-review (rev 2)
+
+- Transcript: no truncation; exclusions explicit; integrity by hash; raw data private; all sessions incl. subagents/relocated; thinking unavailability disclosed.
+- Checkout: invariant + CHECK constraint + CAS transitions + lock ordering + SKIP LOCKED + idempotency hashes + inline sweeps; tested under concurrency and injected faults.
+- Auth: stdlib cross-origin protection verified through the real proxy; `__Host-` cookie; rotation and expiry; timing-safe login.
+- Homepage: no content in FE; DB-mutation tests.
+- Assets: no unlicensed artwork or logos; credits file; fictional catalog.
+- Design: measured tokens + gate + automated drift guards.
+- Residual risks: free-tier behaviour (cold starts, proxy headers, Neon limits); visual fidelity effort with generated covers; transcript volume (large md, mitigated by linked result files); timeline.
+- Out of scope (`scope-decisions.md`): wishlist, reviews, cashback, seller dashboard, real payments, OAuth/magic links, i18n/currency switching, email delivery, admin UI (homepage content managed in DB/seed — that is its backend source).
+
+## Approval conditions (from user, 2026-11-17)
+
+1. Lock ordering verified across create, cancel, expiry sweep and pay. All four paths lock in the same order: **orders row(s) first (ascending id), then offer_keys (ascending offer_id, id)**. Create locks its new order implicitly (insert), then offers `FOR SHARE`, then keys; the sweep and cancel lock orders `FOR UPDATE ORDER BY id` before touching keys; pay locks the order before keys. Concurrency tests mix all four operations in parallel (randomised, run many times with `-race` and `-count`) and then assert: no deadlock errors (SQLSTATE 40P01), the invariant holds, no duplicate key ownership, no reserved keys on non-pending or expired orders.
+2. Visual fidelity is gated on real browser screenshots of rendered pages, inspected side by side with the reference, not only token checks.
+3. Transcript result files under `docs/agent-chat-history/results/` are committed with the md, linked with relative paths, and the verifier checks every link resolves and hashes match.
+
+## Final notes
+
+- **Confidence:** every item of the two-page PDF (R0–R13, T1–T4, D1–D3) maps to an implementation and a verification step; no requirement is unaccounted for.
+- **Still ambiguous:** "every product" scope (full DB, paginated); exact filter set; whether "matches eneba.com" expects their logo (we use our own wordmark to avoid impersonation — your call if you prefer otherwise).
+- **Biggest risks:** production cookie/proxy behaviour, Render cold starts, visual fidelity without real cover art, transcript completeness over many sessions.
+- **First after approval:** (1) set `cleanupPeriodDays`, build discover/export/verify scripts, run them on this session, read the output, add the Stop hook, make private raw backup + desktop Export zip; (2) write the 8 docs; (3) `git init`, create the public GitHub repo with your OK, first commit (docs + reviewed transcript, no raw JSONL).

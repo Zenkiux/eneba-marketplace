@@ -1,0 +1,30 @@
+# Private / local-only
+scripts/transcripts/private-strings.local.txt
+*.jsonl
+agent-logs/raw/
+design/reference/
+.env
+.env.*
+!.env.example
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
+
+# Node / web
+node_modules/
+web/dist/
+coverage/
+playwright-report/
+test-results/
+e2e/.auth/
+
+# Go
+api/bin/
+*.test
+.claude/transcript-hook.log
+.claude/settings.local.json
+
+# Assignment PDF (Eneba document, not redistributed)
+*.pdf
