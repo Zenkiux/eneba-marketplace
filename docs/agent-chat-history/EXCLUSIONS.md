@@ -24,36 +24,36 @@
 
 | Record type | Count |
 |---|---|
-| `agent-name` | 37 |
-| `api-request` | 56 |
-| `api-request-blob` | 46 |
-| `api-request-shape` | 3 |
-| `atis-latch` | 37 |
-| `attachment:agent_listing_delta` | 1 |
-| `attachment:auto_mode` | 1 |
-| `attachment:credential_org` | 1 |
-| `attachment:date` | 1 |
-| `attachment:deferred_tools_delta` | 2 |
-| `attachment:deferred_tools_record` | 17 |
-| `attachment:edited_text_file` | 1 |
-| `attachment:environment` | 1 |
-| `attachment:mcp_instructions_delta` | 2 |
-| `attachment:model` | 1 |
+| `agent-name` | 51 |
+| `api-request` | 103 |
+| `api-request-blob` | 84 |
+| `api-request-shape` | 4 |
+| `atis-latch` | 51 |
+| `attachment:agent_listing_delta` | 2 |
+| `attachment:auto_mode` | 2 |
+| `attachment:credential_org` | 2 |
+| `attachment:date` | 2 |
+| `attachment:deferred_tools_delta` | 4 |
+| `attachment:deferred_tools_record` | 33 |
+| `attachment:edited_text_file` | 4 |
+| `attachment:environment` | 4 |
+| `attachment:mcp_instructions_delta` | 3 |
+| `attachment:model` | 2 |
 | `attachment:plan_mode` | 1 |
 | `attachment:plan_mode_exit` | 1 |
-| `attachment:prompt_snapshot` | 2 |
-| `attachment:remote_session_change` | 1 |
-| `attachment:session_context` | 1 |
-| `attachment:silent_turn_reminder` | 6 |
-| `attachment:skill_listing` | 1 |
-| `custom-title` | 38 |
-| `file-history-delta` | 10 |
-| `file-history-snapshot` | 1 |
-| `last-prompt` | 37 |
-| `queue-operation` | 4 |
-| `relocated` | 37 |
-| `tools-used` | 13 |
+| `attachment:prompt_snapshot` | 4 |
+| `attachment:remote_session_change` | 2 |
+| `attachment:session_context` | 2 |
+| `attachment:silent_turn_reminder` | 9 |
+| `attachment:skill_listing` | 2 |
+| `custom-title` | 52 |
+| `file-history-delta` | 14 |
+| `file-history-snapshot` | 3 |
+| `last-prompt` | 51 |
+| `queue-operation` | 12 |
+| `relocated` | 51 |
+| `tools-used` | 16 |
 
-Reasoning steps stored without text: 41
+Reasoning steps stored without text: 76
 
 Also omitted: `toolUseResult` fields (a structured duplicate of each tool result shown in the main file) and `<system-reminder>` blocks injected by the harness into user messages.

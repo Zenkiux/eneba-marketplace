@@ -1,0 +1,18 @@
+.header {
+  height: var(--header-top-height);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  max-width: var(--content-max-width);
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.wordmark {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-extrabold);
+  text-decoration: none;
+}

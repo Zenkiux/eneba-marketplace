@@ -19,7 +19,7 @@ Measured on https://www.eneba.com/ on 2026-11-17 with the in-app browser: comput
 
 ## Typography (measured)
 
-- Family: `metropolis, Arial, Helvetica, sans-serif`; weights loaded 400, 600, 800 (plus a monospace variant). Metropolis is an open-source font (SIL Open Font License); the licence is checked again before we self-host it.
+- Family: `metropolis, Arial, Helvetica, sans-serif`; weights loaded 400, 600, 800 (plus a monospace variant). We self-host Metropolis via `@fontsource/metropolis` 5.3.0, which ships it under The Unlicense (public domain); see `web/README-assets.md`.
 - Root font size 10px; body 16px / 24px.
 
 | Element | Size / weight / line height |
