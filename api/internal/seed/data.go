@@ -165,11 +165,11 @@ type bannerSeed struct {
 }
 
 var banners = []bannerSeed{
-	{"main", "Crimson Samurai Chronicles", "Pre-order now and get the key before launch day", "/banners/crimson-samurai.svg", "Pre-order", "/store?q=crimson+samurai"},
-	{"main", "Winter Sale: up to -60%", "Hundreds of keys from trusted sellers", "/banners/winter-sale.svg", "See the deals", "/store?sort=discount"},
-	{"side", "Shadow Protocol: Black Sky", "From top-rated sellers", "/banners/shadow-protocol.svg", "Buy now", "/store?q=shadow+protocol"},
-	{"side", "Cosy games under 20 EUR", "Farming, puzzles and more", "/banners/cosy-games.svg", "Browse", "/store?max_price=2000&sort=popular"},
-	{"side", "keyshop Gift Cards", "The easy gift for any gamer", "/banners/gift-cards.svg", "Shop gift cards", "/store?type=gift-card"},
+	{"main", "Crimson Samurai Chronicles", "Pre-order now and get the key before launch day", "/banners/crimson-samurai.jpg", "Pre-order", "/store?q=crimson+samurai"},
+	{"main", "Winter Sale: up to -60%", "Hundreds of keys from trusted sellers", "/banners/winter-sale.jpg", "See the deals", "/store?sort=discount"},
+	{"side", "Shadow Protocol: Black Sky", "From top-rated sellers", "/banners/shadow-protocol.jpg", "Buy now", "/store?q=shadow+protocol"},
+	{"side", "Cosy games under 20 EUR", "Farming, puzzles and more", "/banners/cosy-games.jpg", "Browse", "/store?max_price=2000&sort=popular"},
+	{"side", "keyshop Gift Cards", "The easy gift for any gamer", "/banners/gift-cards.jpg", "Shop gift cards", "/store?type=gift-card"},
 }
 
 type sectionSeed struct {

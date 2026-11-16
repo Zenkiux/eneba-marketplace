@@ -28,3 +28,7 @@ api/bin/
 
 # Assignment PDF (Eneba document, not redistributed)
 *.pdf
+
+# Licensed source photos are inputs only; rendered covers in web/public are committed
+e2e/tools/photos/
+e2e/node_modules/

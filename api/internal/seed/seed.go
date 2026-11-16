@@ -75,7 +75,7 @@ func Run(ctx context.Context, pool *pgxpool.Pool, box *keys.Box, opt Options) (S
 						publisher = EXCLUDED.publisher, genres = EXCLUDED.genres,
 						list_price_cents = EXCLUDED.list_price_cents, popularity = EXCLUDED.popularity
 					RETURNING id`,
-					slug, listingTitle(t, v), t.Description, "/covers/"+t.Slug+".svg", v.Platform, v.Region, t.Type,
+					slug, listingTitle(t, v), t.Description, "/covers/"+t.Slug+".jpg", v.Platform, v.Region, t.Type,
 					t.Release, t.Developer, t.Publisher, t.Genres, v.ListCents, v.Popularity).Scan(&productID)
 				if err != nil {
 					return fmt.Errorf("product %s: %w", slug, err)
