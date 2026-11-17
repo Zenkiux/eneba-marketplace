@@ -59,3 +59,23 @@ Manual (browser, local):
 - Product page: featured offer = cheapest in-stock offer; "N offers" list with seller, rating, stock, price and per-offer buttons.
 - Guest adds the **non-cheapest** offer (KeyHarbor) → cart shows KeyHarbor €42.79 → "Log in and checkout" → `/login?next=%2Fcheckout` → demo login → lands on `/checkout`; `/api/cart` now holds KeyHarbor ×1, browser cart emptied, header shows "Demo Buyer | Log out", `document.cookie` is empty (HttpOnly).
 - Visual review #2 (product, login, cart): 1 high + 2 low fixed, see `docs/design/visual-review.md`.
+
+## 2026-11-17 — day 5: orders, payment, key delivery, end-to-end
+
+Automated — Go (`go test -count=1 ./...` all pass; `internal/orders` also `-race -count=10`, all 16 tests pass every run):
+- orders service: create→pay delivers distinct `DEMO-` keys equal to quantity, keys hidden before payment, other user gets 404, list has no keys; paying removes bought offers from the cart; bad input (no key, empty, qty 0/11, duplicate line, unknown offer, wrong total) leaves no order and no reserved keys; price change → 409 then retry with new total works; inactive offer → 409; multi-line order with one short line reserves nothing; **fault injection** after reservation → no order, no items, no reserved keys, then the same request succeeds; idempotent create (same key → same order, different cart → 422); **10 concurrent identical creates → 1 order**; decline keeps reservation, replayed attempt key returns its first result, retry succeeds, double pay → one payment; **8 concurrent pay submissions → 1 successful payment**; expired order can't be paid and returns keys; sweep frees stock for another buyer; new checkout cancels the previous pending order; cancel is idempotent and refused for paid orders; intruder pay/cancel/get → 404; **50 buyers racing for 3 keys → exactly 3 winners, 47 out_of_stock, 3 distinct orders**; **mixed stress** (12 workers × 25 steps of create/pay/decline/cancel/expire+sweep on 45 shared keys) → no deadlock (40P01/40001), invariant holds, no key lost or created.
+  - Bugs found by the tests: (1) a test helper used `$1` for a citext and a text column (SQLSTATE 42P08) — fixed in the helper; (2) the stress test first passed while creating **0 orders**: `offerIDs[i], prices[offerIDs[i]] = …` evaluates the map index before assignment, so every total was wrong. Fixed, and the test now fails unless paid, cancelled, expired, declined and out-of-stock paths all occurred.
+- HTTP (app package): 401 signed out, 422 empty cart, 400 without Idempotency-Key, 201 then 200 for a retried create, 402 on decline, 422 on invalid outcome, no `DEMO-` in unpaid order JSON, 200 + key on pay, history without keys, detail with the same key, other account → 404 on detail/pay/cancel and empty history, 409 cancel of a paid order, cross-site order creation → 403.
+
+Automated — Playwright (`cd e2e && npx playwright test`, local dev servers): 7 passed.
+- Homepage → first card → **most expensive in-stock offer** (proves the chosen seller is kept) → cart (guest) → "Log in and checkout" → `/login?next=/checkout` → create account → checkout → demo **decline** → demo **success** → order page shows the product, `Seller: <chosen seller>` and a `DEMO-XXXXX-XXXXX-XXXXX` key → order history row "Paid" → opening it shows the same key → cart empty.
+- Header search with typo "starfal odysey" → suggestion shows Starfall Odyssey → results page → product → same purchase flow.
+- `/checkout` and `/account/orders` redirect to login; `GET /api/orders` → 401.
+- Store: Steam checkbox → URL `platform=steam`, count equals API total; sort → URL; back button restores.
+- Mobile (Pixel 7): menu, header search, two cards per row, no horizontal overflow.
+- Design tokens: page `rgb(70,24,172)`, Metropolis, card panel `rgb(31,10,77)`, radius 0, header rows 97/50px, nav `rgba(0,0,0,.25)`, Buy now `rgb(250,211,24)` on black.
+- Homepage from DB: renaming/moving the deals section and disabling "upcoming" in `home_sections` changes the rendered page (local only).
+- First run: 4 of 7 failed, all test-side timing/selector issues (read page before client-side navigation finished; checked a URL-controlled checkbox synchronously; `name: 'Categories'` also matched "Browse categories"; filled the login form during the switch to the register form). Fixed in the tests; the two journeys then passed 3 more consecutive times.
+- Note: the per-IP registration limit (10/min) can be hit by many rapid local E2E runs.
+
+Manual (browser): demo account checkout of the KeyHarbor offer → payment page with 15:00 countdown → decline shows message, keys stay reserved → success → `/orders/<id>` shows key `DEMO-DJKEV-…`, cart badge 0 → "My orders" lists it as Paid.

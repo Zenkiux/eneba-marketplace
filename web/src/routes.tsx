@@ -6,6 +6,7 @@ import { RegisterPage } from './features/auth/RegisterPage'
 import { RequireAuth } from './features/auth/RequireAuth'
 import { CartPage } from './features/cart/CartPage'
 import { CheckoutPage } from './features/checkout/CheckoutPage'
+import { PaymentPage } from './features/checkout/PaymentPage'
 import { HomePage } from './features/home/HomePage'
 import { NotFoundPage } from './features/not-found/NotFoundPage'
 import { OrderPage } from './features/orders/OrderPage'
@@ -21,6 +22,7 @@ export const routes: RouteObject[] = [
       { path: 'p/:slug', element: <ProductPage /> },
       { path: 'cart', element: <CartPage /> },
       { path: 'checkout', element: <RequireAuth><CheckoutPage /></RequireAuth> },
+      { path: 'checkout/:id/pay', element: <RequireAuth><PaymentPage /></RequireAuth> },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
       { path: 'account/orders', element: <RequireAuth><OrdersPage /></RequireAuth> },
