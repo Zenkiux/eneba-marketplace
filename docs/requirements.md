@@ -4,7 +4,7 @@ Source: `Eneba Internship Assignment.pdf` (2 pages), read in full on 2026-11-17.
 Received 2026-11-16 16:48 EET; latest submission by our calculation 2026-11-23 16:48 EET (Eneba's reading of the deadline wins if it differs).
 
 **Type:** E = explicit in the PDF, I = our interpretation of an explicit item, R = engineering recommendation, O = optional.
-**Status values:** planned, in progress, done (evidence linked), verified on production.
+**Status values:** planned, in progress, done (evidence linked), verified on production. Current statuses and evidence: see [Audit](#audit-2026-11-17) at the end.
 
 ## Page 1: process and AI
 
@@ -59,3 +59,34 @@ Received 2026-11-16 16:48 EET; latest submission by our calculation 2026-11-23 1
 | Guest cart | Allowed; checkout needs sign-in | Matches the diagram (sign-in required at checkout) |
 | Logo and branding | Our own wordmark and a "not affiliated with Eneba" footer | Style should match, but a public site must not impersonate Eneba |
 | Product art | Fictional titles with our own covers built from openly licensed photos | No rights to real game art |
+
+## Audit (2026-11-17)
+
+Independent re-check of every row against the PDF, with evidence. "Done (local)" = implemented and verified on local servers; it becomes "verified on production" only after the deployed-app checks.
+
+| ID | Status | Evidence |
+|---|---|---|
+| R0 | in progress | Deadline 2026-11-23 16:48 EET tracked in `implementation-plan.md`; submission e-mail not yet drafted (needs live URL). |
+| R1 | done (local) | `scripts/transcripts/transcripts.py` export+verify pass on all session files incl. sub-agents; tamper tests fail as expected (`testing.md`, transcript section); Stop hook re-exports each turn. Final `--final` run pending (ChatGPT link). |
+| R1b | open | ChatGPT link placeholder `CHATGPT_TRANSCRIPT_URL` in transcript header, README and `agent-logging-plan.md`. |
+| R2 | done | README "How AI was used"; `decisions.md` (23 decisions); unedited transcript. |
+| R3 | done | `interview-preparation.md` (walkthroughs with file pointers, trade-offs, demo script). |
+| R4 | done | `scope-decisions.md`. |
+| R5 | done (local) | Visual reviews #1–#3 in `docs/design/visual-review.md`, no open high items; `e2e/tests/style.spec.ts` asserts measured tokens. |
+| R6 | done (local) | `catalog_test.go` (totals vs independent SQL for 9 filter combinations, all 8 sorts paginate every product once, facets, bad params); `purchase.spec.ts` store test (filter → URL → count = API total, sort, back). |
+| R7 | done (local) | `home_test.go` (reorder/rename/disable/add sections, banner edits/expiry, best sellers follow paid orders, deals follow prices); `home-db.spec.ts` (DB edit changes rendered page). No product/campaign data in React code (`web/src/features/home`). |
+| R8 | done (local) | Header search on every page (`SearchBox.tsx`); `TestSearch` matrix (exact, prefix, substring, case, 2-typo, missing/swapped/wrong letter, nonsense, `%`/`_`/`\`, SQL-looking text, empty, >100 chars); mutation check of escaping; `purchase.spec.ts` typo journey "starfal odysey". |
+| R9 | done (local) | `TestProductPageOffersAndNoKeyLeak`; Playwright journeys buy the most expensive in-stock offer and assert `Seller: <chosen>` on the order. |
+| R10 | done (local) | `orders_test.go` 16 tests incl. 50-buyer race, concurrent duplicates/pays, fault injection, mixed stress with invariant checks (10 consecutive `-race` runs); `orders_test.go` (app) HTTP codes; both Playwright journeys end with a `DEMO-` key, also shown again in order history. |
+| R11 | done (local) | `auth_test.go` (7 tests: cookies, hashing, expiry, generic errors, cross-site 403, form 415, rate limit, prod cookie flags); cart/order endpoints 401 when signed out; other user's order 404; `purchase.spec.ts` sign-in redirects. |
+| R12 | done (local) | Tokens from measurements (`eneba-design-reference.md`, `tokens.css`); stylelint bans raw hex and rounded corners; style assertions in Playwright. |
+| R13 | done (local) | Two Playwright journeys follow the diagram exactly (Homepage / Search → Product → Cart → Checkout with sign-in → Payment → Order and key); step indicator in the UI mirrors it. **Production run pending.** |
+| T1 | done | React 19 + TypeScript strict; `tsc -b` in CI. |
+| T2 | done | Go REST API (`api/`). |
+| T3 | done | PostgreSQL, migrations `api/migrations/` applied on start and in CI. |
+| T4 | done | `architecture.md`, `scope-decisions.md`. |
+| D1 | done | Public repo github.com/Zenkiux/eneba-marketplace (opened logged-out: 200). |
+| D2 | **open** | Not deployed yet — needs Neon/Render/Vercel accounts (`deployment-plan.md`). Highest remaining risk. |
+| D3 | in progress | `docs/agent-chat-history.md` complete and verified so far; final export, `--final` verify and ChatGPT link pending. |
+
+Remaining before submission: deploy (D2), run Playwright against production (R13), ChatGPT link (R1b, D3), final transcript export, submission e-mail (R0).

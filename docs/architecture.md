@@ -132,11 +132,20 @@ Keys are encrypted at rest (AES-256-GCM, key from `KEY_ENCRYPTION_KEY`) and decr
 | GET | `/api/healthz` | – |
 | GET | `/api/home`, `/api/home/sections/{key}` | – |
 | GET | `/api/products`, `/api/products/{slug}`, `/api/search/suggest` | – |
-| GET | `/api/platforms`, `/api/regions`, `/api/types` | – |
+| GET | `/api/platforms`, `/api/regions`, `/api/types`, `/api/catalogs` | – |
+| GET | `/api/offers?items=12:1,40:2` (resolve a guest cart) | – |
 | POST | `/api/auth/register`, `/api/auth/login`, `/api/auth/logout` | – / session |
 | GET | `/api/auth/me` | session |
 | GET, PUT, DELETE | `/api/cart`, `/api/cart/items/{offerId}`; POST `/api/cart/merge` | session |
 | POST | `/api/orders`, `/api/orders/{id}/payments`, `/api/orders/{id}/cancel` | session |
 | GET | `/api/orders`, `/api/orders/{id}` | session |
 
+Catalog and homepage endpoints honour the optional `X-Catalog: eneba` header (see below); responses carry `Vary: X-Catalog`.
+
+Order endpoints return `201` (created) / `200` (repeat of the same request), `402 payment_declined`, `409 price_changed | out_of_stock | offer_unavailable | already_paid`, `410 order_expired`, `422 idempotency_mismatch | empty_cart | validation_failed`.
+
 Errors use one JSON shape: `{"error": {"code": "out_of_stock", "message": "...", "details": {...}}}`.
+
+## Optional Eneba catalog
+
+`products.catalog` is `demo` (our fictional catalog, default) or `eneba` (a snapshot of eneba.com listings). `catalog.SourceMiddleware` reads `X-Catalog`; anything except `eneba` means `demo`. Store, search, facets and homepage product rows filter by it; product pages, cart and orders work with offer ids from either catalog. The snapshot is produced by `e2e/tools/scrape-eneba.mjs` into a gitignored file and loaded with `api/cmd/import-eneba` (real titles, cover URLs on Eneba's CDN and prices; demo sellers; fake keys). The frontend shows the switch only when `/api/catalogs` reports a snapshot, and a "demonstration only" banner while it is on.
