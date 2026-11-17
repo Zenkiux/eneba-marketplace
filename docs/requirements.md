@@ -80,13 +80,13 @@ Independent re-check of every row against the PDF, with evidence. "Done (local)"
 | R10 | verified on production | `orders_test.go` 16 tests incl. 50-buyer race, concurrent duplicates/pays, fault injection, mixed stress with invariant checks (10 consecutive `-race` runs); `orders_test.go` (app) HTTP codes; both Playwright journeys end with a `DEMO-` key, also shown again in order history. |
 | R11 | verified on production | `auth_test.go` (7 tests: cookies, hashing, expiry, generic errors, cross-site 403, form 415, rate limit, prod cookie flags); cart/order endpoints 401 when signed out; other user's order 404; `purchase.spec.ts` sign-in redirects. |
 | R12 | verified on production | Tokens from measurements (`eneba-design-reference.md`, `tokens.css`); stylelint bans raw hex and rounded corners; style assertions in Playwright. |
-| R13 | verified on production | Two Playwright journeys follow the diagram exactly (Homepage / Search → Product → Cart → Checkout with sign-in → Payment → Order and key); both pass against https://keyshop.zenkiux.com. |
+| R13 | verified on production | Two Playwright journeys follow the diagram exactly (Homepage / Search → Product → Cart → Checkout with sign-in → Payment → Order and key); both pass against https://keyshop-zenkiux.vercel.app and https://keyshop.zenkiux.com. |
 | T1 | done | React 19 + TypeScript strict; `tsc -b` in CI. |
 | T2 | done | Go REST API (`api/`). |
 | T3 | done | PostgreSQL, migrations `api/migrations/` applied on start and in CI. |
 | T4 | done | `architecture.md`, `scope-decisions.md`. |
 | D1 | done | Public repo github.com/Zenkiux/eneba-marketplace (opened logged-out: 200). |
-| D2 | done | https://keyshop.zenkiux.com — Go server + PostgreSQL on the always-on Mac, published via Cloudflare Tunnel (free plan); see `deployment-plan.md`. Playwright suite 24/24 against the public URL (2026-11-17). |
+| D2 | verified on production | https://keyshop-zenkiux.vercel.app — Vercel (React build, `/api` rewrite) → Render free web service (Go API) → Neon free Postgres; Playwright 24/24 against it (2026-11-17). https://keyshop.zenkiux.com (Mac + Cloudflare Tunnel) stays as a mirror without cold starts. See `deployment-plan.md`. |
 | D3 | done (re-export before sending) | `docs/agent-chat-history.md` + linked result files; `transcripts.py verify --final` passes (all sessions, exact content, links, no private strings, ChatGPT link present). Run export + verify once more right before sending, so the last messages are included. |
 
 Re-checked 2026-11-17 after the Eneba-parity work: R5–R12 verified on production (Playwright 24/24 on https://keyshop.zenkiux.com; Go and Vitest suites pass). Extra scope beyond the PDF (account area, reviews, favourites, seller pages, "Will it work for me?") is listed in `decisions.md` #27–#37 and does not change any required flow.

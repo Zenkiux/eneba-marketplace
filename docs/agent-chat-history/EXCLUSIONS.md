@@ -109,46 +109,48 @@
 | 2026-11-17T02:21:42.321Z | mcp__Claude_Browser__browser_batch toolu_01W91uqyLvhh7ryQ6hKZhPiq | mcp-Claude_Browser-blob-1794882102317-gg08vu.jpg (8,419 bytes) | binary file stored by Claude Code (screenshot) |
 | 2026-11-17T02:21:53.405Z | mcp__Claude_Browser__computer toolu_01GQwQzeYH8i7agAiE372i1R | image image/jpeg, 16,672 base64 chars | binary payload (screenshot / PDF page images) |
 | 2026-11-17T02:21:53.405Z | mcp__Claude_Browser__computer toolu_01GQwQzeYH8i7agAiE372i1R | mcp-Claude_Browser-blob-1794882113401-efiimr.jpg (12,503 bytes) | binary file stored by Claude Code (screenshot) |
+| 2026-11-17T13:17:43.287Z | Read toolu_01RuexXYPf3VRFuQgPWVYLs2 | document application/pdf, 205,096 base64 chars | binary payload (screenshot / PDF page images) |
 
 ## Harness bookkeeping records (not conversation)
 
 | Record type | Count |
 |---|---|
-| `agent-name` | 393 |
-| `api-request` | 823 |
-| `api-request-blob` | 596 |
-| `api-request-shape` | 9 |
-| `atis-latch` | 393 |
-| `attachment:agent_listing_delta` | 7 |
-| `attachment:auto_mode` | 7 |
+| `agent-name` | 439 |
+| `api-request` | 943 |
+| `api-request-blob` | 663 |
+| `api-request-shape` | 12 |
+| `atis-latch` | 439 |
+| `attachment:agent_listing_delta` | 9 |
+| `attachment:auto_mode` | 9 |
 | `attachment:compact_file_reference` | 3 |
-| `attachment:credential_org` | 7 |
-| `attachment:date` | 7 |
-| `attachment:deferred_tools_delta` | 14 |
-| `attachment:deferred_tools_record` | 323 |
+| `attachment:credential_org` | 9 |
+| `attachment:date` | 9 |
+| `attachment:deferred_tools_delta` | 18 |
+| `attachment:deferred_tools_record` | 358 |
 | `attachment:edited_text_file` | 21 |
-| `attachment:environment` | 137 |
+| `attachment:environment` | 149 |
 | `attachment:file` | 12 |
 | `attachment:hook_additional_context` | 2 |
-| `attachment:mcp_instructions_delta` | 10 |
-| `attachment:model` | 7 |
+| `attachment:instructions` | 1 |
+| `attachment:mcp_instructions_delta` | 14 |
+| `attachment:model` | 9 |
 | `attachment:plan_file_reference` | 3 |
 | `attachment:plan_mode` | 1 |
 | `attachment:plan_mode_exit` | 1 |
-| `attachment:prompt_snapshot` | 12 |
-| `attachment:remote_session_change` | 7 |
-| `attachment:session_context` | 7 |
-| `attachment:silent_turn_reminder` | 38 |
-| `attachment:skill_listing` | 7 |
+| `attachment:prompt_snapshot` | 16 |
+| `attachment:remote_session_change` | 9 |
+| `attachment:session_context` | 9 |
+| `attachment:silent_turn_reminder` | 42 |
+| `attachment:skill_listing` | 9 |
 | `attachment:thinking_drop` | 1 |
-| `custom-title` | 397 |
-| `file-history-delta` | 32 |
-| `file-history-snapshot` | 35 |
-| `last-prompt` | 394 |
-| `queue-operation` | 100 |
+| `custom-title` | 445 |
+| `file-history-delta` | 34 |
+| `file-history-snapshot` | 48 |
+| `last-prompt` | 441 |
+| `queue-operation` | 138 |
 | `relocated` | 383 |
-| `tools-used` | 30 |
+| `tools-used` | 40 |
 
-Reasoning steps stored without text: 581
+Reasoning steps stored without text: 650
 
 Also omitted: `toolUseResult` fields (a structured duplicate of each tool result shown in the main file) and `<system-reminder>` blocks injected by the harness into user messages.

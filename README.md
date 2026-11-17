@@ -4,7 +4,7 @@ Submission for the **Eneba Intern Assignment 2027**: a marketplace web app in En
 
 | | |
 |---|---|
-| **Live app** | **https://keyshop.zenkiux.com** |
+| **Live app** | **https://keyshop-zenkiux.vercel.app** (Vercel + Render + Neon, free tiers). Mirror without cold starts: https://keyshop.zenkiux.com |
 | **Demo account** | `demo@example.test` / `demo-password-2027` (or create your own) |
 | **AI conversation history** | [docs/agent-chat-history.md](docs/agent-chat-history.md) (Claude Code, complete) · ChatGPT planning chat: https://chatgpt.com/share/6afb8cee-cbcc-83ed-b0cd-8dc72839ec88 |
 
@@ -32,9 +32,19 @@ The full purchase flow from the assignment's diagram — **Homepage or Search �
 - **Backend:** Go (standard library HTTP router), REST/JSON, `pgx`, `goose` migrations, `bcrypt`.
 - **Database:** PostgreSQL 16 (`pg_trgm`, `citext`).
 - **Tests:** Go integration tests on real PostgreSQL, Vitest, Playwright.
-- **Hosting:** a Mac that stays on runs the Go server (API + built website) and PostgreSQL as background services; **Cloudflare Tunnel** (free plan) publishes it at `keyshop.zenkiux.com` over HTTPS. Free cloud alternative (Vercel → Render → Neon) is ready in the repo (`web/vercel.json`, `render.yaml`).
+- **Hosting (main):** free tiers — **Vercel** serves the React build and proxies `/api` to the Go API on **Render** (Virginia), which uses **Neon** Postgres (us-east-1). Render's free service sleeps after 15 minutes idle, so the first request can take about a minute (the app shows "Waking up the server…").
+- **Hosting (mirror):** a Mac that stays on runs the Go server (API + built website) and PostgreSQL as background services; **Cloudflare Tunnel** (free plan) publishes it at `keyshop.zenkiux.com` over HTTPS. Same code and data; see [docs/deployment-plan.md](docs/deployment-plan.md).
 
 ## Architecture
+
+```mermaid
+flowchart LR
+  V[Browser] -->|HTTPS keyshop-zenkiux.vercel.app| VC[Vercel: React build, /api rewrite]
+  VC -->|/api| R[Go API on Render free]
+  R --> N[(Neon Postgres free)]
+```
+
+Mirror on the Mac:
 
 ```mermaid
 flowchart LR

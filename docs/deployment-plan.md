@@ -1,6 +1,18 @@
 # Deployment
 
-## Live: https://keyshop.zenkiux.com (deployed 2026-11-17)
+## Main: https://keyshop-zenkiux.vercel.app (free cloud tiers, deployed 2026-11-17)
+
+Moved to the main link because the PDF asks for a free-tier service "(for example Render or Vercel)" and an always-on home Mac is a single point of failure during review.
+
+| Part | Service (free tier) | Notes |
+|---|---|---|
+| Frontend | Vercel Hobby, project `eneba-marketplace`, domain `keyshop-zenkiux.vercel.app` | Deployed from `web/` with `npx vercel deploy --prod` (git auto-deploy disconnected: the project root is `web/`, not the repo root). `web/vercel.json` rewrites `/api/:path*` to Render, so the cookie stays first-party |
+| API | Render free web service `eneba-marketplace-api-wg22.onrender.com`, region Virginia | Root `api/`, build `go build -o bin/server ./cmd/server`, start `./bin/server`, health check `/api/healthz`. Env: `APP_ENV=prod`, `DATABASE_URL` (Neon, direct/unpooled), `KEY_ENCRYPTION_KEY`, `TRUSTED_ORIGINS=https://keyshop-zenkiux.vercel.app` |
+| Database | Neon Free via the Vercel Marketplace (`eneba-db`, us-east-1) | Seeded from the laptop: `go run ./cmd/seed`, then `go run ./cmd/import-eneba` with the Neon URL and the same key as Render |
+
+The name `eneba-marketplace.vercel.app` / `eneba-marketplace-api.onrender.com` already belong to another candidate's project, hence `keyshop-zenkiux` and the `-wg22` suffix.
+
+## Mirror: https://keyshop.zenkiux.com (deployed 2026-11-17)
 
 | Part | Where | Notes |
 |---|---|---|
@@ -30,7 +42,7 @@ Chosen by the owner over Vercel/Render/Neon: no cold starts, own domain for the 
 scripts/mac-host/deploy.sh
 ```
 
-## Fallback: free cloud hosting (not used)
+## Free cloud hosting: original plan and provider terms (now the main link)
 
 | Part | Service (free tier) | Notes |
 |---|---|---|
