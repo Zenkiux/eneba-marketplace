@@ -1,29 +1,35 @@
+/* Measured on eneba.com/checkout: panels #351183 with 20px padding, lines rgba(0,0,0,.12) with a
+   90×127 cover flush left, "Sold by" 12/800, title 14/800, "Digital product" 12/400 at 70%,
+   price 14/900, Summary 355px wide with the yellow button first. */
 .page {
-  padding-top: 30px;
-}
-
-.h1 {
-  margin-bottom: 24px;
-  font-size: var(--font-size-store-h1);
-  font-weight: var(--font-weight-bold);
-}
-
-.h2 {
-  font-size: 2rem;
-  font-weight: var(--font-weight-bold);
+  padding-top: 40px;
 }
 
 .layout {
   display: grid;
-  grid-template-columns: 1fr 350px;
-  gap: 30px;
+  grid-template-columns: minmax(0, 635px) 355px;
+  gap: 20px;
   align-items: start;
+  justify-content: center;
+}
+
+.panel,
+.summary {
+  padding: 20px;
+  background: var(--color-bg-checkout);
+}
+
+.h1,
+.h2 {
+  margin-bottom: 20px;
+  font-size: 1.8rem;
+  font-weight: var(--font-weight-extrabold);
 }
 
 .lines {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 10px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -31,33 +37,44 @@
 
 .line {
   display: grid;
-  grid-template-columns: 70px 1fr auto 110px auto;
+  grid-template-columns: 90px minmax(0, 1fr) auto;
   gap: 20px;
-  align-items: center;
-  padding: 16px 20px;
-  background: var(--color-bg-row);
+  min-height: 127px;
+  padding: 10px 20px 5px 0;
+  background: var(--color-bg-line);
 }
 
 .lineUnavailable {
   opacity: 0.7;
 }
 
+.thumb {
+  margin: -10px 0 -5px;
+}
+
 .thumb img {
-  width: 70px;
-  height: 105px;
+  width: 90px;
+  height: 100%;
+  min-height: 127px;
   object-fit: cover;
 }
 
 .info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
   min-width: 0;
+}
+
+.soldBy {
+  font-size: var(--font-size-card-title);
+  font-weight: var(--font-weight-extrabold);
 }
 
 .title {
   font-size: var(--font-size-nav);
   font-weight: var(--font-weight-extrabold);
+  line-height: 1.4;
   text-decoration: none;
 }
 
@@ -65,16 +82,9 @@
   text-decoration: underline;
 }
 
-.meta {
-  color: var(--color-text-soft);
+.digital {
+  color: var(--color-text-crumb);
   font-size: var(--font-size-card-title);
-}
-
-.region {
-  color: var(--color-region);
-  font-size: var(--font-size-card-meta);
-  font-weight: var(--font-weight-extrabold);
-  text-transform: uppercase;
 }
 
 .stockWarning {
@@ -94,20 +104,34 @@
   color: var(--color-cta);
 }
 
+.controls {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: auto;
+  padding-bottom: 6px;
+}
+
 .qty {
   display: flex;
+  gap: 4px;
   align-items: center;
-  border: 1px solid rgb(255 255 255 / 30%);
 }
 
 .qty button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border: 0;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid transparent;
   background: none;
+  font-weight: var(--font-weight-semibold);
+}
+
+.qty button:hover:not(:disabled) {
+  border-color: rgb(255 255 255 / 40%);
 }
 
 .qty button:disabled {
@@ -116,41 +140,69 @@
 }
 
 .qty span {
-  min-width: 28px;
+  min-width: 22px;
+  font-size: var(--font-size-nav);
   font-weight: var(--font-weight-extrabold);
   text-align: center;
 }
 
-.price {
-  font-size: 1.8rem;
-  font-weight: var(--font-weight-extrabold);
-  text-align: right;
-}
-
 .remove {
   display: flex;
-  padding: 6px;
+  padding: 2px;
   border: 0;
   background: none;
-  color: var(--color-text-soft);
+  color: var(--color-text-crumb);
 }
 
 .remove:hover {
   color: var(--color-text);
 }
 
+.price {
+  font-size: var(--font-size-nav);
+  font-weight: 900;
+  white-space: nowrap;
+}
+
 .summary {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 24px;
-  background: var(--color-bg-filter);
+}
+
+.summary .h2 {
+  margin-bottom: 0;
+}
+
+.checkout,
+.primaryLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--button-height-small);
+  padding: 0 10px;
+  border: 0;
+  background: var(--color-cta);
+  color: var(--color-cta-text);
+  font-size: var(--font-size-button);
+  font-weight: var(--font-weight-extrabold);
+  text-decoration: none;
+}
+
+.primaryLink {
+  align-self: flex-start;
+  padding: 0 24px;
+}
+
+.checkout:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .totals {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 8px;
+  gap: 10px;
   margin: 0;
   font-size: var(--font-size-nav);
 }
@@ -162,39 +214,21 @@
 
 .totalLabel {
   align-self: end;
-  font-weight: var(--font-weight-semibold);
+  margin-top: 6px;
+  font-weight: var(--font-weight-extrabold);
 }
 
 .total {
-  font-size: 2.6rem;
+  margin-top: 6px !important;
+  font-size: 2.4rem;
   font-weight: var(--font-weight-extrabold);
 }
 
 .warning {
   padding: 10px 12px;
   border-left: 3px solid var(--color-cta);
-  background: var(--color-bg-row);
+  background: var(--color-bg-line);
   font-size: var(--font-size-card-title);
-}
-
-.checkout,
-.primaryLink {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 46px;
-  padding: 0 24px;
-  border: 0;
-  background: var(--color-cta);
-  color: var(--color-cta-text);
-  font-size: var(--font-size-button);
-  font-weight: var(--font-weight-extrabold);
-  text-decoration: none;
-}
-
-.checkout:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .note {
@@ -210,34 +244,43 @@
   margin-top: 2px;
 }
 
+.recs {
+  margin-top: 50px;
+}
+
+.recsH {
+  margin-bottom: 20px;
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-bold);
+}
+
 @media (width <= 900px) {
+  .page {
+    padding-top: 20px;
+  }
+
   .layout {
     grid-template-columns: 1fr;
   }
 
-  .line {
-    grid-template-columns: 56px 1fr auto;
-    gap: 12px;
+  .panel,
+  .summary {
     padding: 14px;
   }
 
+  .line {
+    grid-template-columns: 64px minmax(0, 1fr) auto;
+    gap: 12px;
+    min-height: 96px;
+    padding-right: 12px;
+  }
+
   .thumb img {
-    width: 56px;
-    height: 84px;
+    width: 64px;
+    min-height: 96px;
   }
 
-  .qty {
-    grid-column: 2;
-    justify-self: start;
-  }
-
-  .price {
-    grid-column: 3;
-    grid-row: 1;
-  }
-
-  .remove {
-    grid-column: 3;
-    justify-self: end;
+  .recsH {
+    font-size: 2.2rem;
   }
 }

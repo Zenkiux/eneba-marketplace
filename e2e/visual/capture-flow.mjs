@@ -28,10 +28,10 @@ for (const [vp, size] of Object.entries({ desktop: { width: 1280, height: 800 },
     console.log(`${name}-${vp}.png`)
   }
   await page.goto(`${base}/cart`); await shot('cart')
-  await page.goto(`${base}/checkout`); await shot('checkout')
-  await page.getByRole('button', { name: 'Continue to payment' }).click()
+  await page.goto(`${base}/checkout`)
   await page.waitForURL(/\/pay$/); await shot('payment')
-  await page.getByRole('button', { name: /Simulate successful payment/ }).click()
+  await page.getByRole('radio', { name: /Credit or debit card/ }).check(); await shot('payment-selected')
+  await page.getByRole('button', { name: 'Continue' }).click()
   await page.waitForURL(/\/orders\//); await shot('order')
   await page.goto(`${base}/account/orders`); await shot('orders')
   await page.goto(`${base}/no-such-page`); await shot('notfound')

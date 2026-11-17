@@ -8,7 +8,6 @@ import { ErrorState } from '../../components/States'
 import { rich } from '../../i18n/rich'
 import { useI18n } from '../../i18n/useI18n'
 import { NotFoundPage } from '../not-found/NotFoundPage'
-import { Steps } from '../checkout/Steps'
 import { StatusBadge } from './StatusBadge'
 import styles from '../checkout/checkout.module.css'
 
@@ -31,7 +30,6 @@ function OrderView({ o }: { o: Order }) {
   const { t, money, eur, converted, intl } = useI18n()
   return (
     <Container className={styles.page}>
-      {paid && <Steps current="Order and key" />}
       <div className={styles.orderHead}>
         <h1 className={styles.h1}>{paid ? t('Thank you! Here are your keys') : t('Order details')}</h1>
         <StatusBadge status={o.status} />

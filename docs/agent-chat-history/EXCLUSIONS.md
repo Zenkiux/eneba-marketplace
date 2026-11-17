@@ -67,6 +67,14 @@
 | 2026-11-17T02:09:21.537Z | mcp__Claude_Browser__browser_batch toolu_0131EngCQGxaHCmULjcmbDRo | mcp-Claude_Browser-blob-1794881361530-eovvbr.jpg (47,733 bytes) | binary file stored by Claude Code (screenshot) |
 | 2026-11-17T02:23:54.663Z | mcp__Claude_Browser__computer toolu_012uUcdWdbWcbhcQuC4E1K7E | image image/jpeg, 52,536 base64 chars | binary payload (screenshot / PDF page images) |
 | 2026-11-17T02:23:54.663Z | mcp__Claude_Browser__computer toolu_012uUcdWdbWcbhcQuC4E1K7E | mcp-Claude_Browser-blob-1794882234656-zqufne.jpg (39,402 bytes) | binary file stored by Claude Code (screenshot) |
+| 2026-11-17T02:51:17.447Z | mcp__Claude_Browser__computer toolu_01MGRRXbYj4Jr5Biqp2LKTLC | image image/jpeg, 11,780 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T02:51:17.447Z | mcp__Claude_Browser__computer toolu_01MGRRXbYj4Jr5Biqp2LKTLC | mcp-Claude_Browser-blob-1794883877441-z68alz.jpg (8,835 bytes) | binary file stored by Claude Code (screenshot) |
+| 2026-11-17T02:51:53.094Z | mcp__Claude_Browser__browser_batch toolu_01VSXbknq9SyAxqqu9d8q5ye | image image/jpeg, 11,176 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T02:51:53.094Z | mcp__Claude_Browser__browser_batch toolu_01VSXbknq9SyAxqqu9d8q5ye | mcp-Claude_Browser-blob-1794883913085-cqmf8k.jpg (8,381 bytes) | binary file stored by Claude Code (screenshot) |
+| 2026-11-17T02:52:40.521Z | mcp__Claude_Browser__computer toolu_012yoXMqgpNA3LspMuFEfRE8 | image image/png, 72,580 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T02:52:40.521Z | mcp__Claude_Browser__computer toolu_012yoXMqgpNA3LspMuFEfRE8 | mcp-Claude_Browser-blob-1794883960517-vvowje.png (54,435 bytes) | binary file stored by Claude Code (screenshot) |
+| 2026-11-17T03:01:28.333Z | Read toolu_01UTz8LRsERPJK6Rx5rCwEH8 | image image/png, 383,636 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T03:01:28.343Z | Read toolu_01QVwJ3mJ4ohYr7Em7qywaUp | image image/png, 140,132 base64 chars | binary payload (screenshot / PDF page images) |
 | 2026-11-17T02:21:02.401Z | mcp__Claude_Browser__browser_batch toolu_01DP6X4mRRjVdKPZqE1wR7pj | image image/jpeg, 28,816 base64 chars | binary payload (screenshot / PDF page images) |
 | 2026-11-17T02:21:02.401Z | mcp__Claude_Browser__browser_batch toolu_01DP6X4mRRjVdKPZqE1wR7pj | mcp-Claude_Browser-blob-1794882062392-3j2a4y.jpg (21,612 bytes) | binary file stored by Claude Code (screenshot) |
 | 2026-11-17T02:21:24.817Z | mcp__Claude_Browser__browser_batch toolu_01Tp7auAWQ6DYwoejpcaNqjd | image image/jpeg, 31,420 base64 chars | binary payload (screenshot / PDF page images) |
@@ -82,19 +90,19 @@
 
 | Record type | Count |
 |---|---|
-| `agent-name` | 229 |
-| `api-request` | 489 |
-| `api-request-blob` | 345 |
+| `agent-name` | 249 |
+| `api-request` | 525 |
+| `api-request-blob` | 362 |
 | `api-request-shape` | 5 |
-| `atis-latch` | 229 |
+| `atis-latch` | 249 |
 | `attachment:agent_listing_delta` | 3 |
 | `attachment:auto_mode` | 3 |
 | `attachment:credential_org` | 3 |
 | `attachment:date` | 3 |
 | `attachment:deferred_tools_delta` | 6 |
-| `attachment:deferred_tools_record` | 160 |
+| `attachment:deferred_tools_record` | 171 |
 | `attachment:edited_text_file` | 18 |
-| `attachment:environment` | 63 |
+| `attachment:environment` | 68 |
 | `attachment:hook_additional_context` | 1 |
 | `attachment:mcp_instructions_delta` | 4 |
 | `attachment:model` | 3 |
@@ -105,14 +113,14 @@
 | `attachment:session_context` | 3 |
 | `attachment:silent_turn_reminder` | 15 |
 | `attachment:skill_listing` | 3 |
-| `custom-title` | 230 |
+| `custom-title` | 250 |
 | `file-history-delta` | 31 |
-| `file-history-snapshot` | 18 |
-| `last-prompt` | 229 |
-| `queue-operation` | 64 |
-| `relocated` | 229 |
-| `tools-used` | 23 |
+| `file-history-snapshot` | 20 |
+| `last-prompt` | 249 |
+| `queue-operation` | 68 |
+| `relocated` | 249 |
+| `tools-used` | 24 |
 
-Reasoning steps stored without text: 359
+Reasoning steps stored without text: 387
 
 Also omitted: `toolUseResult` fields (a structured duplicate of each tool result shown in the main file) and `<system-reminder>` blocks injected by the harness into user messages.

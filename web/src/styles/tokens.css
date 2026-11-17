@@ -25,6 +25,11 @@
   --color-checkbox-border: rgb(255 255 255 / 70%);
   --color-promo: #e8336d; /* highlighted nav pill (estimate) */
   --color-overlay: rgb(10 2 30 / 80%);
+  --color-bg-checkout: #351183; /* checkout header bar and cart/summary panels */
+  --color-bg-line: rgb(0 0 0 / 12%); /* cart lines */
+  --color-bg-method: rgb(0 0 0 / 25%); /* payment method rows */
+  --color-step-active: #23c299;
+  --color-step-disabled: rgb(255 255 255 / 40%);
 
   /* Typography (html font-size is 10px, so 1rem = 10px) */
   --font-family: "Metropolis", Arial, Helvetica, sans-serif;
@@ -63,4 +68,5 @@
   --radius: 0;
   --radius-pill: 15px;
   --radius-checkbox: 3px;
+  --radius-round: 50%; /* radio buttons */
 }

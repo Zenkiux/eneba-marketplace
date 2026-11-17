@@ -239,24 +239,7 @@ a.itemTitle:hover {
 }
 
 /* ---------------------------------------------------------------- payment */
-.demoBanner {
-  display: flex;
-  gap: 14px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid rgb(255 255 255 / 15%);
-}
 
-.demoBanner svg {
-  flex: none;
-  color: var(--color-cta);
-}
-
-.demoBanner p {
-  margin-top: 6px;
-  color: var(--color-text-soft);
-  font-size: var(--font-size-nav);
-  line-height: 1.55;
-}
 
 .timer {
   margin: 18px 0 14px;
@@ -531,5 +514,261 @@ a.itemTitle:hover {
   .keyItem img {
     width: 48px;
     height: 72px;
+  }
+}
+
+/* ---------------------------------------------------------------- Eneba-style payment step
+   Measured on eneba.com/checkout/payment: method rows 525px × 80px, padding 15/15/15/20,
+   rgba(0,0,0,.25), selected #5825CC; 90×30 logo; title 14/700; detail 12/600 at 70%;
+   20px radio with a 2px yellow ring when selected; summary panel #351183 445px, padding 30px;
+   total 24/800; yellow "Continue" 35px. */
+.payLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 525px) 445px;
+  gap: 30px;
+  align-items: start;
+  justify-content: center;
+}
+
+.demoBanner {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--color-cta);
+  background: var(--color-bg-method);
+}
+
+.demoBanner svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--color-cta);
+}
+
+.demoTitle {
+  font-size: var(--font-size-nav);
+  font-weight: var(--font-weight-extrabold);
+}
+
+.demoBanner p {
+  margin-top: 4px;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-card-title);
+  line-height: 1.5;
+}
+
+.methods {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.method {
+  position: relative;
+  display: grid;
+  grid-template-columns: 90px 1fr 20px;
+  gap: 30px;
+  align-items: center;
+  min-height: 80px;
+  padding: 15px 15px 15px 20px;
+  background: var(--color-bg-method);
+  cursor: pointer;
+}
+
+.method:hover {
+  background: rgb(0 0 0 / 35%);
+}
+
+.methodSelected,
+.methodSelected:hover {
+  background: var(--color-bg-filter);
+}
+
+/* The real radio covers the whole row (invisible), so the row is clickable, focusable and
+   announced as a radio button. */
+.methodInput {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.methodInput:focus-visible + .methodLogo {
+  outline: 2px solid var(--color-cta);
+  outline-offset: 4px;
+}
+
+.methodLogo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 90px;
+  height: 30px;
+  background: var(--color-text);
+  color: var(--color-bg-page);
+}
+
+.methodLogoDecline {
+  color: var(--color-region);
+}
+
+.methodText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.methodText strong {
+  font-size: var(--font-size-nav);
+  font-weight: var(--font-weight-bold);
+}
+
+.methodText small {
+  color: var(--color-text-crumb);
+  font-size: var(--font-size-card-title);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.3;
+}
+
+.radio {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgb(255 255 255 / 60%);
+  border-radius: var(--radius-round);
+}
+
+.methodSelected .radio {
+  border-color: var(--color-cta);
+  background: radial-gradient(circle, var(--color-cta) 0 4px, transparent 5px);
+}
+
+.paySummary {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 30px;
+  background: var(--color-bg-checkout);
+}
+
+.paySummary .timer {
+  margin: 0;
+}
+
+.summaryItems {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.soldBy {
+  font-size: var(--font-size-card-title);
+  font-weight: var(--font-weight-extrabold);
+}
+
+.summaryItem {
+  display: grid;
+  grid-template-columns: 50px 1fr auto;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.summaryItem img {
+  width: 50px;
+  height: 75px;
+  object-fit: cover;
+}
+
+.summaryItem > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.itemPrice {
+  font-size: var(--font-size-nav);
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.sumRows {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  margin: 0;
+  padding-top: 16px;
+  border-top: 1px solid rgb(255 255 255 / 15%);
+  font-size: var(--font-size-nav);
+}
+
+.sumRows dd {
+  margin: 0;
+  text-align: right;
+}
+
+.sumTotalLabel {
+  align-self: end;
+  font-weight: var(--font-weight-extrabold);
+}
+
+.sumRows .total {
+  font-size: 2.4rem;
+}
+
+.collected,
+.terms,
+.hint {
+  color: var(--color-text-crumb);
+  font-size: var(--font-size-card-title);
+  line-height: 1.5;
+}
+
+.continue {
+  height: var(--button-height-small);
+  border: 0;
+  background: var(--color-cta);
+  color: var(--color-cta-text);
+  font-size: var(--font-size-button);
+  font-weight: var(--font-weight-extrabold);
+}
+
+.continue:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.preparing {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: flex-start;
+  min-height: 40vh;
+  padding: 40px 0;
+}
+
+@media (width <= 900px) {
+  .payLayout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .method {
+    grid-template-columns: 64px 1fr 20px;
+    gap: 14px;
+    padding: 12px;
+  }
+
+  .methodLogo {
+    width: 64px;
+  }
+
+  .paySummary {
+    padding: 18px;
   }
 }

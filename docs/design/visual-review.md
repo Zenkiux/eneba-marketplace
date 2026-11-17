@@ -48,3 +48,20 @@ Captured with `node e2e/visual/capture-flow.mjs` (signs up a throwaway account, 
 | V18 | Order history | desktop | Long multi-item titles joined on one line | low | — | open |
 
 Result: all flow screens accepted (no open high items). Screenshots: `app/{cart,checkout,payment,order,orders,notfound}-{desktop,mobile}.png`.
+
+## Review #4 — 2026-11-17 (cart, checkout, payment vs. the real Eneba checkout)
+
+The owner signed in to eneba.com in the browser pane; I added one offer (Age of Empires II) with "Buy now", which opens `eneba.com/checkout/payment`, then opened the cart step (`eneba.com/checkout`). Nothing was paid: no payment method was confirmed and "Continue" was never pressed. Measured with computed styles (the pane was too narrow for useful screenshots).
+
+Measured on Eneba: checkout-only header — full-width bar `#351183`, 94px, padding 23px 20px: logo, steps "Cart → Payment → Get your product" (12px/600; done white, active `#23C299`, upcoming 40% white), language/currency. Cart: "My cart" panel `#351183`, padding 20px, H1 18px/800; lines `rgba(0,0,0,.12)` with a 90×127 cover flush left, "Sold by" + seller 12px/800, title 14px/800, "Digital product" 12px at 70%, − 1 + stepper, price 14px/900; "Summary" panel 355px with the yellow "Proceed to checkout" (35px) first, then "N product(s)", "Service fee", "Total:" 24px/800; "Inspired by your picks" product row. Payment: method rows 525×80, padding 15/15/15/20, `rgba(0,0,0,.25)`, selected `#5825CC`; 90×30 logo, title 14px/700, detail 12px/600 at 70%, 20px radio with a 2px yellow ring when selected; summary panel `#351183` 445px, padding 30px: "Sold by", item, Sub-total, Service fee, Total 24px/800, "Payment collected on behalf of <seller>", terms line, yellow "Continue" 35px (only usable once a method is chosen).
+
+| ID | Screen | Difference (before) | Severity | Fix | Status |
+|---|---|---|---|---|---|
+| V19 | All checkout screens | Full site header and our own 4-step indicator; Eneba uses a minimal checkout header with 3 steps | high | `CheckoutHeader` on /cart, /checkout, /orders/:id; steps Cart → Payment → Get your product | fixed |
+| V20 | Cart | Different layout (single list + generic summary) | high | Eneba layout: "My cart" panel, measured line layout, Summary with button first, recommendations row | fixed |
+| V21 | Checkout | Separate "Review your order" step that Eneba doesn't have | medium | "Proceed to checkout" creates the order and goes straight to Payment (sign-in still required) | fixed |
+| V22 | Payment | Two "Simulate…" buttons instead of a method list | high | Eneba-style selectable method rows (demo methods: card/wallet/bank approve, "Declined card" declines; no card data), summary with "Payment collected on behalf of…", "Continue" enabled after choosing | fixed |
+| V23 | Payment | Eneba shows real payment brands (PayPal, banks, Apple/Google Pay) | low | Not reproduced: no real providers in a demo; generic icons and clear "Demo" labels instead | won't fix |
+| V24 | Cart | Eneba's Ukraine donation box and discount-code field | low | Not reproduced (no coupons/donations in scope) | won't fix |
+
+Screenshots: `app/cart-desktop.png`, `app/payment-desktop.png`, `app/payment-selected-desktop.png` (+ mobile).

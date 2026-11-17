@@ -35,7 +35,13 @@ PLIST
 
 restart() { # label
   launchctl bootout "gui/$UID_NUM/$1" 2>/dev/null || true
-  launchctl bootstrap "gui/$UID_NUM" "$AGENTS/$1.plist"
+  # bootout is asynchronous: wait until the old service is gone, otherwise bootstrap fails (EIO).
+  for i in $(seq 1 20); do launchctl print "gui/$UID_NUM/$1" >/dev/null 2>&1 || break; sleep 0.5; done
+  for i in 1 2 3; do
+    launchctl bootstrap "gui/$UID_NUM" "$AGENTS/$1.plist" 2>/dev/null && return 0
+    sleep 1
+  done
+  echo "could not start $1"; return 1
 }
 
 case "${1:-deploy}" in

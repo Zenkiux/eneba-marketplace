@@ -22,7 +22,7 @@ export async function addChosenOffer(page: Page): Promise<{ seller: string; titl
   return { seller, title }
 }
 
-/** From the cart as a guest: go to checkout, create an account, pay (decline first, then succeed). */
+/** From the cart as a guest: checkout → create an account → Payment (decline first, then succeed) → keys. */
 export async function checkoutAsNewUser(page: Page, email: string) {
   await page.goto('/cart')
   await page.getByRole('button', { name: 'Log in and checkout' }).click()
@@ -35,15 +35,17 @@ export async function checkoutAsNewUser(page: Page, email: string) {
   await page.getByLabel('Password', { exact: true }).fill('e2e-password-123')
   await page.getByRole('button', { name: 'Create account' }).click()
 
-  await expect(page).toHaveURL(/\/checkout$/)
-  await page.getByRole('button', { name: 'Continue to payment' }).click()
+  // Like Eneba, "Proceed to checkout" goes straight to Payment (the order and key reservation are created on the way).
   await expect(page).toHaveURL(/\/checkout\/[0-9a-f-]{36}\/pay$/)
   await expect(page.getByRole('heading', { name: /Demo payment — no real money is charged/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Continue' })).toBeDisabled() // no method chosen yet
 
-  await page.getByRole('button', { name: 'Simulate declined payment' }).click()
+  await page.getByRole('radio', { name: /Declined card/ }).check()
+  await page.getByRole('button', { name: 'Continue' }).click()
   await expect(page.getByRole('alert').filter({ hasText: 'declined' })).toBeVisible()
 
-  await page.getByRole('button', { name: /Simulate successful payment/ }).click()
+  await page.getByRole('radio', { name: /Credit or debit card/ }).check()
+  await page.getByRole('button', { name: 'Continue' }).click()
   await expect(page).toHaveURL(/\/orders\/[0-9a-f-]{36}$/)
   await expect(page.getByRole('heading', { name: 'Thank you! Here are your keys' })).toBeVisible()
 }
