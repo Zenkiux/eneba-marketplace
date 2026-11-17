@@ -26,3 +26,12 @@ Automated:
 
 Manual (browser):
 - Vite dev server + API: `localhost:5173/api/healthz` proxied → ok; home page shows "API status: ok"; body background rgb(70, 24, 172); Metropolis 400/700/800 loaded.
+
+## 2026-11-17 — day 2: catalog, search, homepage APIs
+
+Automated (`go test -count=1 ./...`, each test on its own clone of a migrated + seeded template DB):
+- catalog: 9 tests pass — totals vs independent SQL counts for 9 filter combinations; every product reachable through pagination under all 8 sorts with no duplicates; sort order checks; facet counts; search matrix (exact, prefix, substring, casing, 2-typo, missing/swapped/wrong letter, nonsense, `%`, `_`, `\`, SQL-looking text, empty, >100 chars → 400); suggest; bad parameters → 400; product offers + stock match DB and contain no key material; sold-out cheapest offer moves the "From" price.
+  - First run failed: "100%" fuzzily matched "Gift Card 10 EUR" (trigram similarity, not an escaping bug). Test case changed to a bare `%`.
+  - Mutation check: with LIKE escaping removed, `%` and `_` each returned all 58 products and the test failed; restored → passes.
+- home: 6 tests pass — reorder/rename/disable/add sections in DB changes `/api/home` and section output; banner edits and expiry; a product with 10 paid units becomes the top best seller; a price drop makes the top deal; upcoming vs new releases don't overlap; categories; unknown section → 404.
+- Boot with `SEED_IF_EMPTY=true` on an empty database → seeded 58 products / 231 offers / 2799 keys, API served them.

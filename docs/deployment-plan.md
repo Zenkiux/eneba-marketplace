@@ -12,9 +12,9 @@ Current free-tier limits are re-checked on the providers' pages before setup and
 
 1. You create Vercel, Render and Neon accounts (GitHub sign-in). I never enter or see passwords.
 2. Neon: create project + database; copy the pooled connection string into Render's env vars yourself (or paste into the dashboard when prompted).
-3. Render: new Web Service from the GitHub repo, root `api/`, build `go build -o bin/server ./cmd/server`, start `bin/server`. Env: `DATABASE_URL`, `KEY_ENCRYPTION_KEY` (32 random bytes, base64), `APP_ENV=prod`, `TRUSTED_ORIGINS=https://<vercel-domain>`. Migrations run on boot.
-4. Seed once: Render shell / one-off job `bin/seed` (idempotent).
-5. Vercel: import repo, root `web/`, framework Vite; set the rewrite target.
+3. Render: New → Blueprint from the GitHub repo (`render.yaml`: root `api/`, build `go build -o bin/server ./cmd/server`, start `./bin/server`). Env: `DATABASE_URL`, `KEY_ENCRYPTION_KEY` (32 random bytes, base64), `APP_ENV=prod`, `TRUSTED_ORIGINS=https://<vercel-domain>`. Migrations run on boot.
+4. Seeding: `SEED_IF_EMPTY=true` (in `render.yaml`) makes the server seed an empty database on first boot; later restarts leave data alone. Render's free tier has no shell or one-off jobs.
+5. Vercel: import repo, root directory `web/` (settings come from `web/vercel.json`); replace `RENDER_SERVICE_HOST` in `web/vercel.json` with the Render hostname.
 6. Check through the real proxy: `Origin` / `Sec-Fetch-Site` reach the API; the `__Host-sid` cookie is set on the Vercel domain; a cross-site POST is rejected. Record results in `docs/testing.md`.
 7. Run Playwright against the production URL; then a manual pass in a clean browser profile.
 

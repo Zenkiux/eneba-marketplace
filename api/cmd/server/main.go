@@ -13,9 +13,13 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/Zenkiux/eneba-marketplace/api/internal/catalog"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/config"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/db"
+	"github.com/Zenkiux/eneba-marketplace/api/internal/home"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/httpx"
+	"github.com/Zenkiux/eneba-marketplace/api/internal/keys"
+	"github.com/Zenkiux/eneba-marketplace/api/internal/seed"
 )
 
 func main() {
@@ -41,6 +45,13 @@ func run() error {
 	defer pool.Close()
 	if err := db.Migrate(ctx, pool); err != nil {
 		return err
+	}
+	// Free hosting has no shell for one-off jobs, so production can seed itself on first boot.
+	// Only an empty catalog is seeded: later restarts never overwrite live data.
+	if os.Getenv("SEED_IF_EMPTY") == "true" {
+		if err := seedIfEmpty(ctx, pool, cfg); err != nil {
+			return err
+		}
 	}
 
 	handler, err := newRouter(cfg, pool)
@@ -71,6 +82,23 @@ func run() error {
 	return srv.Shutdown(shutdownCtx)
 }
 
+func seedIfEmpty(ctx context.Context, pool *pgxpool.Pool, cfg config.Config) error {
+	var empty bool
+	if err := pool.QueryRow(ctx, `SELECT NOT EXISTS (SELECT 1 FROM products)`).Scan(&empty); err != nil || !empty {
+		return err
+	}
+	box, err := keys.NewBox(cfg.KeyEncryption)
+	if err != nil {
+		return err
+	}
+	st, err := seed.Run(ctx, pool, box, seed.Options{})
+	if err != nil {
+		return err
+	}
+	slog.Info("seeded empty database", "products", st.Products, "offers", st.Offers, "keys", st.KeysAdded)
+	return nil
+}
+
 // newRouter wires every module's routes. Modules register their own handlers here as they are built.
 func newRouter(cfg config.Config, pool *pgxpool.Pool) (http.Handler, error) {
 	mux := http.NewServeMux()
@@ -83,6 +111,8 @@ func newRouter(cfg config.Config, pool *pgxpool.Pool) (http.Handler, error) {
 		httpx.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
 		return nil
 	}))
+	catalog.NewHandler(catalog.NewStore(pool)).Register(mux)
+	home.NewHandler(pool).Register(mux)
 	mux.Handle("/api/", httpx.Handler(func(w http.ResponseWriter, r *http.Request) error { return httpx.ErrNotFound }))
 
 	// Cross-site request protection for every state-changing request (Go 1.25+):

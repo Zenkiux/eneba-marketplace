@@ -1,0 +1,22 @@
+# Render Blueprint for the Go API (free web service).
+# Secrets are marked sync: false: you enter them in the Render dashboard, never in git.
+services:
+  - type: web
+    name: eneba-marketplace-api
+    runtime: go
+    plan: free
+    rootDir: api
+    buildCommand: go build -o bin/server ./cmd/server
+    startCommand: ./bin/server
+    healthCheckPath: /api/healthz
+    envVars:
+      - key: APP_ENV
+        value: prod
+      - key: SEED_IF_EMPTY
+        value: "true"
+      - key: DATABASE_URL
+        sync: false   # Neon pooled connection string
+      - key: KEY_ENCRYPTION_KEY
+        sync: false   # openssl rand -base64 32
+      - key: TRUSTED_ORIGINS
+        sync: false   # e.g. https://<project>.vercel.app
