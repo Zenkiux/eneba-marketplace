@@ -16,6 +16,7 @@ func NewHandler(trustCloudflare bool) *Handler { return &Handler{trustCloudflare
 func (h *Handler) Register(mux *http.ServeMux) {
 	mux.Handle("POST /api/compat/detect", httpx.Handler(h.detect))
 	mux.Handle("GET /api/compat/gpus", httpx.Handler(h.gpus))
+	mux.Handle("GET /api/compat/cpu", httpx.Handler(h.cpu))
 }
 
 // DetectRequest is what the browser can tell us without installing anything.
@@ -79,5 +80,16 @@ func (h *Handler) detect(w http.ResponseWriter, r *http.Request) error {
 
 func (h *Handler) gpus(w http.ResponseWriter, r *http.Request) error {
 	httpx.JSON(w, http.StatusOK, map[string]any{"gpus": GPUs})
+	return nil
+}
+
+// cpu scores a processor model typed by the visitor ("i5-4590", "Ryzen 5 3600", "Core 2 Duo").
+func (h *Handler) cpu(w http.ResponseWriter, r *http.Request) error {
+	name := r.URL.Query().Get("name")
+	if len(name) > 100 {
+		return httpx.NewError(http.StatusBadRequest, "bad_request", "Processor name too long")
+	}
+	score, ok := CPUScore(name)
+	httpx.JSON(w, http.StatusOK, map[string]any{"score": score, "matched": ok})
 	return nil
 }

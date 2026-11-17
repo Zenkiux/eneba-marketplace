@@ -21,6 +21,7 @@ import (
 	"github.com/Zenkiux/eneba-marketplace/api/internal/keys"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/money"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/orders"
+	"github.com/Zenkiux/eneba-marketplace/api/internal/wishlist"
 )
 
 // NewRouter builds the HTTP handler. The order service is returned too so main can run its
@@ -50,6 +51,7 @@ func NewRouter(cfg config.Config, pool *pgxpool.Pool) (http.Handler, *orders.Ser
 	orderSvc := orders.NewService(pool, box)
 	orders.NewHandler(orderSvc).Register(mux)
 	home.NewHandler(pool).Register(mux)
+	wishlist.NewHandler(pool).Register(mux)
 	mux.Handle("/api/", httpx.Handler(func(w http.ResponseWriter, r *http.Request) error { return httpx.ErrNotFound }))
 	if cfg.StaticDir != "" {
 		mux.Handle("/", staticSite(cfg.StaticDir))

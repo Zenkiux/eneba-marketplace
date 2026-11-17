@@ -14,6 +14,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Zenkiux/eneba-marketplace/api/internal/app"
+	"github.com/Zenkiux/eneba-marketplace/api/internal/compat"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/config"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/db"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/keys"
@@ -53,6 +54,11 @@ func run() error {
 		}
 	}
 
+	if n, err := compat.Reparse(ctx, pool); err != nil {
+		return err
+	} else {
+		slog.Info("re-parsed system requirements", "products", n)
+	}
 	if n, err := search.Refresh(ctx, pool); err != nil {
 		return err
 	} else if n > 0 {

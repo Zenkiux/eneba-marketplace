@@ -4,7 +4,9 @@ import type { ProductDetail } from '../../api/types'
 import { rich } from '../../i18n/rich'
 import { useI18n } from '../../i18n/useI18n'
 import { ProposalNote } from '../proposal/ProposalNote'
-import { hardwareShort, PART_LABEL, verdictFor, type Part } from './verdict'
+import { verdictFor, type ReqLevel } from './verdict'
+import type { DeviceProfile } from './device'
+import type { Requirements } from '../../api/types'
 import { regionWorksIn } from './regions'
 import { useDevice } from './useDevice'
 import styles from './ProductCompat.module.css'
@@ -22,10 +24,6 @@ function Row({ ok, unknown, title, detail }: { ok: boolean; unknown?: boolean; t
       </div>
     </li>
   )
-}
-
-function partsText(parts: Part[], t: (text: string) => string) {
-  return parts.map((p) => t(PART_LABEL[p])).join(', ')
 }
 
 /** "Will it work for me?" check for one product: region, platform and PC requirements. */
@@ -73,36 +71,9 @@ export function ProductCompat({ p }: { p: ProductDetail }) {
               }
             />
           ) : (
-            req?.minimum && (
-              <>
-                <Row
-                  ok={hardwareShort(device, req.minimum).length === 0}
-                  unknown={!device.gpuScore || !device.cpuScore || !device.ramGb}
-                  title={t('Minimum requirements')}
-                  detail={
-                    hardwareShort(device, req.minimum).length
-                      ? t('Below minimum: {parts}.', { parts: partsText(hardwareShort(device, req.minimum), t) })
-                      : !device.gpuScore || !device.cpuScore || !device.ramGb
-                        ? t('Some of your PC details are missing.')
-                        : t('Your PC meets the minimum requirements.')
-                  }
-                />
-                {req.recommended && (
-                  <Row
-                    ok={hardwareShort(device, req.recommended).length === 0}
-                    unknown={!device.gpuScore || !device.cpuScore || !device.ramGb}
-                    title={t('Recommended requirements')}
-                    detail={
-                      hardwareShort(device, req.recommended).length
-                        ? t('Expect lower settings: {parts}.', { parts: partsText(hardwareShort(device, req.recommended), t) })
-                        : t('Should run well at recommended settings.')
-                    }
-                  />
-                )}
-              </>
-            )
+            <PCCheck device={device} req={req} />
           )}
-          {!console && !req?.minimum && <Row ok unknown title={t('PC requirements')} detail={t('No official requirements listed for this product.')} />}
+
         </ul>
       )}
       {device && (
@@ -134,5 +105,105 @@ export function ProductCompat({ p }: { p: ProductDetail }) {
         </div>
       )}
     </section>
+  )
+}
+
+type Cell = 'ok' | 'no' | 'unknown' | 'none'
+type HwPart = 'os' | 'cpu' | 'gpu' | 'ram'
+
+const RAW_KEYS: Record<HwPart, string[]> = {
+  os: ['system requirements', 'os', 'operating'],
+  cpu: ['processor', 'cpu'],
+  gpu: ['graphics', 'video', 'gpu'],
+  ram: ['memory', 'ram'],
+}
+
+function rawField(raw: Record<string, string> | undefined, part: HwPart) {
+  if (!raw) return ''
+  const hit = Object.entries(raw).find(([k]) => RAW_KEYS[part].some((n) => k.toLowerCase().includes(n)))
+  return hit?.[1] ?? ''
+}
+
+/** One part against one requirement level: pass, fail, can't tell, or not required. */
+function cell(device: DeviceProfile, level: ReqLevel | undefined, raw: string, part: HwPart): Cell {
+  if (!level && !raw) return 'none'
+  if (level?.unchecked?.includes(part as 'gpu')) return 'unknown'
+  const need = part === 'os' ? level?.os : part === 'cpu' ? level?.cpuScore : part === 'gpu' ? level?.gpuScore : level?.ramGb
+  if (!need) return raw ? 'unknown' : 'none'
+  if (part === 'os') return device.os ? (device.os === need ? 'ok' : 'no') : 'unknown'
+  const have = part === 'cpu' ? device.cpuScore : part === 'gpu' ? device.gpuScore : device.ramGb
+  if (!have) return 'unknown'
+  return have + (part === 'ram' ? 0.01 : 0) >= (need as number) ? 'ok' : 'no'
+}
+
+/** CYRI-style comparison: each part of the visitor's PC against the minimum and recommended specs. */
+function PCCheck({ device, req }: { device: DeviceProfile; req: Requirements | null }) {
+  const { t } = useI18n()
+  if (!req || (!req.minimum && !req.rawMinimum)) {
+    return <Row ok unknown title={t('PC requirements')} detail={t('No official requirements listed for this product, so we can’t check your PC.')} />
+  }
+  const parts: { key: HwPart; label: string; yours: string }[] = [
+    { key: 'os', label: t('Operating system'), yours: device.os ? { windows: 'Windows', mac: 'macOS', linux: 'Linux' }[device.os] : '' },
+    { key: 'cpu', label: t('Processor'), yours: device.cpuLabel ? t(device.cpuLabel) : '' },
+    { key: 'gpu', label: t('Graphics card'), yours: device.gpuScore ? device.gpuName : '' },
+    { key: 'ram', label: t('Memory (RAM)'), yours: device.ramGb ? t('{n} GB', { n: device.ramGb }) : '' },
+  ]
+  const rows = parts.map((p) => ({
+    ...p,
+    min: cell(device, req.minimum, rawField(req.rawMinimum, p.key), p.key),
+    rec: cell(device, req.recommended, rawField(req.rawRecommended, p.key), p.key),
+    minText: rawField(req.rawMinimum, p.key),
+    recText: rawField(req.rawRecommended, p.key),
+  }))
+  const minFail = rows.filter((r) => r.min === 'no')
+  const minUnknown = rows.filter((r) => r.min === 'unknown')
+  const recFail = rows.filter((r) => r.rec === 'no' || r.rec === 'unknown')
+  const hasRec = Boolean(req.recommended || req.rawRecommended)
+  const verdict = minFail.length
+    ? { ok: false, unknown: false, title: t('Your PC can’t run it'), detail: t('Below minimum: {parts}.', { parts: minFail.map((r) => r.label).join(', ') }) }
+    : minUnknown.length
+      ? {
+          ok: false,
+          unknown: true,
+          title: t('Can’t fully check'),
+          detail: t('Not checked: {parts}. Add your details or compare the requirements below.', { parts: minUnknown.map((r) => r.label).join(', ') }),
+        }
+      : hasRec && recFail.length
+        ? { ok: true, unknown: false, title: t('Runs at minimum settings'), detail: t('Below recommended: {parts}.', { parts: recFail.map((r) => r.label).join(', ') }) }
+        : { ok: true, unknown: false, title: t('Your PC can run it'), detail: hasRec ? t('Meets the recommended requirements.') : t('Meets the minimum requirements.') }
+  const mark = (c: Cell) =>
+    c === 'ok' ? <CircleCheck size={16} aria-label={t('meets')} /> : c === 'no' ? <CircleX size={16} aria-label={t('below')} /> : c === 'unknown' ? <CircleHelp size={16} aria-label={t('not checked')} /> : null
+  return (
+    <>
+      <Row ok={verdict.ok} unknown={verdict.unknown} title={verdict.title} detail={verdict.detail} />
+      <li className={styles.compare}>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">{t('Part')}</th>
+              <th scope="col">{t('Your PC')}</th>
+              <th scope="col">{t('Minimum')}</th>
+              {hasRec && <th scope="col">{t('Recommended')}</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.key}>
+                <th scope="row">{r.label}</th>
+                <td>{r.yours || <em>{t('Unknown')}</em>}</td>
+                <td className={styles[r.min]}>
+                  {mark(r.min)} <span>{r.minText || '—'}</span>
+                </td>
+                {hasRec && (
+                  <td className={styles[r.rec]}>
+                    {mark(r.rec)} <span>{r.recText || '—'}</span>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </li>
+    </>
   )
 }

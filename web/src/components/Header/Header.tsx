@@ -1,14 +1,15 @@
 import { Heart, Menu, Search, ShoppingCart, User, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link, NavLink } from 'react-router'
-import { useLogout, useMe } from '../../api/auth'
+import { useMe } from '../../api/auth'
 import { useCart } from '../../features/cart/useCart'
 import { CatalogNotice, CatalogSwitch } from '../CatalogSwitch'
-import { ProposalSwitch } from '../../features/proposal/ProposalSwitch'
+import { ProposalsMenu } from '../../features/proposal/ProposalsMenu'
 import { SearchBox } from '../SearchBox'
 import { LocaleSwitcher } from '../LocaleSwitcher'
 import { useI18n } from '../../i18n/useI18n'
 import { Logo } from './Logo'
+import { UserMenu } from './UserMenu'
 import styles from './Header.module.css'
 
 // Site navigation (chrome, not page content): shortcuts into the store's filters.
@@ -29,7 +30,6 @@ export function Header() {
   const [searchOpen, setSearchOpen] = useState(false)
   const { count } = useCart()
   const me = useMe()
-  const logout = useLogout()
   const { t } = useI18n()
 
   return (
@@ -54,6 +54,9 @@ export function Header() {
         <span className={styles.locale}>
           <LocaleSwitcher />
         </span>
+        <span className={styles.topSwitch}>
+          <CatalogSwitch />
+        </span>
         <div className={styles.actions}>
           <button
             type="button"
@@ -64,25 +67,15 @@ export function Header() {
           >
             <Search size={24} />
           </button>
-          <span className={`${styles.iconButton} ${styles.disabled}`} title={t('Wishlist is not part of this demo')}>
-            <Heart size={24} aria-label={t('Wishlist (not available in this demo)')} />
-          </span>
+          <Link to="/wishlist" className={styles.iconButton} aria-label={t('Favorites')}>
+            <Heart size={24} />
+          </Link>
           <Link to="/cart" className={`${styles.iconButton} ${styles.cart}`} aria-label={count === 1 ? t('Cart, 1 item') : t('Cart, {n} items', { n: count })}>
             <ShoppingCart size={24} />
             {count > 0 && <span className={styles.cartCount}>{count}</span>}
           </Link>
           {me.data ? (
-            <div className={styles.account}>
-              <Link to="/account/orders" className={styles.iconButton} aria-label={t('My orders')}>
-                <User size={24} />
-              </Link>
-              <span className={styles.accountText}>
-                <Link to="/account/orders">{me.data.displayName}</Link> <span aria-hidden="true">|</span>{' '}
-                <button type="button" className={styles.linkButton} onClick={() => logout.mutate()}>
-                  {t('Log out')}
-                </button>
-              </span>
-            </div>
+            <UserMenu user={me.data} />
           ) : (
             <Link to="/login" className={styles.account}>
               <User size={24} aria-hidden="true" />
@@ -118,8 +111,10 @@ export function Header() {
             <LocaleSwitcher />
           </span>
           <span className={styles.switches}>
-            <ProposalSwitch />
-            <CatalogSwitch />
+            <ProposalsMenu onNavigate={() => setMenuOpen(false)} />
+            <span className={styles.navCatalog}>
+              <CatalogSwitch />
+            </span>
           </span>
         </div>
       </nav>

@@ -16,7 +16,7 @@ export function ProposalPage() {
   }, [t])
   return (
     <Container className={styles.page}>
-      <p className={styles.kicker}>{t('Feature proposal by the candidate')}</p>
+      <p className={styles.kicker}>{t('Proposal #1 by the candidate')}</p>
       <h1 className={styles.h1}>“Will it work for me?” — check region, platform and PC before buying</h1>
       <p className={styles.lead}>
         The marketplace above replicates eneba.com. This is the one addition I’d propose. Try it as a customer on{' '}

@@ -65,3 +65,19 @@ Measured on Eneba: checkout-only header — full-width bar `#351183`, 94px, padd
 | V24 | Cart | Eneba's Ukraine donation box and discount-code field | low | Not reproduced (no coupons/donations in scope) | won't fix |
 
 Screenshots: `app/cart-desktop.png`, `app/payment-desktop.png`, `app/payment-selected-desktop.png` (+ mobile).
+
+## Review #5 — 2026-11-17 (account area, user menu, favorites, proposals menu, PC check)
+
+Reference: my.eneba.com measured while signed in to the owner's account (computed styles, desktop 1280 px); personal data was not copied. App: Playwright screenshots at 1280 × 900 and 375 × 812.
+
+| # | Screen | Discrepancy | Severity | Fix | Status |
+|---|---|---|---|---|---|
+| 1 | Account | No account area: only a dark "My orders" list | high | Light dashboard: 70 px #4618AC bar, 240 px sidebar (groups 50 px, 14/600; sub-items 26 px, padding-left 58, #A09AAC → white when active; open group #351281), white cards with `0 0 15px rgb(121 113 137 / 10%)`, 15/800 uppercase titles, #E9E8F7 footer | fixed |
+| 2 | Orders | Card list instead of Eneba's table | high | Table: DATE, STATUS, ORDER TITLE, ORDER ID, PAYMENT METHOD, TOTAL AMOUNT, Details; 10/800 headers, 12/600 cells, status in #00CF9F / red, totals 16/800 #797189; search by order ID + Reset filters | fixed |
+| 3 | Keys library | Missing | high | Table: DATE, ORDER ID, PRODUCT NAME, SELLER, PRICE, View keys; search by product name / order id | fixed |
+| 4 | Header | Account shown as "Name \| Log out" text; wishlist icon disabled | medium | Avatar button with Eneba's 290 px #5825CC dropdown (profile, Favorites with count, My account, Balance, Cashback, Orders, Keys library, Logout); heart opens Favorites | fixed |
+| 5 | Header | "Proposal notes" switch did nothing on the homepage | medium | "Proposals" menu (proposal #1); catalog switch moved to the top row so the category bar fits at 1280 px | fixed |
+| 6 | Overview | Balance card had no top padding; order IDs wrapped | low | Padding 20 px when a card has no title; IDs `nowrap` | fixed |
+| 7 | Product | PC check was one line ("Below minimum: …") | medium | CYRI-style table (part · your PC · minimum · recommended, ✓/✗/?) | fixed |
+
+Mobile (375 px): sidebar becomes an off-canvas menu from the top bar; no horizontal scroll (scrollWidth = 375).

@@ -1,7 +1,7 @@
 import { Cpu, Gamepad2, Globe2, MonitorSmartphone, ScanSearch } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
-import { useGPUs } from '../../api/compat'
+import { scoreCPU, useGPUs } from '../../api/compat'
 import { useProducts } from '../../api/catalog'
 import { Container } from '../../components/Container'
 import { ProductCard, ProductCardSkeleton } from '../../components/ProductCard'
@@ -26,6 +26,8 @@ export function WillItWorkPage() {
   const [draft, setDraft] = useState<DeviceProfile>(saved ?? EMPTY)
   const [detecting, setDetecting] = useState(false)
   const [detectNote, setDetectNote] = useState<string | null>(null)
+  const [cpuModel, setCpuModel] = useState('')
+  const [cpuNote, setCpuNote] = useState<string | null>(null)
   const gpus = useGPUs()
   const { t } = useI18n()
 
@@ -69,12 +71,30 @@ export function WillItWorkPage() {
     }
   }
 
+  async function applyCpuModel() {
+    const name = cpuModel.trim()
+    if (!name) return
+    try {
+      const r = await scoreCPU(name)
+      if (r.matched) {
+        setDraft((d) => ({ ...d, cpuScore: r.score, cpuLabel: name }))
+        setCpuNote(null)
+      } else setCpuNote(t('We don’t recognise “{name}”. Pick the closest group above.', { name }))
+    } catch {
+      setCpuNote(t('Couldn’t check the processor right now.'))
+    }
+  }
+
   const gpuList = gpus.data?.gpus ?? []
+  const customCpu = draft.cpuScore > 0 && !CPU_CHOICES.some((c) => c.score === draft.cpuScore && c.label === draft.cpuLabel)
   const set = <K extends keyof DeviceProfile>(k: K, v: DeviceProfile[K]) => setDraft((d) => ({ ...d, [k]: v }))
   const dirty = JSON.stringify(draft) !== JSON.stringify(saved ?? EMPTY)
 
   return (
     <Container className={styles.page}>
+      <Link to="/proposal" className={styles.kicker}>
+        💡 {t('Proposal #1 — read why and how')}
+      </Link>
       <div className={styles.head}>
         <h1 className={styles.h1}>{t('Will it work for me?')}</h1>
         <ProposalNote id="overview" inline />
@@ -149,17 +169,37 @@ export function WillItWorkPage() {
             <select
               value={draft.cpuScore || ''}
               onChange={(e) => {
-                const c = CPU_CHOICES.find((x) => x.score === Number(e.target.value))
+                const v = Number(e.target.value)
+                if (customCpu && v === draft.cpuScore) return
+                const c = CPU_CHOICES.find((x) => x.score === v)
                 setDraft((d) => ({ ...d, cpuScore: c?.score ?? 0, cpuLabel: c?.label ?? '' }))
               }}
             >
               <option value="">{t('Unknown')}</option>
+              {customCpu && <option value={draft.cpuScore}>{draft.cpuLabel}</option>}
               {CPU_CHOICES.map((c) => (
                 <option key={c.score} value={c.score}>
                   {t(c.label)}
                 </option>
               ))}
             </select>
+          </label>
+
+          <label className={styles.field}>
+            <span>{t('…or type your processor model')}</span>
+            <input
+              placeholder={t('e.g. i5-4590, Ryzen 5 3600, Core 2 Duo E8400')}
+              value={cpuModel}
+              onChange={(e) => setCpuModel(e.target.value)}
+              onBlur={() => void applyCpuModel()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  void applyCpuModel()
+                }
+              }}
+            />
+            {cpuNote && <small className={styles.warn}>{cpuNote}</small>}
           </label>
 
           <label className={styles.field}>

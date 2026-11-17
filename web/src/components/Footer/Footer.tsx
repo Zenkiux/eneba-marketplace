@@ -10,7 +10,8 @@ export function Footer() {
         <nav className={styles.links} aria-label={t('Footer')}>
           <Link to="/store">{t('All products')}</Link>
           <Link to="/store?sort=discount">{t('Deals')}</Link>
-          <Link to="/account/orders">{t('My orders')}</Link>
+          <Link to="/account">{t('My account')}</Link>
+          <Link to="/account/orders">{t('Orders')}</Link>
           <Link to="/will-it-work">{t('Will it work for me?')}</Link>
           <Link to="/proposal">{t('Feature proposal')}</Link>
           <a href="https://github.com/Zenkiux/eneba-marketplace">{t('Source code')}</a>

@@ -17,7 +17,8 @@ type Order struct {
 	CreatedAt       time.Time   `json:"createdAt"`
 	ExpiresAt       time.Time   `json:"expiresAt"`
 	PaidAt          *time.Time  `json:"paidAt"`
-	LastPayment     *string     `json:"lastPayment"` // "succeeded" | "declined" | null
+	LastPayment     *string     `json:"lastPayment"`   // "succeeded" | "declined" | null
+	PaymentMethod   *string     `json:"paymentMethod"` // demo method of the successful payment, if recorded
 	Items           []OrderItem `json:"items"`
 	ItemCount       int         `json:"itemCount"`
 	SecondsToExpiry int         `json:"secondsToExpiry"` // only meaningful while pending
@@ -41,11 +42,12 @@ func validUUID(s string) bool { return uuidRe.MatchString(s) }
 
 const orderCols = `o.id, o.status, o.total_cents, o.currency, o.created_at, o.expires_at, o.paid_at,
 	(SELECT outcome::text FROM payment_attempts pa WHERE pa.order_id = o.id ORDER BY pa.id DESC LIMIT 1),
+	(SELECT nullif(method, '') FROM payment_attempts pa WHERE pa.order_id = o.id AND pa.outcome = 'succeeded' LIMIT 1),
 	greatest(0, extract(epoch FROM o.expires_at - now()))::int`
 
 func scanOrder(row pgx.Row) (Order, error) {
 	var o Order
-	err := row.Scan(&o.ID, &o.Status, &o.TotalCents, &o.Currency, &o.CreatedAt, &o.ExpiresAt, &o.PaidAt, &o.LastPayment, &o.SecondsToExpiry)
+	err := row.Scan(&o.ID, &o.Status, &o.TotalCents, &o.Currency, &o.CreatedAt, &o.ExpiresAt, &o.PaidAt, &o.LastPayment, &o.PaymentMethod, &o.SecondsToExpiry)
 	return o, err
 }
 
@@ -159,4 +161,22 @@ func (s *Service) List(ctx context.Context, userID string) ([]Order, error) {
 		}
 	}
 	return list, nil
+}
+
+// Labels the demo payment page may send. Only these are stored.
+func validMethod(m string) bool {
+	switch m {
+	case "card", "wallet", "bank", "declined":
+		return true
+	}
+	return false
+}
+
+func (s *Service) recordMethod(ctx context.Context, orderID, attemptKey, method string) error {
+	if !validUUID(orderID) {
+		return nil
+	}
+	_, err := s.db.Exec(ctx, `UPDATE payment_attempts SET method = $3 WHERE order_id = $1 AND idempotency_key = $2 AND method = ''`,
+		orderID, attemptKey, method)
+	return err
 }

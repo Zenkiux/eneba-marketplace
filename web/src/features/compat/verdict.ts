@@ -6,6 +6,7 @@ export interface ReqLevel {
   gpuScore?: number
   cpuScore?: number
   ramGb?: number
+  unchecked?: ('gpu' | 'cpu' | 'ram')[]
 }
 
 export type Part = 'region' | 'platform' | 'os' | 'gpu' | 'cpu' | 'ram'
@@ -13,6 +14,8 @@ export type Part = 'region' | 'platform' | 'os' | 'gpu' | 'cpu' | 'ram'
 export interface Verdict {
   status: 'works' | 'no' | 'unknown'
   failing: Part[] // why it doesn't work
+  /** Why the answer is "unknown": the visitor's PC details are missing, or the game's requirements are. */
+  unknownReason?: 'device' | 'data'
 }
 
 const CONSOLE_OF: Record<string, 'psn' | 'xbox' | 'nintendo'> = { psn: 'psn', xbox: 'xbox', nintendo: 'nintendo' }
@@ -31,7 +34,7 @@ export function hardwareShort(p: DeviceProfile, l: ReqLevel | null | undefined):
 /** Does this product work for the visitor? Same rules as the API's works=1 filter. */
 export function verdictFor(
   p: DeviceProfile,
-  product: { platform: { slug: string }; region: { slug: string }; reqMin?: ReqLevel | null },
+  product: { platform: { slug: string }; region: { slug: string }; type?: { slug: string }; reqMin?: ReqLevel | null },
 ): Verdict {
   const failing: Part[] = []
   if (!regionWorksIn(product.region.slug, p.country)) failing.push('region')
@@ -42,8 +45,15 @@ export function verdictFor(
     failing.push(...hardwareShort(p, product.reqMin))
   }
   if (failing.length) return { status: 'no', failing }
-  const hardwareUnknown = !consoleKey && product.reqMin && (!p.gpuScore || !p.cpuScore || !p.ramGb)
-  return { status: hardwareUnknown ? 'unknown' : 'works', failing }
+  if (consoleKey || product.platform.slug === 'keyshop') return { status: 'works', failing }
+  const req = product.reqMin
+  const isGame = !product.type || product.type.slug === 'game' || product.type.slug === 'dlc'
+  // A PC game we can't compare is never "works": either the game's data or the PC's is missing.
+  if ((!req && isGame) || (req?.unchecked?.length ?? 0) > 0) return { status: 'unknown', failing, unknownReason: 'data' }
+  const missing =
+    req && ((req.gpuScore && !p.gpuScore) || (req.cpuScore && !p.cpuScore) || (req.ramGb && !p.ramGb) || (req.os && !p.os))
+  if (missing) return { status: 'unknown', failing, unknownReason: 'device' }
+  return { status: 'works', failing }
 }
 
 export const PART_LABEL: Record<Part, string> = {

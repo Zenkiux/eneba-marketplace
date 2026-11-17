@@ -64,12 +64,15 @@ export function worksParams(p: DeviceProfile): URLSearchParams {
 // CPU choices for manual selection (browsers can't read the CPU model). Scores match the API's
 // heuristic in api/internal/compat/hardware.go.
 export const CPU_CHOICES = [
-  { label: 'Older (Core 2, Phenom, Pentium, FX)', score: 400 },
-  { label: 'Intel Core i3/i5 2nd–5th gen · Ryzen 3 1000', score: 600 },
+  { label: 'Single-core (Pentium 4, Athlon 64)', score: 100 },
+  { label: 'Old dual-core (Core 2 Duo, Pentium, Athlon X2)', score: 180 },
+  { label: 'Old quad-core (Core 2 Quad, Phenom II X4)', score: 300 },
+  { label: 'Intel Core i3/i5 1st–2nd gen · AMD FX', score: 400 },
+  { label: 'Intel Core i3/i5 3rd–5th gen · Ryzen 3 1000', score: 600 },
   { label: 'Intel Core i5 6th–8th gen · Ryzen 5 1000–2000', score: 900 },
   { label: 'Intel Core i5/i7 9th–10th gen · Ryzen 5/7 3000', score: 1100 },
   { label: 'Intel Core i5/i7 11th–12th gen · Ryzen 5/7 5000', score: 1300 },
   { label: 'Intel Core 13th–14th gen / Ultra · Ryzen 7000–9000', score: 1550 },
 ] as const
 
-export const RAM_CHOICES = [4, 8, 12, 16, 32, 64] as const
+export const RAM_CHOICES = [1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 64] as const

@@ -11,6 +11,7 @@ import { useCart } from '../cart/useCart'
 import { ProductCompat } from '../compat/ProductCompat'
 import { NotFoundPage } from '../not-found/NotFoundPage'
 import { ratingLabel } from './rating'
+import { WishlistButton } from '../wishlist/WishlistButton'
 import styles from './ProductPage.module.css'
 
 export function ProductPage() {
@@ -53,6 +54,7 @@ function Product({ p }: { p: ProductDetail }) {
         <img className={styles.cover} referrerPolicy="no-referrer" src={p.coverUrl} alt={t('{title} cover', { title: p.title })} width={200} height={300} />
         <div className={styles.summary}>
           <h1 className={styles.h1}>{p.title}</h1>
+          <WishlistButton productId={p.id} title={p.title} className={styles.fav} withLabel />
           <ul className={styles.facts}>
             <li>
               <CircleCheck className={styles.factIconOk} size={34} strokeWidth={1.5} aria-hidden="true" />

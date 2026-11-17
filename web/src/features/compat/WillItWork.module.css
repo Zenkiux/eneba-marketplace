@@ -247,3 +247,13 @@
     font-size: 2.4rem;
   }
 }
+
+.kicker {
+  display: inline-block;
+  margin-bottom: 8px;
+  color: var(--color-cta);
+  font-size: var(--font-size-card-title);
+  font-weight: var(--font-weight-extrabold);
+  text-decoration: none;
+  text-transform: uppercase;
+}

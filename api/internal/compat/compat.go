@@ -8,6 +8,9 @@ type Level struct {
 	GPUScore int     `json:"gpuScore,omitempty"`
 	CPUScore int     `json:"cpuScore,omitempty"`
 	RAMGB    float64 `json:"ramGb,omitempty"`
+	// Parts the game lists but we couldn't turn into a number (e.g. an unknown graphics card).
+	// A "works for you" verdict is never given while a listed part is unchecked.
+	Unchecked []string `json:"unchecked,omitempty"`
 }
 
 // Requirements is the structured form stored with a product (raw text kept for display).
@@ -36,16 +39,28 @@ func ParseLevel(raw map[string]string) *Level {
 		return nil
 	}
 	l := &Level{OS: OSFamily(field(raw, "system requirements", "os", "operating"))}
-	if s, ok := RequiredGPUScore(field(raw, "graphics", "video", "gpu")); ok {
-		l.GPUScore = s
+	if text := strings.TrimSpace(field(raw, "graphics", "video", "gpu")); text != "" {
+		if s, ok := RequiredGPUScore(text); ok {
+			l.GPUScore = s
+		} else {
+			l.Unchecked = append(l.Unchecked, "gpu")
+		}
 	}
-	if s, ok := RequiredCPUScore(field(raw, "processor", "cpu")); ok {
-		l.CPUScore = s
+	if text := strings.TrimSpace(field(raw, "processor", "cpu")); text != "" {
+		if s, ok := RequiredCPUScore(text); ok {
+			l.CPUScore = s
+		} else {
+			l.Unchecked = append(l.Unchecked, "cpu")
+		}
 	}
-	if g, ok := ParseGB(field(raw, "memory", "ram")); ok {
-		l.RAMGB = g
+	if text := strings.TrimSpace(field(raw, "memory", "ram")); text != "" {
+		if g, ok := ParseGB(text); ok {
+			l.RAMGB = g
+		} else {
+			l.Unchecked = append(l.Unchecked, "ram")
+		}
 	}
-	if l.OS == "" && l.GPUScore == 0 && l.CPUScore == 0 && l.RAMGB == 0 {
+	if l.OS == "" && l.GPUScore == 0 && l.CPUScore == 0 && l.RAMGB == 0 && len(l.Unchecked) == 0 {
 		return nil
 	}
 	return l

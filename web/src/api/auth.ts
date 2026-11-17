@@ -6,6 +6,7 @@ export interface User {
   id: string
   email: string
   displayName: string
+  createdAt?: string
 }
 
 /** The signed-in user, or null. A 401 from /auth/me simply means "not signed in". */

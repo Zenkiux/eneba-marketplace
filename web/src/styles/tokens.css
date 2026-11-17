@@ -31,6 +31,24 @@
   --color-step-active: #23c299;
   --color-step-disabled: rgb(255 255 255 / 40%);
 
+  /* Account area (my.eneba.com is a light dashboard; measured 2026-11-17) */
+  --color-acc-bg: #fff;
+  --color-acc-heading: #1f0a4e;
+  --color-acc-text: #544d60;
+  --color-acc-muted: #797189;
+  --color-acc-faint: #a09aac;
+  --color-acc-side: #4618ac;
+  --color-acc-side-open: #351281; /* expanded sidebar group */
+  --color-acc-side-text: #f4f4f6;
+  --color-acc-link: #4618ac;
+  --color-acc-amount: #32117d;
+  --color-acc-positive: #00cf9f;
+  --color-acc-negative: #f00;
+  --color-acc-footer: #e9e8f7;
+  --color-acc-row: #f6f5fb; /* table row hover / zebra (estimate) */
+  --color-user-menu: #5825cc; /* header user dropdown */
+  --shadow-acc-card: 0 0 15px rgb(121 113 137 / 10%);
+
   /* Typography (html font-size is 10px, so 1rem = 10px) */
   --font-family: "Metropolis", Arial, Helvetica, sans-serif;
   --font-size-root: 10px;

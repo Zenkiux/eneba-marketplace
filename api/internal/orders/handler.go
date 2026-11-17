@@ -47,6 +47,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) error {
 func (h *Handler) pay(w http.ResponseWriter, r *http.Request) error {
 	var body struct {
 		Outcome Outcome `json:"outcome"`
+		Method  string  `json:"method"` // label of the demo method picked, e.g. "card"
 	}
 	if err := httpx.Decode(r, &body); err != nil {
 		return err
@@ -54,6 +55,14 @@ func (h *Handler) pay(w http.ResponseWriter, r *http.Request) error {
 	o, err := h.svc.Pay(r.Context(), uid(r), r.PathValue("id"), r.Header.Get("Idempotency-Key"), body.Outcome)
 	if err != nil {
 		return err
+	}
+	if m := body.Method; validMethod(m) {
+		if err := h.svc.recordMethod(r.Context(), r.PathValue("id"), r.Header.Get("Idempotency-Key"), m); err != nil {
+			return err
+		}
+		if o.Status == "paid" {
+			o.PaymentMethod = &m
+		}
 	}
 	httpx.JSON(w, http.StatusOK, o)
 	return nil

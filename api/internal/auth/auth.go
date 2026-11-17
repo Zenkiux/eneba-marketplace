@@ -133,7 +133,7 @@ func hashToken(token string) []byte {
 }
 
 // CreateSession stores a new session and returns the raw token for the cookie.
-func (s *Service) CreateSession(ctx context.Context, userID, userAgent string) (string, time.Time, error) {
+func (s *Service) CreateSession(ctx context.Context, userID, userAgent, country string) (string, time.Time, error) {
 	b := make([]byte, 32)
 	if _, err := rand.Read(b); err != nil {
 		return "", time.Time{}, err
@@ -148,8 +148,8 @@ func (s *Service) CreateSession(ctx context.Context, userID, userAgent string) (
 		userID, s.now(), s.now().Add(-sessionIdleLimit)); err != nil {
 		return "", time.Time{}, err
 	}
-	_, err := s.db.Exec(ctx, `INSERT INTO sessions (token_hash, user_id, expires_at, last_seen_at, user_agent) VALUES ($1, $2, $3, $4, $5)`,
-		hashToken(token), userID, expires, s.now(), userAgent)
+	_, err := s.db.Exec(ctx, `INSERT INTO sessions (token_hash, user_id, expires_at, last_seen_at, user_agent, country) VALUES ($1, $2, $3, $4, $5, $6)`,
+		hashToken(token), userID, expires, s.now(), userAgent, country)
 	return token, expires, err
 }
 

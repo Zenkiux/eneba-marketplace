@@ -56,6 +56,10 @@ func (h *Handler) Register(mux *http.ServeMux) {
 	mux.Handle("POST /api/auth/login", httpx.Handler(h.login))
 	mux.Handle("POST /api/auth/logout", httpx.Handler(h.logout))
 	mux.Handle("GET /api/auth/me", RequireUser(httpx.Handler(h.me)))
+	mux.Handle("GET /api/account/sessions", RequireUser(httpx.Handler(h.sessions)))
+	mux.Handle("POST /api/account/sessions/revoke-others", RequireUser(httpx.Handler(h.revokeOthers)))
+	mux.Handle("PATCH /api/account/profile", RequireUser(httpx.Handler(h.updateProfile)))
+	mux.Handle("POST /api/account/password", RequireUser(httpx.Handler(h.changePassword)))
 }
 
 // Middleware resolves the session cookie (if any) into a user on the request context.
@@ -169,7 +173,13 @@ func (h *Handler) startSession(w http.ResponseWriter, r *http.Request, u User, s
 			return err
 		}
 	}
-	token, expires, err := h.svc.CreateSession(r.Context(), u.ID, r.UserAgent())
+	country := ""
+	if h.trustProxy {
+		if c := r.Header.Get("CF-IPCountry"); len(c) == 2 && c != "XX" && c != "T1" {
+			country = strings.ToUpper(c)
+		}
+	}
+	token, expires, err := h.svc.CreateSession(r.Context(), u.ID, r.UserAgent(), country)
 	if err != nil {
 		return err
 	}

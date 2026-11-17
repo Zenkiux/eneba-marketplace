@@ -24,6 +24,7 @@ export interface Order {
   expiresAt: string
   paidAt: string | null
   lastPayment: 'succeeded' | 'declined' | null
+  paymentMethod: string | null
   items: OrderItem[]
   itemCount: number
   secondsToExpiry: number
@@ -86,8 +87,8 @@ export function usePayOrder(id: string) {
   const qc = useQueryClient()
   return useMutation({
     // A fresh attempt key per click; the server ignores a repeated key and returns its first result.
-    mutationFn: (outcome: 'success' | 'decline') =>
-      api.post<Order>(`/orders/${id}/payments`, { outcome }, { headers: { 'Idempotency-Key': crypto.randomUUID() } }),
+    mutationFn: ({ outcome, method }: { outcome: 'success' | 'decline'; method: string }) =>
+      api.post<Order>(`/orders/${id}/payments`, { outcome, method }, { headers: { 'Idempotency-Key': crypto.randomUUID() } }),
     onSuccess: (order) => {
       qc.setQueryData(['orders', id], order)
       forgetCheckoutKeys()

@@ -20,7 +20,7 @@ export interface ProductCard {
   discountPercent: number
   offerCount: number
   /** Minimum PC requirements as comparable numbers (PC games only). */
-  reqMin?: { os?: string; gpuScore?: number; cpuScore?: number; ramGb?: number } | null
+  reqMin?: RequirementLevel | null
 }
 
 export interface FacetValue extends Named {
@@ -57,6 +57,8 @@ export interface RequirementLevel {
   gpuScore?: number
   cpuScore?: number
   ramGb?: number
+  /** Parts the game lists that couldn't be turned into numbers (never treated as a pass). */
+  unchecked?: ('gpu' | 'cpu' | 'ram')[]
 }
 
 export interface Requirements {

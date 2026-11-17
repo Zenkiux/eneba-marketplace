@@ -43,7 +43,7 @@ const CardSelect = `
 SELECT p.id, p.slug, p.title, p.cover_url,
        pl.slug, pl.name, r.slug, r.name, t.slug, t.name,
        to_char(p.release_date, 'YYYY-MM-DD'), p.list_price_cents, s.min_price, s.offer_count,
-       p.req_min_os, p.req_min_gpu, p.req_min_cpu, p.req_min_ram::float8` + cardFrom
+       p.req_min_os, p.req_min_gpu, p.req_min_cpu, p.req_min_ram::float8, p.req_min_unchecked` + cardFrom
 
 const cardFrom = `
 FROM products p
@@ -63,11 +63,12 @@ func ScanCard(row pgx.Row) (Card, error) {
 	var os *string
 	var gpu, cpu *int
 	var ram *float64
+	var unchecked []string
 	err := row.Scan(&c.ID, &c.Slug, &c.Title, &c.CoverURL,
 		&c.Platform.Slug, &c.Platform.Name, &c.Region.Slug, &c.Region.Name, &c.Type.Slug, &c.Type.Name,
-		&c.ReleaseDate, &c.ListPriceCents, &c.MinPriceCents, &c.OfferCount, &os, &gpu, &cpu, &ram)
-	if os != nil || gpu != nil || cpu != nil || ram != nil {
-		c.ReqMin = &compat.Level{}
+		&c.ReleaseDate, &c.ListPriceCents, &c.MinPriceCents, &c.OfferCount, &os, &gpu, &cpu, &ram, &unchecked)
+	if os != nil || gpu != nil || cpu != nil || ram != nil || len(unchecked) > 0 {
+		c.ReqMin = &compat.Level{Unchecked: unchecked}
 		if os != nil {
 			c.ReqMin.OS = *os
 		}
@@ -205,10 +206,12 @@ func (f Filter) where(args pgx.NamedArgs, skip string) string {
 		args["works_ram"] = w.RAMGB
 		conds = append(conds, `r.slug = ANY(@works_regions)`, `(pl.slug = 'keyshop' OR pl.slug = ANY(@works_consoles)
 			OR (pl.slug = ANY(@works_pc)
-			    AND (p.req_min_os IS NULL OR @works_os = '' OR p.req_min_os = @works_os)
-			    AND (p.req_min_gpu IS NULL OR @works_gpu = 0 OR @works_gpu >= p.req_min_gpu)
-			    AND (p.req_min_cpu IS NULL OR @works_cpu = 0 OR @works_cpu >= p.req_min_cpu)
-			    AND (p.req_min_ram IS NULL OR @works_ram::float8 = 0 OR @works_ram::float8 >= p.req_min_ram)))`)
+			    AND (p.requirements IS NOT NULL OR t.slug NOT IN ('game', 'dlc'))
+			    AND cardinality(p.req_min_unchecked) = 0
+			    AND (p.req_min_os IS NULL OR p.req_min_os = @works_os)
+			    AND (p.req_min_gpu IS NULL OR @works_gpu >= p.req_min_gpu)
+			    AND (p.req_min_cpu IS NULL OR @works_cpu >= p.req_min_cpu)
+			    AND (p.req_min_ram IS NULL OR @works_ram::float8 >= p.req_min_ram)))`)
 	}
 	if f.MinPrice != nil {
 		args["min_price"] = *f.MinPrice

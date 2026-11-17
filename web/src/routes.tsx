@@ -1,6 +1,10 @@
 import type { RouteObject } from 'react-router'
 import { Layout } from './components/Layout'
-import { OrdersPage } from './features/account/OrdersPage'
+import { AccountLayout } from './features/account/AccountLayout'
+import { LibraryPage, LoginHistoryPage, OrdersPage, OverviewPage, TicketsPage } from './features/account/AccountPages'
+import { AddFundsPage, BonusPage, CashbackPage, RedeemPage, TransactionsPage, WalletPage } from './features/account/BalancePages'
+import { ConnectedAppsPage, MfaPage, PasswordPage, PersonalInfoPage } from './features/account/SettingsPages'
+import { WishlistPage } from './features/wishlist/WishlistPage'
 import { LoginPage } from './features/auth/LoginPage'
 import { RegisterPage } from './features/auth/RegisterPage'
 import { RequireAuth } from './features/auth/RequireAuth'
@@ -29,8 +33,31 @@ export const routes: RouteObject[] = [
       { path: 'checkout/:id/pay', element: <RequireAuth><PaymentPage /></RequireAuth> },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
-      { path: 'account/orders', element: <RequireAuth><OrdersPage /></RequireAuth> },
+      { path: 'wishlist', element: <RequireAuth><WishlistPage /></RequireAuth> },
       { path: 'orders/:id', element: <RequireAuth><OrderPage /></RequireAuth> },
+      { path: '*', element: <NotFoundPage /> },
+    ],
+  },
+  {
+    // my.eneba.com-style account area with its own shell (sign-in enforced inside the layout).
+    path: 'account',
+    element: <AccountLayout />,
+    children: [
+      { index: true, element: <OverviewPage /> },
+      { path: 'login-history', element: <LoginHistoryPage /> },
+      { path: 'wallet', element: <WalletPage /> },
+      { path: 'transactions', element: <TransactionsPage /> },
+      { path: 'cashback', element: <CashbackPage /> },
+      { path: 'bonus', element: <BonusPage /> },
+      { path: 'redeem-gift-card', element: <RedeemPage /> },
+      { path: 'add-funds', element: <AddFundsPage /> },
+      { path: 'orders', element: <OrdersPage /> },
+      { path: 'library', element: <LibraryPage /> },
+      { path: 'tickets', element: <TicketsPage /> },
+      { path: 'settings', element: <PersonalInfoPage /> },
+      { path: 'password', element: <PasswordPage /> },
+      { path: 'connected-apps', element: <ConnectedAppsPage /> },
+      { path: 'mfa', element: <MfaPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

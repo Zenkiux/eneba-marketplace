@@ -23,9 +23,10 @@ test('homepage → product → chosen seller → cart → sign-in → payment �
 
   // Order history shows the paid order; opening it shows the same key again.
   await page.goto('/account/orders')
-  const row = page.getByRole('link').filter({ hasText: title })
-  await expect(row.getByText('Paid')).toBeVisible()
-  await row.click()
+  const row = page.getByTestId('order-row').filter({ hasText: title })
+  await expect(row.getByText('Order fulfilled')).toBeVisible()
+  await expect(row.getByText('Credit or debit card')).toBeVisible()
+  await row.getByRole('link', { name: /^Details/ }).click()
   await expect(page).toHaveURL(orderUrl)
   await expect(page.getByTestId('game-key').first()).toHaveText(key!)
 

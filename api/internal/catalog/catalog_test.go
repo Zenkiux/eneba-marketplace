@@ -331,6 +331,10 @@ func TestWorksForMeFilter(t *testing.T) {
 	if !(strong > weak && weak > 0) {
 		t.Fatalf("a strong PC should get more games than a weak one (strong %d, weak %d)", strong, weak)
 	}
+	// Unknown hardware is not a pass: without GPU/CPU/RAM no game with requirements is listed.
+	if unknown := total("country=LT&os=windows"); unknown >= weak {
+		t.Fatalf("a PC with unknown hardware got %d products, more than a budget PC (%d)", unknown, weak)
+	}
 	// A Mac can't run the (Windows-only) demo games; only platform-free items remain.
 	mac := total("country=LT&os=mac&gpu=20000&cpu=1500&ram=32")
 	if mac >= weak {

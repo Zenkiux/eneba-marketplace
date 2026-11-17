@@ -1,0 +1,34 @@
+.page {
+  padding-top: 30px;
+  padding-bottom: 60px;
+}
+
+.h1 {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 25px;
+  font-size: var(--font-size-store-h1);
+  font-weight: var(--font-weight-bold);
+}
+
+.count {
+  color: var(--color-text-muted);
+  font-size: 2rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 20px;
+}
+
+.cta {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 10px 20px;
+  background: var(--color-cta);
+  color: var(--color-cta-text);
+  font-weight: var(--font-weight-extrabold);
+  text-decoration: none;
+}

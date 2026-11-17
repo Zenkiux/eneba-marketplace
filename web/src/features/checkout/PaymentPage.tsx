@@ -61,7 +61,7 @@ export function PaymentPage() {
 
   function submit() {
     if (!chosen) return
-    pay.mutate(chosen.outcome, { onSuccess: (paid) => navigate(`/orders/${paid.id}`, { replace: true }) })
+    pay.mutate({ outcome: chosen.outcome, method: chosen.id }, { onSuccess: (paid) => navigate(`/orders/${paid.id}`, { replace: true }) })
   }
 
   return (

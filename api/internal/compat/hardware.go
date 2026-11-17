@@ -23,6 +23,33 @@ type GPU struct {
 
 // GPUs, approximate relative performance (≈ Time Spy graphics score).
 var GPUs = []GPU{
+	// Older cards (pre-DirectX 12) can't run Time Spy; their numbers are extrapolated from
+	// relative benchmarks of the time so that old minimum requirements can still be compared.
+	{"GeForce FX 5900", 20}, {"GeForce 6800", 40}, {"GeForce 7600 GT", 60}, {"GeForce 7900 GT", 80},
+	{"GeForce 8600 GT", 110}, {"GeForce 8800 GTS", 280}, {"GeForce 8800 GT", 300}, {"GeForce 8800 GTX", 340}, {"GeForce 8800", 280},
+	{"GeForce 9600 GT", 230}, {"GeForce 9800 GT", 310}, {"GeForce 9800 GTX", 360}, {"GeForce GTS 250", 380},
+	{"GeForce GTX 260", 450}, {"GeForce GTX 275", 520}, {"GeForce GTX 285", 560},
+	{"GeForce GT 420", 140}, {"GeForce GT 430", 170}, {"GeForce GT 440", 230}, {"GeForce GTS 450", 430},
+	{"GeForce GTX 460", 700}, {"GeForce GTX 465", 750}, {"GeForce GTX 470", 850}, {"GeForce GTX 480", 950},
+	{"GeForce GT 520", 120}, {"GeForce GT 610", 120}, {"GeForce GT 620", 140}, {"GeForce GT 630", 240}, {"GeForce GT 640", 350},
+	{"GeForce GT 710", 150}, {"GeForce GT 720", 180}, {"GeForce GT 730", 260}, {"GeForce GT 740", 450},
+	{"GeForce GTX 550 Ti", 600}, {"GeForce GTX 560", 800}, {"GeForce GTX 560 Ti", 900}, {"GeForce GTX 570", 1000}, {"GeForce GTX 580", 1100},
+	{"GeForce GTX 650", 600}, {"GeForce GTX 650 Ti", 850}, {"GeForce GTX 650 Ti Boost", 1300}, {"GeForce GTX 660 Ti", 2000},
+	{"GeForce GTX 670", 2300}, {"GeForce GTX 680", 2500}, {"GeForce GTX 690", 3500}, {"GeForce GTX 750", 1000},
+	{"GeForce GTX 780", 2900}, {"GeForce GTX 780 Ti", 3500}, {"GeForce GTX Titan", 3200}, {"GeForce GTX 950", 1900},
+	{"GeForce GTX 1630", 2300},
+	{"Radeon 9800", 20}, {"Radeon X1950", 90}, {"Radeon HD 2600", 90}, {"Radeon HD 2900", 180}, {"Radeon HD 3850", 200},
+	{"Radeon HD 3870", 230}, {"Radeon HD 4650", 140}, {"Radeon HD 4850", 300}, {"Radeon HD 4870", 350}, {"Radeon HD 4890", 400},
+	{"Radeon HD 5450", 60}, {"Radeon HD 5570", 180}, {"Radeon HD 5670", 280}, {"Radeon HD 5750", 400}, {"Radeon HD 5770", 450},
+	{"Radeon HD 5850", 650}, {"Radeon HD 5870", 750}, {"Radeon HD 6450", 100}, {"Radeon HD 6570", 250}, {"Radeon HD 6670", 350},
+	{"Radeon HD 6770", 450}, {"Radeon HD 6790", 550}, {"Radeon HD 6850", 650}, {"Radeon HD 6870", 750}, {"Radeon HD 6950", 900},
+	{"Radeon HD 6970", 1000}, {"Radeon HD 7750", 600}, {"Radeon HD 7770", 800}, {"Radeon HD 7790", 1100}, {"Radeon HD 7850", 1500},
+	{"Radeon HD 7870", 1800}, {"Radeon HD 7950", 2100}, {"Radeon HD 7970", 2500}, {"Radeon R7 240", 300}, {"Radeon R7 250", 450},
+	{"Radeon R7 260X", 1100}, {"Radeon R7 360", 1000}, {"Radeon R7 370", 1600}, {"Radeon R9 270X", 2000}, {"Radeon R9 380", 2900},
+	{"Radeon R9 390X", 4000}, {"Radeon R9 Fury", 5000},
+	{"Intel GMA", 10}, {"Intel HD Graphics 2000", 60}, {"Intel HD Graphics 3000", 100}, {"Intel HD Graphics 2500", 90},
+	{"Intel HD Graphics 4400", 250}, {"Intel HD Graphics 4600", 300}, {"Intel HD Graphics 5500", 300}, {"Intel HD Graphics 520", 350},
+	{"Intel HD Graphics 530", 400}, {"Intel HD Graphics 630", 450},
 	// NVIDIA desktop
 	{"GeForce GT 1030", 1100}, {"GeForce GTX 750 Ti", 1200}, {"GeForce GTX 660", 1700}, {"GeForce GTX 760", 2000},
 	{"GeForce GTX 770", 2400}, {"GeForce GTX 960", 2500}, {"GeForce GTX 970", 3400}, {"GeForce GTX 980", 4100},
@@ -63,14 +90,18 @@ var GPUs = []GPU{
 	{"Apple M4 Pro", 7000}, {"Apple M4 Max", 14000},
 }
 
-var spaces = regexp.MustCompile(`\s+`)
+var (
+	spaces     = regexp.MustCompile(`\s+`)
+	gluedModel = regexp.MustCompile(`\b(hd|gtx|gts|gt|rtx|rx|r[579])(\d)`)
+)
 
 func canon(s string) string {
 	s = strings.ToLower(s)
-	for _, w := range []string{"nvidia", "geforce", "amd", "ati", "(r)", "(tm)", "®", "™", "graphics card", "series"} {
+	for _, w := range []string{"nvidia", "geforce", "gforce", "radeon", "amd", "ati ", "(r)", "(tm)", "®", "™", "graphics card", "graphics", "series"} {
 		s = strings.ReplaceAll(s, w, " ")
 	}
 	s = regexp.MustCompile(`[^a-z0-9 ]`).ReplaceAllString(s, " ")
+	s = gluedModel.ReplaceAllString(s, "$1 $2") // "hd6950" → "hd 6950", "gtx970" → "gtx 970"
 	return strings.TrimSpace(spaces.ReplaceAllString(s, " "))
 }
 
@@ -99,6 +130,11 @@ func MatchGPU(text string) (GPU, bool) {
 	return GPU{}, false
 }
 
+// Requirements that name no card but only a tiny amount of video memory or an old DirectX
+// version ("128 MB VRAM", "DirectX 9.0c compatible"): any graphics chip from the last 15 years
+// meets them.
+var trivialGPU = regexp.MustCompile(`(?i)^\D*\b(?:32|64|128|256|512)\s*mb\b|directx\s*(?:9|10)\b|dx\s*(?:9|10)\b|shader model [23]\b|opengl\s*[23]`)
+
 // RequiredGPUScore reads a requirement like "GTX 1060 | RX 580" and returns the lowest score
 // among the listed alternatives (either card is enough). ok=false if none is recognised.
 func RequiredGPUScore(text string) (int, bool) {
@@ -108,11 +144,14 @@ func RequiredGPUScore(text string) (int, bool) {
 			best, ok = g.Score, true
 		}
 	}
+	if !ok && trivialGPU.MatchString(text) {
+		return 10, true
+	}
 	return best, ok
 }
 
 func splitAlternatives(text string) []string {
-	return regexp.MustCompile(`\s*(?:\||/|\bor\b|;)\s*`).Split(text, -1)
+	return regexp.MustCompile(`(?i)\s*(?:\||/|\(or\)|\bor\b|;|,\s*(?:amd|nvidia|intel|ati)\b)\s*`).Split(text, -1)
 }
 
 // ---------------------------------------------------------------- CPUs
@@ -122,7 +161,12 @@ var (
 	intelUltra = regexp.MustCompile(`(?i)core\s*ultra\s*([579])`)
 	amdRyzen   = regexp.MustCompile(`(?i)ryzen\s*([3579])\s*(?:pro\s*)?(\d{4})`)
 	amdFX      = regexp.MustCompile(`(?i)\bfx[\s-]*(\d{4})`)
-	oldCPU     = regexp.MustCompile(`(?i)core\s*2|phenom|athlon|pentium|celeron|i[357][\s-]*\d{3}\b`)
+	firstGenI  = regexp.MustCompile(`(?i)\bi[357][\s-]*\d{3}\b`)
+	genericI   = regexp.MustCompile(`(?i)\b(?:core\s*)?i([3579])\b`)
+	genericRyz = regexp.MustCompile(`(?i)ryzen\s*([3579])\b`)
+	quadOld    = regexp.MustCompile(`(?i)core\s*2\s*quad|\bq[69]\d{3}\b|phenom|athlon\s*ii\s*x4|quad[\s-]*core|\b4\s*cores?\b`)
+	dualOld    = regexp.MustCompile(`(?i)core\s*2|core\s*duo|pentium|celeron|athlon|dual[\s-]*core|\bx2\b|\be[4-8]\d{3}\b`)
+	ghzOnly    = regexp.MustCompile(`(?i)\d(?:\.\d+)?\s*ghz|\bsse2\b|pentium\s*(?:4|iv)|athlon\s*64`)
 )
 
 // CPUScore estimates a CPU's gaming performance (≈ relative index, 1000 = Core i5-8400) from
@@ -149,8 +193,26 @@ func CPUScore(text string) (int, bool) {
 	if amdFX.MatchString(text) {
 		return 450, true
 	}
-	if oldCPU.MatchString(text) {
+	if firstGenI.MatchString(text) {
+		return 350, true
+	}
+	if m := genericI.FindStringSubmatch(text); m != nil { // "Intel Core i5" with no model number
+		tier, _ := strconv.Atoi(m[1])
+		return 450 + (tier-3)*50, true
+	}
+	if m := genericRyz.FindStringSubmatch(text); m != nil {
+		tier, _ := strconv.Atoi(m[1])
+		return 700 + (tier-3)*50, true
+	}
+	// Old and generic descriptions, from the strongest to the weakest.
+	if quadOld.MatchString(text) {
 		return 300, true
+	}
+	if dualOld.MatchString(text) {
+		return 180, true
+	}
+	if ghzOnly.MatchString(text) {
+		return 100, true
 	}
 	return 0, false
 }

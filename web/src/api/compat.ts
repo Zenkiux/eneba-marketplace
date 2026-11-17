@@ -26,3 +26,7 @@ export function useGPUs() {
     staleTime: Infinity,
   })
 }
+
+export function scoreCPU(name: string) {
+  return api.get<{ score: number; matched: boolean }>(`/compat/cpu?name=${encodeURIComponent(name)}`)
+}

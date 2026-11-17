@@ -76,3 +76,45 @@ func TestRegions(t *testing.T) {
 		}
 	}
 }
+
+// Regression: an old PC used to "pass" GTA V because its minimum graphics card (GeForce 9800 GT)
+// wasn't recognised and the graphics check was silently skipped.
+func TestOldPCAgainstGTAV(t *testing.T) {
+	gta := ParseLevel(map[string]string{
+		"System requirements": "Windows 10 64 Bit, Windows 8.1 64 Bit", "Memory": "4 GB RAM",
+		"Graphics":  "NVIDIA GeForce 9800 GT 1GB / AMD Radeon HD 4870 1GB",
+		"Processor": "Intel Core 2 Quad Q6600 2.40 GHz / AMD Phenom 9850 2.5 GHz",
+	})
+	if gta.GPUScore != 310 || gta.CPUScore != 300 || gta.RAMGB != 4 || len(gta.Unchecked) != 0 {
+		t.Fatalf("GTA V minimum parsed as %+v", gta)
+	}
+	gt520, _ := MatchGPU("GeForce GT 520")
+	core2duo, _ := CPUScore("Intel Core 2 Duo E8400")
+	old := Device{OS: "windows", GPUScore: gt520.Score, CPUScore: core2duo, RAMGB: 2}
+	if c := Compare(old, gta); c.Meets || len(c.Short) != 3 {
+		t.Fatalf("Core 2 Duo + GT 520 + 2 GB must fail GTA V on gpu, cpu and ram: %+v", c)
+	}
+	gtx750, _ := MatchGPU("GeForce GTX 750 Ti")
+	ok := Device{OS: "windows", GPUScore: gtx750.Score, CPUScore: 600, RAMGB: 8}
+	if c := Compare(ok, gta); !c.Meets {
+		t.Fatalf("i5 + GTX 750 Ti + 8 GB meets GTA V minimum: %+v", c)
+	}
+}
+
+func TestUnrecognisedRequirementIsUnchecked(t *testing.T) {
+	l := ParseLevel(map[string]string{"Graphics": "GeForce GTX 500 or similar", "Memory": "4 GB"})
+	if l == nil || len(l.Unchecked) != 1 || l.Unchecked[0] != "gpu" {
+		t.Fatalf("unknown card must be reported as unchecked, got %+v", l)
+	}
+	for in, want := range map[string]int{"128 MB VRAM": 10, "Radeon HD6950 / GeForce GTX 570": 900, "GTX 580 / AMD HD 7870": 1100,
+		"Nvidia Geforce 8600 GT (OR) ATI Radeon HD 2600 Pro (OR) equivalent": 90, "Intel HD 3000. Radeon 4xxx (or below)s": 100} {
+		if got, ok := RequiredGPUScore(in); !ok || got != want {
+			t.Errorf("RequiredGPUScore(%q) = %d %v, want %d", in, got, ok, want)
+		}
+	}
+	for in, want := range map[string]int{"Dual core CPU 2.4 GHz": 180, "1 GHz": 100, "Intel Core i3": 450, "Quad-core Intel or AMD, 2.5 GHz": 300} {
+		if got, ok := CPUScore(in); !ok || got != want {
+			t.Errorf("CPUScore(%q) = %d %v, want %d", in, got, ok, want)
+		}
+	}
+}

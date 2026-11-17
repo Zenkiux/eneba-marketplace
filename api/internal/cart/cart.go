@@ -60,7 +60,7 @@ SELECT o.id, o.price_cents, o.currency,
        (SELECT count(*)::int FROM offer_keys k WHERE k.offer_id = o.id AND k.status = 'available'),
        o.active, se.slug, se.name, se.rating::float8, se.verified,
        p.slug, p.title, p.cover_url, pl.slug, pl.name, r.slug, r.name,
-       p.req_min_os, p.req_min_gpu, p.req_min_cpu, p.req_min_ram::float8
+       p.req_min_os, p.req_min_gpu, p.req_min_cpu, p.req_min_ram::float8, p.req_min_unchecked
 FROM offers o
 JOIN sellers se ON se.id = o.seller_id
 JOIN products p ON p.id = o.product_id
@@ -68,16 +68,17 @@ JOIN platforms pl ON pl.id = p.platform_id
 JOIN regions r ON r.id = p.region_id`
 
 type reqCols struct {
-	os       *string
-	gpu, cpu *int
-	ram      *float64
+	os        *string
+	gpu, cpu  *int
+	ram       *float64
+	unchecked []string
 }
 
 func (c reqCols) level() *compat.Level {
-	if c.os == nil && c.gpu == nil && c.cpu == nil && c.ram == nil {
+	if c.os == nil && c.gpu == nil && c.cpu == nil && c.ram == nil && len(c.unchecked) == 0 {
 		return nil
 	}
-	l := &compat.Level{}
+	l := &compat.Level{Unchecked: c.unchecked}
 	if c.os != nil {
 		l.OS = *c.os
 	}
@@ -101,7 +102,7 @@ func scanLine(row pgx.Row) (Line, error) {
 		&l.Seller.Slug, &l.Seller.Name, &l.Seller.Rating, &l.Seller.Verified,
 		&l.Product.Slug, &l.Product.Title, &l.Product.CoverURL,
 		&l.Product.Platform.Slug, &l.Product.Platform.Name, &l.Product.Region.Slug, &l.Product.Region.Name,
-		&rc.os, &rc.gpu, &rc.cpu, &rc.ram)
+		&rc.os, &rc.gpu, &rc.cpu, &rc.ram, &rc.unchecked)
 	l.Available = active && l.Stock > 0
 	l.Product.ReqMin = rc.level()
 	return l, err
@@ -142,7 +143,7 @@ func (s *Store) Get(ctx context.Context, userID string) (Cart, error) {
 			&l.Seller.Slug, &l.Seller.Name, &l.Seller.Rating, &l.Seller.Verified,
 			&l.Product.Slug, &l.Product.Title, &l.Product.CoverURL,
 			&l.Product.Platform.Slug, &l.Product.Platform.Name, &l.Product.Region.Slug, &l.Product.Region.Name,
-			&rc.os, &rc.gpu, &rc.cpu, &rc.ram)
+			&rc.os, &rc.gpu, &rc.cpu, &rc.ram, &rc.unchecked)
 		l.Quantity = qty
 		l.Available = active && l.Stock > 0
 		l.Product.ReqMin = rc.level()
