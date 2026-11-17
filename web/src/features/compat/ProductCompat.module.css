@@ -1,0 +1,111 @@
+.box {
+  margin-top: 50px;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.h2 {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-h2);
+}
+
+.setup {
+  padding: 18px 20px;
+  background: var(--color-bg-row);
+}
+
+.setup a,
+.small a {
+  color: var(--color-cta);
+  font-weight: var(--font-weight-semibold);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 860px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rows li {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 14px 20px;
+  background: var(--color-bg-row);
+}
+
+.rows li div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--font-size-nav);
+}
+
+.rows li span {
+  color: var(--color-text-soft);
+}
+
+.ok svg {
+  flex: none;
+  color: var(--color-positive);
+}
+
+.no svg {
+  flex: none;
+  color: var(--color-region);
+}
+
+.unknown svg {
+  flex: none;
+  color: var(--color-text-muted);
+}
+
+.small {
+  margin-top: 10px;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-card-title);
+}
+
+.tables {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  max-width: 860px;
+  margin-top: 22px;
+}
+
+.table {
+  border-collapse: collapse;
+  font-size: var(--font-size-nav);
+}
+
+.table caption {
+  margin-bottom: 8px;
+  font-weight: var(--font-weight-bold);
+  text-align: left;
+}
+
+.table th,
+.table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+  text-align: left;
+  vertical-align: top;
+}
+
+.table th {
+  width: 38%;
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-semibold);
+}

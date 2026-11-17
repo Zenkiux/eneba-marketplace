@@ -6,6 +6,7 @@ describe('store URL state', () => {
     const url = new URLSearchParams('q=star&platform=steam,gog&region=global&type=game&min_price=500&max_price=4000&sort=price_asc&page=3')
     const state = parseStoreParams(url)
     expect(state).toEqual({
+      works: false,
       q: 'star', platform: ['steam', 'gog'], region: ['global'], type: ['game'],
       minPrice: 500, maxPrice: 4000, sort: 'price_asc', page: 3,
     })
@@ -36,6 +37,15 @@ describe('store URL state', () => {
     const s = parseStoreParams(new URLSearchParams('page=4&platform=steam'))
     expect(toggle(s, 'platform', 'steam')).toMatchObject({ platform: [], page: 1 })
     expect(toggle(s, 'platform', 'gog')).toMatchObject({ platform: ['steam', 'gog'], page: 1 })
+  })
+
+  it('adds the device profile only when "works for me" is on', () => {
+    const profile = new URLSearchParams('works=1&country=LT&gpu=8800')
+    const off = new URLSearchParams(toApiQuery(parseStoreParams(new URLSearchParams('')), profile))
+    expect(off.get('works')).toBeNull()
+    const on = new URLSearchParams(toApiQuery(parseStoreParams(new URLSearchParams('works=1')), profile))
+    expect(on.get('works')).toBe('1')
+    expect(on.get('gpu')).toBe('8800')
   })
 
   it('converts euro input to cents', () => {

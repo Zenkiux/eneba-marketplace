@@ -103,6 +103,16 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	f.Source = SourceFrom(r.Context())
+	if r.URL.Query().Get("works") == "1" {
+		w, err := parseWorks(r)
+		if err != nil {
+			return err
+		}
+		if w.Regions, err = h.store.AllowedRegions(r.Context(), r.URL.Query().Get("country")); err != nil {
+			return err
+		}
+		f.Works = w
+	}
 	page, err := h.store.List(r.Context(), f)
 	if err != nil {
 		return err
@@ -157,4 +167,50 @@ func (h *Handler) catalogs(w http.ResponseWriter, r *http.Request) error {
 	}
 	httpx.JSON(w, http.StatusOK, map[string]any{"catalogs": list})
 	return nil
+}
+
+// parseWorks reads the visitor's device profile for the "works for me" filter:
+// ?works=1&country=LT&os=windows&gpu=8800&cpu=1100&ram=16&consoles=psn,xbox
+func parseWorks(r *http.Request) (*Works, error) {
+	q := r.URL.Query()
+	w := &Works{}
+	switch os := q.Get("os"); os {
+	case "", "windows", "mac", "linux":
+		w.OS = os
+	default:
+		return nil, bad("os must be windows, mac or linux")
+	}
+	num := func(name string, max int) (int, error) {
+		v := q.Get(name)
+		if v == "" {
+			return 0, nil
+		}
+		n, err := strconv.Atoi(v)
+		if err != nil || n < 0 || n > max {
+			return 0, bad(name + " is out of range")
+		}
+		return n, nil
+	}
+	var err error
+	if w.GPUScore, err = num("gpu", 100000); err != nil {
+		return nil, err
+	}
+	if w.CPUScore, err = num("cpu", 10000); err != nil {
+		return nil, err
+	}
+	ram, err := num("ram", 1024)
+	if err != nil {
+		return nil, err
+	}
+	w.RAMGB = float64(ram)
+	for _, c := range list(q.Get("consoles")) {
+		if c != "psn" && c != "xbox" && c != "nintendo" {
+			return nil, bad("consoles may contain psn, xbox, nintendo")
+		}
+		w.Consoles = append(w.Consoles, c)
+	}
+	if c := q.Get("country"); c != "" && (len(c) != 2 || strings.ToUpper(c) != c) {
+		return nil, bad("country must be a two-letter code like LT")
+	}
+	return w, nil
 }

@@ -2,6 +2,7 @@
 // between the browser's query string and the API's query string.
 
 export interface StoreState {
+  works: boolean // "Works for me" (uses the saved device profile)
   q: string
   platform: string[]
   region: string[]
@@ -38,6 +39,7 @@ export function parseStoreParams(params: URLSearchParams): StoreState {
   const q = (params.get('q') ?? '').trim()
   const page = Number(params.get('page'))
   return {
+    works: params.get('works') === '1',
     q,
     platform: list(params.get('platform')),
     region: list(params.get('region')),
@@ -61,14 +63,17 @@ export function toUrlParams(s: StoreState): URLSearchParams {
   const defaultSort = s.q ? RELEVANCE.value : 'popular'
   if (s.sort !== defaultSort) p.set('sort', s.sort)
   if (s.page > 1) p.set('page', String(s.page))
+  if (s.works) p.set('works', '1')
   return p
 }
 
-/** Query string for GET /api/products. */
-export function toApiQuery(s: StoreState): string {
+/** Query string for GET /api/products. `works` adds the visitor's device profile. */
+export function toApiQuery(s: StoreState, works?: URLSearchParams | null): string {
   const p = toUrlParams(s)
+  p.delete('works')
   p.set('sort', s.sort)
   p.set('page_size', String(PAGE_SIZE))
+  if (s.works && works) works.forEach((v, k) => p.set(k, v))
   return p.toString()
 }
 

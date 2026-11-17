@@ -19,6 +19,8 @@ export interface ProductCard {
   minPriceCents: number | null
   discountPercent: number
   offerCount: number
+  /** Minimum PC requirements as comparable numbers (PC games only). */
+  reqMin?: { os?: string; gpuScore?: number; cpuScore?: number; ramGb?: number } | null
 }
 
 export interface FacetValue extends Named {
@@ -50,11 +52,26 @@ export interface Offer {
   seller: Seller
 }
 
+export interface RequirementLevel {
+  os?: string
+  gpuScore?: number
+  cpuScore?: number
+  ramGb?: number
+}
+
+export interface Requirements {
+  minimum?: RequirementLevel
+  recommended?: RequirementLevel
+  rawMinimum?: Record<string, string>
+  rawRecommended?: Record<string, string>
+}
+
 export interface ProductDetail extends ProductCard {
   description: string
   developer: string
   publisher: string
   genres: string[]
+  requirements: Requirements | null
   offers: Offer[]
 }
 
@@ -92,7 +109,7 @@ export interface CartLine {
   stock: number
   available: boolean
   seller: { slug: string; name: string; rating: number; verified: boolean }
-  product: { slug: string; title: string; coverUrl: string; platform: Named; region: Named }
+  product: { slug: string; title: string; coverUrl: string; platform: Named; region: Named; reqMin?: ProductCard['reqMin'] }
 }
 
 export interface Cart {

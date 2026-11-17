@@ -1,6 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles/global.css'
+import { getLocale, LANGUAGES } from './i18n/locale'
+
+document.documentElement.lang = LANGUAGES.find((l) => l.code === getLocale().lang)?.htmlLang ?? 'en'
 import { App } from './App'
 
 const container = document.getElementById('root')

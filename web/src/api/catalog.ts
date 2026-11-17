@@ -2,11 +2,12 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { api } from './client'
 import type { HomeSection, HomeSectionRef, ProductCard, ProductDetail, ProductPage } from './types'
 
-export function useProducts(query: string) {
+export function useProducts(query: string, enabled = true) {
   return useQuery({
     queryKey: ['products', query],
     queryFn: ({ signal }) => api.get<ProductPage>(`/products?${query}`, { signal }),
     placeholderData: keepPreviousData,
+    enabled,
   })
 }
 

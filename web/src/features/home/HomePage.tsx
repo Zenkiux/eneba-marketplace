@@ -1,6 +1,7 @@
 import { useHomeLayout } from '../../api/catalog'
 import { Container } from '../../components/Container'
 import { ErrorState } from '../../components/States'
+import { useI18n } from '../../i18n/useI18n'
 import { sectionComponents } from './sections/registry-components'
 
 /**
@@ -9,6 +10,7 @@ import { sectionComponents } from './sections/registry-components'
  */
 export function HomePage() {
   const { data, isPending, isError, error, refetch } = useHomeLayout()
+  const { t } = useI18n()
   if (isError) {
     return (
       <Container>
@@ -19,7 +21,7 @@ export function HomePage() {
   if (isPending) return <div style={{ minHeight: '80vh' }} aria-busy="true" />
   return (
     <>
-      <h1 className="visuallyHidden">keyshop — digital game keys</h1>
+      <h1 className="visuallyHidden">{t('keyshop — digital game keys')}</h1>
       {data.sections.map((s) => {
         const Section = sectionComponents[s.type]
         return Section ? <Section key={s.key} sectionKey={s.key} title={s.title} /> : null

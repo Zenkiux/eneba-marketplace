@@ -4,6 +4,7 @@ import { useMe } from '../../api/auth'
 import { ApiError, api } from '../../api/client'
 import type { Cart } from '../../api/types'
 import { showToast } from '../../components/toastBus'
+import { useI18n } from '../../i18n/useI18n'
 import { guestCart, MAX_QUANTITY } from './guestCart'
 
 /**
@@ -14,6 +15,7 @@ import { guestCart, MAX_QUANTITY } from './guestCart'
  */
 export function useCart() {
   const qc = useQueryClient()
+  const { t } = useI18n()
   const me = useMe()
   const signedIn = !!me.data
   const guestLines = useSyncExternalStore(guestCart.subscribe, guestCart.get)
@@ -35,7 +37,7 @@ export function useCart() {
     mutationFn: ({ offerId, quantity }: { offerId: number; quantity: number }) =>
       api.put<Cart>(`/cart/items/${offerId}`, { quantity }),
     onSuccess: (cart) => qc.setQueryData(['cart'], cart),
-    onError: (e) => showToast(e instanceof ApiError ? e.message : 'Could not update the cart'),
+    onError: (e) => showToast(e instanceof ApiError ? e.message : t('Could not update the cart')),
   })
   const removeServer = useMutation({
     mutationFn: (offerId: number) => api.delete<Cart>(`/cart/items/${offerId}`),
@@ -64,11 +66,11 @@ export function useCart() {
         const current = server.data?.lines.find((l) => l.offerId === offerId)?.quantity ?? 0
         setServer.mutate(
           { offerId, quantity: Math.min(current + quantity, cap) },
-          { onSuccess: () => label && showToast(`Added to cart: ${label}`) },
+          { onSuccess: () => label && showToast(t('Added to cart: {label}', { label })) },
         )
       } else {
         guestCart.add(offerId, quantity, maxStock)
-        if (label) showToast(`Added to cart: ${label}`)
+        if (label) showToast(t('Added to cart: {label}', { label }))
       }
     },
     setQuantity(offerId: number, quantity: number) {

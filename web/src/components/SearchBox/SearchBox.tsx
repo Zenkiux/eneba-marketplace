@@ -2,14 +2,14 @@ import { Search, X } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router'
 import { useSuggestions } from '../../api/catalog'
-import { formatCents } from '../../lib/money'
+import { useI18n } from '../../i18n/useI18n'
 import styles from './SearchBox.module.css'
 
 function useDebounced<T>(value: T, ms: number): T {
   const [v, setV] = useState(value)
   useEffect(() => {
-    const t = setTimeout(() => setV(value), ms)
-    return () => clearTimeout(t)
+    const timer = setTimeout(() => setV(value), ms)
+    return () => clearTimeout(timer)
   }, [value, ms])
   return v
 }
@@ -23,6 +23,7 @@ export function SearchBox({ autoFocus = false, onDone }: { autoFocus?: boolean; 
   const [params] = useSearchParams()
   const location = useLocation()
   const navigate = useNavigate()
+  const { t, money } = useI18n()
   const [text, setText] = useState(() => (location.pathname === '/store' ? (params.get('q') ?? '') : ''))
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(-1)
@@ -97,8 +98,8 @@ export function SearchBox({ autoFocus = false, onDone }: { autoFocus?: boolean; 
           autoFocus={autoFocus}
           autoComplete="off"
           maxLength={100}
-          placeholder="Search for games, gift cards and more"
-          aria-label="Search products"
+          placeholder={t('Search for games, gift cards and more')}
+          aria-label={t('Search products')}
           role="combobox"
           aria-expanded={showList}
           aria-controls={listId}
@@ -113,13 +114,13 @@ export function SearchBox({ autoFocus = false, onDone }: { autoFocus?: boolean; 
           onKeyDown={onKeyDown}
         />
         {text && (
-          <button type="button" className={styles.clear} aria-label="Clear search" onClick={() => setText('')}>
+          <button type="button" className={styles.clear} aria-label={t('Clear search')} onClick={() => setText('')}>
             <X size={18} aria-hidden="true" />
           </button>
         )}
       </form>
       {showList && (
-        <ul id={listId} role="listbox" className={styles.list} aria-label="Suggestions" aria-busy={isFetching}>
+        <ul id={listId} role="listbox" className={styles.list} aria-label={t('Suggestions')} aria-busy={isFetching}>
           {items.map((p, i) => (
             <li
               key={p.id}
@@ -136,7 +137,7 @@ export function SearchBox({ autoFocus = false, onDone }: { autoFocus?: boolean; 
               <img referrerPolicy="no-referrer" src={p.coverUrl} alt="" width={36} height={54} />
               <span className={styles.optTitle}>{p.title}</span>
               <span className={styles.optPrice}>
-                {p.minPriceCents === null ? 'Sold out' : formatCents(p.minPriceCents)}
+                {p.minPriceCents === null ? t('Sold out') : money(p.minPriceCents)}
               </span>
             </li>
           ))}
@@ -148,7 +149,7 @@ export function SearchBox({ autoFocus = false, onDone }: { autoFocus?: boolean; 
                 goToResults()
               }}
             >
-              See all results for “{text.trim()}”
+              {t('See all results for “{q}”', { q: text.trim() })}
             </button>
           </li>
         </ul>

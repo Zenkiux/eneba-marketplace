@@ -15,6 +15,7 @@ import (
 
 	"github.com/Zenkiux/eneba-marketplace/api/internal/auth"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/catalog"
+	"github.com/Zenkiux/eneba-marketplace/api/internal/compat"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/httpx"
 )
 
@@ -44,6 +45,7 @@ type ProductRef struct {
 	CoverURL string        `json:"coverUrl"`
 	Platform catalog.Named `json:"platform"`
 	Region   catalog.Named `json:"region"`
+	ReqMin   *compat.Level `json:"reqMin,omitempty"` // for the "Will it work for me?" cart warning
 }
 
 // Cart is the response for every cart endpoint.
@@ -57,21 +59,51 @@ const lineSelect = `
 SELECT o.id, o.price_cents, o.currency,
        (SELECT count(*)::int FROM offer_keys k WHERE k.offer_id = o.id AND k.status = 'available'),
        o.active, se.slug, se.name, se.rating::float8, se.verified,
-       p.slug, p.title, p.cover_url, pl.slug, pl.name, r.slug, r.name
+       p.slug, p.title, p.cover_url, pl.slug, pl.name, r.slug, r.name,
+       p.req_min_os, p.req_min_gpu, p.req_min_cpu, p.req_min_ram::float8
 FROM offers o
 JOIN sellers se ON se.id = o.seller_id
 JOIN products p ON p.id = o.product_id
 JOIN platforms pl ON pl.id = p.platform_id
 JOIN regions r ON r.id = p.region_id`
 
+type reqCols struct {
+	os       *string
+	gpu, cpu *int
+	ram      *float64
+}
+
+func (c reqCols) level() *compat.Level {
+	if c.os == nil && c.gpu == nil && c.cpu == nil && c.ram == nil {
+		return nil
+	}
+	l := &compat.Level{}
+	if c.os != nil {
+		l.OS = *c.os
+	}
+	if c.gpu != nil {
+		l.GPUScore = *c.gpu
+	}
+	if c.cpu != nil {
+		l.CPUScore = *c.cpu
+	}
+	if c.ram != nil {
+		l.RAMGB = *c.ram
+	}
+	return l
+}
+
 func scanLine(row pgx.Row) (Line, error) {
 	var l Line
 	var active bool
+	var rc reqCols
 	err := row.Scan(&l.OfferID, &l.PriceCents, &l.Currency, &l.Stock, &active,
 		&l.Seller.Slug, &l.Seller.Name, &l.Seller.Rating, &l.Seller.Verified,
 		&l.Product.Slug, &l.Product.Title, &l.Product.CoverURL,
-		&l.Product.Platform.Slug, &l.Product.Platform.Name, &l.Product.Region.Slug, &l.Product.Region.Name)
+		&l.Product.Platform.Slug, &l.Product.Platform.Name, &l.Product.Region.Slug, &l.Product.Region.Name,
+		&rc.os, &rc.gpu, &rc.cpu, &rc.ram)
 	l.Available = active && l.Stock > 0
+	l.Product.ReqMin = rc.level()
 	return l, err
 }
 
@@ -105,12 +137,15 @@ func (s *Store) Get(ctx context.Context, userID string) (Cart, error) {
 		var qty int
 		var l Line
 		var active bool
+		var rc reqCols
 		err := r.Scan(&qty, &l.OfferID, &l.PriceCents, &l.Currency, &l.Stock, &active,
 			&l.Seller.Slug, &l.Seller.Name, &l.Seller.Rating, &l.Seller.Verified,
 			&l.Product.Slug, &l.Product.Title, &l.Product.CoverURL,
-			&l.Product.Platform.Slug, &l.Product.Platform.Name, &l.Product.Region.Slug, &l.Product.Region.Name)
+			&l.Product.Platform.Slug, &l.Product.Platform.Name, &l.Product.Region.Slug, &l.Product.Region.Name,
+			&rc.os, &rc.gpu, &rc.cpu, &rc.ram)
 		l.Quantity = qty
 		l.Available = active && l.Stock > 0
+		l.Product.ReqMin = rc.level()
 		return l, err
 	})
 	return summarise(lines), err

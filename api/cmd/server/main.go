@@ -17,6 +17,7 @@ import (
 	"github.com/Zenkiux/eneba-marketplace/api/internal/config"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/db"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/keys"
+	"github.com/Zenkiux/eneba-marketplace/api/internal/search"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/seed"
 )
 
@@ -50,6 +51,12 @@ func run() error {
 		if err := seedIfEmpty(ctx, pool, cfg); err != nil {
 			return err
 		}
+	}
+
+	if n, err := search.Refresh(ctx, pool); err != nil {
+		return err
+	} else if n > 0 {
+		slog.Info("refreshed search text", "products", n)
 	}
 
 	handler, orderSvc, err := app.NewRouter(cfg, pool)

@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -25,8 +26,31 @@ type Section struct {
 }
 
 type sectionConfig struct {
-	Limit int    `json:"limit"`
-	Type  string `json:"type"` // optional product type filter, e.g. "game"
+	Limit  int               `json:"limit"`
+	Type   string            `json:"type"`   // optional product type filter, e.g. "game"
+	Titles map[string]string `json:"titles"` // translated titles by language code, e.g. {"lt": "…"}
+}
+
+// Lang picks the first supported language from Accept-Language ("lt-LT,lt;q=0.9" → "lt").
+func Lang(r *http.Request) string {
+	for _, part := range strings.Split(r.Header.Get("Accept-Language"), ",") {
+		code := strings.ToLower(strings.TrimSpace(strings.SplitN(strings.SplitN(part, ";", 2)[0], "-", 2)[0]))
+		switch code {
+		case "en", "lt", "de", "pl":
+			return code
+		}
+	}
+	return "en"
+}
+
+func localTitle(title string, raw json.RawMessage, lang string) string {
+	var c sectionConfig
+	if lang != "en" && len(raw) > 0 && json.Unmarshal(raw, &c) == nil {
+		if t := c.Titles[lang]; t != "" {
+			return t
+		}
+	}
+	return title
 }
 
 // Provider loads the content of one block type.
@@ -53,13 +77,16 @@ func (h *Handler) Register(mux *http.ServeMux) {
 }
 
 func (h *Handler) layout(w http.ResponseWriter, r *http.Request) error {
-	rows, err := h.db.Query(r.Context(), `SELECT key, type, title FROM home_sections WHERE enabled ORDER BY position, id`)
+	rows, err := h.db.Query(r.Context(), `SELECT key, type, title, config FROM home_sections WHERE enabled ORDER BY position, id`)
 	if err != nil {
 		return err
 	}
+	lang := Lang(r)
 	sections, err := pgx.CollectRows(rows, func(r pgx.CollectableRow) (Section, error) {
 		var s Section
-		return s, r.Scan(&s.Key, &s.Type, &s.Title)
+		err := r.Scan(&s.Key, &s.Type, &s.Title, &s.config)
+		s.Title = localTitle(s.Title, s.config, lang)
+		return s, err
 	})
 	if err != nil {
 		return err
@@ -95,7 +122,8 @@ func (h *Handler) section(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	httpx.JSON(w, http.StatusOK, map[string]any{"key": s.Key, "type": s.Type, "title": s.Title, "content": content})
+	w.Header().Add("Vary", "Accept-Language")
+	httpx.JSON(w, http.StatusOK, map[string]any{"key": s.Key, "type": s.Type, "title": localTitle(s.Title, s.config, Lang(r)), "content": content})
 	return nil
 }
 

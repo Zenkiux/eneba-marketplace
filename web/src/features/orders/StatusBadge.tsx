@@ -1,4 +1,5 @@
 import type { OrderStatus } from '../../api/orders'
+import { useI18n } from '../../i18n/useI18n'
 import styles from '../checkout/checkout.module.css'
 
 const LABELS: Record<OrderStatus, string> = {
@@ -16,5 +17,6 @@ const CLASSES: Record<OrderStatus, string | undefined> = {
 }
 
 export function StatusBadge({ status }: { status: OrderStatus }) {
-  return <span className={`${styles.badge} ${CLASSES[status] ?? ''}`}>{LABELS[status]}</span>
+  const { t } = useI18n()
+  return <span className={`${styles.badge} ${CLASSES[status] ?? ''}`}>{t(LABELS[status])}</span>
 }

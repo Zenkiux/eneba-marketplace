@@ -1,19 +1,21 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router'
 import { Container } from '../../components/Container'
+import { useI18n } from '../../i18n/useI18n'
 import styles from './NotFoundPage.module.css'
 
 /** Eneba-style 404: oversized playful headline, one line of copy, outlined button. */
 export function NotFoundPage() {
+  const { t } = useI18n()
   useEffect(() => {
-    document.title = 'Page not found — keyshop'
-  }, [])
+    document.title = t('Page not found — keyshop')
+  }, [t])
   return (
     <Container className={styles.page}>
-      <h1 className={styles.title}>Level not found! 404</h1>
-      <p className={styles.text}>This page doesn’t exist — maybe it was moved, or the link has a typo.</p>
+      <h1 className={styles.title}>{t('Level not found! 404')}</h1>
+      <p className={styles.text}>{t('This page doesn’t exist — maybe it was moved, or the link has a typo.')}</p>
       <Link to="/store" className={styles.button}>
-        Continue browsing
+        {t('Continue browsing')}
       </Link>
       <div className={styles.sprites} aria-hidden="true">
         {['--color-region', '--color-region-alt', '--color-cta', '--color-text-muted'].map((c, i) => (

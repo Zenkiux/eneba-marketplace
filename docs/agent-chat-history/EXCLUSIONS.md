@@ -63,41 +63,56 @@
 | 2026-11-17T01:18:21.406Z | mcp__Claude_Browser__browser_batch toolu_01SXKp2vupzGyiWuZtjJbYCY | mcp-Claude_Browser-blob-1794878301399-fpm1g7.jpg (54,339 bytes) | binary file stored by Claude Code (screenshot) |
 | 2026-11-17T01:18:37.562Z | mcp__Claude_Browser__browser_batch toolu_015kC5W2YUrsJv7GfRruZtrQ | image image/jpeg, 113,920 base64 chars | binary payload (screenshot / PDF page images) |
 | 2026-11-17T01:18:37.562Z | mcp__Claude_Browser__browser_batch toolu_015kC5W2YUrsJv7GfRruZtrQ | mcp-Claude_Browser-blob-1794878317557-qdfs6b.jpg (85,438 bytes) | binary file stored by Claude Code (screenshot) |
+| 2026-11-17T02:09:21.537Z | mcp__Claude_Browser__browser_batch toolu_0131EngCQGxaHCmULjcmbDRo | image image/jpeg, 63,644 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T02:09:21.537Z | mcp__Claude_Browser__browser_batch toolu_0131EngCQGxaHCmULjcmbDRo | mcp-Claude_Browser-blob-1794881361530-eovvbr.jpg (47,733 bytes) | binary file stored by Claude Code (screenshot) |
+| 2026-11-17T02:23:54.663Z | mcp__Claude_Browser__computer toolu_012uUcdWdbWcbhcQuC4E1K7E | image image/jpeg, 52,536 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T02:23:54.663Z | mcp__Claude_Browser__computer toolu_012uUcdWdbWcbhcQuC4E1K7E | mcp-Claude_Browser-blob-1794882234656-zqufne.jpg (39,402 bytes) | binary file stored by Claude Code (screenshot) |
+| 2026-11-17T02:21:02.401Z | mcp__Claude_Browser__browser_batch toolu_01DP6X4mRRjVdKPZqE1wR7pj | image image/jpeg, 28,816 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T02:21:02.401Z | mcp__Claude_Browser__browser_batch toolu_01DP6X4mRRjVdKPZqE1wR7pj | mcp-Claude_Browser-blob-1794882062392-3j2a4y.jpg (21,612 bytes) | binary file stored by Claude Code (screenshot) |
+| 2026-11-17T02:21:24.817Z | mcp__Claude_Browser__browser_batch toolu_01Tp7auAWQ6DYwoejpcaNqjd | image image/jpeg, 31,420 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T02:21:24.817Z | mcp__Claude_Browser__browser_batch toolu_01Tp7auAWQ6DYwoejpcaNqjd | mcp-Claude_Browser-blob-1794882084803-vk0ach.jpg (23,565 bytes) | binary file stored by Claude Code (screenshot) |
+| 2026-11-17T02:21:37.155Z | mcp__Claude_Browser__browser_batch toolu_012KmtcdpYW8imBzuuevG2bJ | image image/jpeg, 38,232 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T02:21:37.155Z | mcp__Claude_Browser__browser_batch toolu_012KmtcdpYW8imBzuuevG2bJ | mcp-Claude_Browser-blob-1794882097152-mxghf2.jpg (28,672 bytes) | binary file stored by Claude Code (screenshot) |
+| 2026-11-17T02:21:42.321Z | mcp__Claude_Browser__browser_batch toolu_01W91uqyLvhh7ryQ6hKZhPiq | image image/jpeg, 11,228 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T02:21:42.321Z | mcp__Claude_Browser__browser_batch toolu_01W91uqyLvhh7ryQ6hKZhPiq | mcp-Claude_Browser-blob-1794882102317-gg08vu.jpg (8,419 bytes) | binary file stored by Claude Code (screenshot) |
+| 2026-11-17T02:21:53.405Z | mcp__Claude_Browser__computer toolu_01GQwQzeYH8i7agAiE372i1R | image image/jpeg, 16,672 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T02:21:53.405Z | mcp__Claude_Browser__computer toolu_01GQwQzeYH8i7agAiE372i1R | mcp-Claude_Browser-blob-1794882113401-efiimr.jpg (12,503 bytes) | binary file stored by Claude Code (screenshot) |
 
 ## Harness bookkeeping records (not conversation)
 
 | Record type | Count |
 |---|---|
-| `agent-name` | 190 |
-| `api-request` | 357 |
-| `api-request-blob` | 294 |
-| `api-request-shape` | 4 |
-| `atis-latch` | 190 |
-| `attachment:agent_listing_delta` | 2 |
-| `attachment:auto_mode` | 2 |
-| `attachment:credential_org` | 2 |
-| `attachment:date` | 2 |
-| `attachment:deferred_tools_delta` | 4 |
-| `attachment:deferred_tools_record` | 134 |
-| `attachment:edited_text_file` | 16 |
-| `attachment:environment` | 46 |
-| `attachment:mcp_instructions_delta` | 3 |
-| `attachment:model` | 2 |
+| `agent-name` | 226 |
+| `api-request` | 479 |
+| `api-request-blob` | 342 |
+| `api-request-shape` | 5 |
+| `atis-latch` | 226 |
+| `attachment:agent_listing_delta` | 3 |
+| `attachment:auto_mode` | 3 |
+| `attachment:credential_org` | 3 |
+| `attachment:date` | 3 |
+| `attachment:deferred_tools_delta` | 6 |
+| `attachment:deferred_tools_record` | 158 |
+| `attachment:edited_text_file` | 18 |
+| `attachment:environment` | 59 |
+| `attachment:hook_additional_context` | 1 |
+| `attachment:mcp_instructions_delta` | 4 |
+| `attachment:model` | 3 |
 | `attachment:plan_mode` | 1 |
 | `attachment:plan_mode_exit` | 1 |
-| `attachment:prompt_snapshot` | 4 |
-| `attachment:remote_session_change` | 2 |
-| `attachment:session_context` | 2 |
+| `attachment:prompt_snapshot` | 6 |
+| `attachment:remote_session_change` | 3 |
+| `attachment:session_context` | 3 |
 | `attachment:silent_turn_reminder` | 15 |
-| `attachment:skill_listing` | 2 |
-| `custom-title` | 191 |
-| `file-history-delta` | 28 |
-| `file-history-snapshot` | 17 |
-| `last-prompt` | 190 |
-| `queue-operation` | 50 |
-| `relocated` | 190 |
+| `attachment:skill_listing` | 3 |
+| `custom-title` | 227 |
+| `file-history-delta` | 31 |
+| `file-history-snapshot` | 18 |
+| `last-prompt` | 226 |
+| `queue-operation` | 62 |
+| `relocated` | 226 |
 | `tools-used` | 23 |
 
-Reasoning steps stored without text: 255
+Reasoning steps stored without text: 351
 
 Also omitted: `toolUseResult` fields (a structured duplicate of each tool result shown in the main file) and `<system-reminder>` blocks injected by the harness into user messages.

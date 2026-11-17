@@ -15,7 +15,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/Zenkiux/eneba-marketplace/api/internal/compat"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/keys"
+	"github.com/Zenkiux/eneba-marketplace/api/internal/search"
 )
 
 // Demo account, published in the README so evaluators can sign in immediately.
@@ -81,6 +83,10 @@ func Run(ctx context.Context, pool *pgxpool.Pool, box *keys.Box, opt Options) (S
 					return fmt.Errorf("product %s: %w", slug, err)
 				}
 				st.Products++
+				min, rec := demoRequirements(t, v)
+				if err := compat.SaveRequirements(ctx, tx, productID, min, rec); err != nil {
+					return err
+				}
 				n, added, err := seedOffers(ctx, tx, box, slug, productID, v.ListCents, sellerIDs)
 				if err != nil {
 					return fmt.Errorf("offers %s: %w", slug, err)
@@ -94,6 +100,9 @@ func Run(ctx context.Context, pool *pgxpool.Pool, box *keys.Box, opt Options) (S
 		}
 		return seedDemoUser(ctx, tx)
 	})
+	if err == nil {
+		_, err = search.Refresh(ctx, pool)
+	}
 	return st, err
 }
 

@@ -3,9 +3,9 @@ import { useEffect, useId, useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router'
 import { useLogin, useMe, useRegister } from '../../api/auth'
 import { ApiError } from '../../api/client'
+import { useI18n } from '../../i18n/useI18n'
 import styles from './AuthPage.module.css'
 import { safeNext } from './safeNext'
-
 
 const DEMO = { email: 'demo@example.test', password: 'demo-password-2027' }
 
@@ -21,17 +21,18 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   const [password, setPassword] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const { t } = useI18n()
   const ids = { email: useId(), password: useId(), name: useId(), error: useId() }
 
   useEffect(() => {
-    document.title = mode === 'login' ? 'Log in — keyshop' : 'Create account — keyshop'
-  }, [mode])
+    document.title = mode === 'login' ? t('Log in — keyshop') : t('Create account — keyshop')
+  }, [mode, t])
 
   if (me.data && !mutation.isPending && !mutation.isSuccess) return <Navigate to={next} replace />
 
   const error = mutation.error instanceof ApiError ? mutation.error : null
   const fieldError = (field: string) => (error?.details?.field === field ? error.message : null)
-  const formError = error && !error.details?.field ? error.message : mutation.isError && !error ? 'Something went wrong. Please try again.' : null
+  const formError = error && !error.details?.field ? error.message : mutation.isError && !error ? t('Something went wrong. Please try again.') : null
 
   function submit(e: FormEvent) {
     e.preventDefault()
@@ -47,39 +48,39 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
         <p className={styles.greeting} aria-hidden="true">
           {mode === 'login' ? (
             <>
-              Hi!
+              {t('Hi!')}
               <br />
-              It’s nice to
+              {t('It’s nice to')}
               <br />
-              see you!
+              {t('see you!')}
             </>
           ) : (
             <>
-              Join and
+              {t('Join and')}
               <br />
-              start playing!
+              {t('start playing!')}
             </>
           )}
         </p>
         <section className={styles.panel} aria-labelledby="auth-title">
           <h1 id="auth-title" className={styles.title}>
-            {mode === 'login' ? 'Log in' : 'Create account'}
+            {mode === 'login' ? t('Log in') : t('Create account')}
           </h1>
           <p className={styles.switch}>
-            {mode === 'login' ? 'New here? ' : 'Already have an account? '}
-            <Link to={otherLink}>{mode === 'login' ? 'Create account' : 'Log in'}</Link>
+            {mode === 'login' ? t('New here?') : t('Already have an account?')}{' '}
+            <Link to={otherLink}>{mode === 'login' ? t('Create account') : t('Log in')}</Link>
           </p>
-          {next.startsWith('/checkout') && <p className={styles.notice}>Sign in to continue to checkout. Your cart is kept.</p>}
+          {next.startsWith('/checkout') && <p className={styles.notice}>{t('Sign in to continue to checkout. Your cart is kept.')}</p>}
 
           <form className={styles.form} onSubmit={submit} noValidate aria-describedby={formError ? ids.error : undefined}>
             {mode === 'register' && (
               <div className={styles.field}>
-                <label htmlFor={ids.name}>Name (optional)</label>
+                <label htmlFor={ids.name}>{t('Name (optional)')}</label>
                 <input id={ids.name} autoComplete="nickname" maxLength={50} value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
               </div>
             )}
             <div className={styles.field}>
-              <label htmlFor={ids.email}>E-mail</label>
+              <label htmlFor={ids.email}>{t('E-mail')}</label>
               <input
                 id={ids.email}
                 type="email"
@@ -92,7 +93,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
               {fieldError('email') && <p className={styles.fieldError}>{fieldError('email')}</p>}
             </div>
             <div className={styles.field}>
-              <label htmlFor={ids.password}>Password</label>
+              <label htmlFor={ids.password}>{t('Password')}</label>
               <div className={styles.passwordWrap}>
                 <input
                   id={ids.password}
@@ -104,14 +105,14 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
                   onChange={(e) => setPassword(e.target.value)}
                   aria-invalid={!!fieldError('password')}
                 />
-                <button type="button" className={styles.reveal} aria-label={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword((s) => !s)}>
+                <button type="button" className={styles.reveal} aria-label={showPassword ? t('Hide password') : t('Show password')} onClick={() => setShowPassword((s) => !s)}>
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
               {fieldError('password') ? (
                 <p className={styles.fieldError}>{fieldError('password')}</p>
               ) : (
-                mode === 'register' && <p className={styles.hint}>At least 8 characters.</p>
+                mode === 'register' && <p className={styles.hint}>{t('At least 8 characters.')}</p>
               )}
             </div>
             {formError && (
@@ -120,14 +121,14 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
               </p>
             )}
             <button type="submit" className={styles.submit} disabled={mutation.isPending}>
-              {mutation.isPending ? 'Please wait…' : mode === 'login' ? 'Log in' : 'Create account'}
+              {mutation.isPending ? t('Please wait…') : mode === 'login' ? t('Log in') : t('Create account')}
             </button>
           </form>
 
           {mode === 'login' && (
             <div className={styles.demo}>
               <p>
-                Demo account: <code>{DEMO.email}</code> / <code>{DEMO.password}</code>
+                {t('Demo account:')} <code>{DEMO.email}</code> / <code>{DEMO.password}</code>
               </p>
               <button
                 type="button"
@@ -136,7 +137,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
                   setPassword(DEMO.password)
                 }}
               >
-                Fill in demo account
+                {t('Fill in demo account')}
               </button>
             </div>
           )}

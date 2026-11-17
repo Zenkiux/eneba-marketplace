@@ -192,6 +192,9 @@ func TestSearch(t *testing.T) {
 		{"neon drfit", "neon-drift-racing"},                                         // swapped letters
 		{"shadow protokol", "shadow-protocol"},                                      // wrong letter
 		{"hollow", "hollow-crown"},                                                  // partial word
+		{"kingdom forge ii", "kingdom-forge-2"},                                     // Roman numeral for a digit
+		{"tfv", "tiny-farm-valley"},                                                 // acronym
+		{"pokémon", ""},                                                             // accents normalised, no such game
 		{"xyzzy", ""},                                                               // nonsense
 		{"%", ""},                                                                   // LIKE wildcard is literal (would match everything if unescaped)
 		{"_", ""},                                                                   // LIKE wildcard is literal
@@ -311,5 +314,57 @@ func TestSoldOutOfferDoesNotSetPrice(t *testing.T) {
 	last := p.Offers[len(p.Offers)-1]
 	if last.ID != offerID || last.Stock != 0 {
 		t.Fatal("sold-out offer should be listed last with stock 0")
+	}
+}
+
+func TestWorksForMeFilter(t *testing.T) {
+	e := setup(t)
+	total := func(q string) int {
+		var p catalog.Page
+		if code := e.get("/api/products?works=1&page_size=60&"+q, &p); code != 200 {
+			t.Fatalf("%s: status %d", q, code)
+		}
+		return p.Total
+	}
+	strong := total("country=LT&os=windows&gpu=20000&cpu=1500&ram=32")
+	weak := total("country=LT&os=windows&gpu=1300&cpu=750&ram=8") // budget PC: indie games only
+	if !(strong > weak && weak > 0) {
+		t.Fatalf("a strong PC should get more games than a weak one (strong %d, weak %d)", strong, weak)
+	}
+	// A Mac can't run the (Windows-only) demo games; only platform-free items remain.
+	mac := total("country=LT&os=mac&gpu=20000&cpu=1500&ram=32")
+	if mac >= weak {
+		t.Fatalf("mac %d should be below weak windows %d", mac, weak)
+	}
+	// Owning a PlayStation adds PSN keys.
+	withPS := total("country=LT&os=mac&consoles=psn")
+	if withPS <= mac {
+		t.Fatalf("owning a PlayStation should add products (%d vs %d)", withPS, mac)
+	}
+	// Region: a buyer in the US must not get Europe-only keys.
+	var us catalog.Page
+	e.get("/api/products?works=1&page_size=60&country=US&os=windows&gpu=20000&cpu=1500&ram=32&consoles=psn,xbox,nintendo", &us)
+	for _, it := range us.Items {
+		if it.Region.Slug == "europe" || it.Region.Slug == "united-kingdom" {
+			t.Fatalf("US buyer got a %s key: %s", it.Region.Slug, it.Slug)
+		}
+	}
+	for _, bad := range []string{"os=amiga", "gpu=-1", "consoles=sega", "country=lithuania"} {
+		if code := e.get("/api/products?works=1&"+bad, nil); code != 400 {
+			t.Errorf("%s: want 400, got %d", bad, code)
+		}
+	}
+}
+
+func TestProductRequirementsExposed(t *testing.T) {
+	e := setup(t)
+	var p catalog.Product
+	e.get("/api/products/starfall-odyssey-steam-global", &p)
+	if p.Requirements == nil || p.Requirements.Minimum == nil || p.Requirements.Minimum.GPUScore == 0 || p.ReqMin == nil {
+		t.Fatalf("PC game should expose parsed requirements: %+v", p.Requirements)
+	}
+	e.get("/api/products/starfall-odyssey-psn-europe", &p)
+	if p.Requirements != nil {
+		t.Fatal("console keys have no PC requirements")
 	}
 }

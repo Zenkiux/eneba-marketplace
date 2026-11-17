@@ -1,0 +1,694 @@
+=== features/account/OrdersPage.tsx
+     1	import { useEffect } from 'react'
+     2	import { Link } from 'react-router'
+     3	import { useOrders } from '../../api/orders'
+     4	import { Container } from '../../components/Container'
+     5	import { EmptyState, ErrorState } from '../../components/States'
+     6	import { formatCents } from '../../lib/money'
+     7	import { StatusBadge } from '../orders/StatusBadge'
+     8	import styles from '../checkout/checkout.module.css'
+     9	
+    10	/** Order history (signed-in only; the API returns only the current user's orders). */
+    11	export function OrdersPage() {
+    12	  const { data, isPending, isError, error, refetch } = useOrders()
+    13	  useEffect(() => {
+    14	    document.title = 'My orders — keyshop'
+    15	  }, [])
+    16	  return (
+    17	    <Container className={styles.page}>
+    18	      <h1 className={styles.h1}>My orders</h1>
+    19	      {isError ? (
+    20	        <ErrorState error={error} onRetry={() => void refetch()} />
+    21	      ) : isPending ? (
+    22	        <div aria-busy="true" style={{ minHeight: '40vh' }} />
+    23	      ) : data.orders.length === 0 ? (
+    24	        <EmptyState title="No orders yet">
+    25	          <p>When you buy something, your order and its keys will appear here.</p>
+    26	          <Link to="/store" className={styles.primaryLink}>
+    27	            Browse the store
+    28	          </Link>
+    29	        </EmptyState>
+    30	      ) : (
+    31	        <ul className={styles.orderList}>
+    32	          {data.orders.map((o) => (
+    33	            <li key={o.id}>
+    34	              <Link to={o.status === 'pending_payment' ? `/checkout/${o.id}/pay` : `/orders/${o.id}`} className={styles.orderRow}>
+    35	                <div className={styles.orderCovers} aria-hidden="true">
+    36	                  {o.items.slice(0, 3).map((it) => (
+    37	                    <img key={it.offerId} referrerPolicy="no-referrer" src={it.coverUrl} alt="" width={40} height={60} />
+    38	                  ))}
+    39	                </div>
+    40	                <div className={styles.orderInfo}>
+    41	                  <span className={styles.itemTitle}>{o.items.map((it) => it.title).join(', ')}</span>
+    42	                  <span className={styles.itemMeta}>
+    43	                    {new Date(o.createdAt).toLocaleDateString('en-IE', { dateStyle: 'medium' })} · {o.itemCount} {o.itemCount === 1 ? 'key' : 'keys'} ·
+    44	                    Sellers: {[...new Set(o.items.map((it) => it.seller))].join(', ')}
+    45	                  </span>
+    46	                </div>
+    47	                <StatusBadge status={o.status} />
+    48	                <strong className={styles.orderTotal}>{formatCents(o.totalCents, o.currency)}</strong>
+    49	              </Link>
+    50	            </li>
+    51	          ))}
+    52	        </ul>
+    53	      )}
+    54	    </Container>
+    55	  )
+    56	}
+=== features/auth/AuthPage.tsx
+     1	import { Eye, EyeOff } from 'lucide-react'
+     2	import { useEffect, useId, useState, type FormEvent } from 'react'
+     3	import { Link, Navigate, useNavigate, useSearchParams } from 'react-router'
+     4	import { useLogin, useMe, useRegister } from '../../api/auth'
+     5	import { ApiError } from '../../api/client'
+     6	import styles from './AuthPage.module.css'
+     7	import { safeNext } from './safeNext'
+     8	
+     9	
+    10	const DEMO = { email: 'demo@example.test', password: 'demo-password-2027' }
+    11	
+    12	export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
+    13	  const [params] = useSearchParams()
+    14	  const next = safeNext(params.get('next'))
+    15	  const navigate = useNavigate()
+    16	  const me = useMe()
+    17	  const login = useLogin()
+    18	  const register = useRegister()
+    19	  const mutation = mode === 'login' ? login : register
+    20	  const [email, setEmail] = useState('')
+    21	  const [password, setPassword] = useState('')
+    22	  const [displayName, setDisplayName] = useState('')
+    23	  const [showPassword, setShowPassword] = useState(false)
+    24	  const ids = { email: useId(), password: useId(), name: useId(), error: useId() }
+    25	
+    26	  useEffect(() => {
+    27	    document.title = mode === 'login' ? 'Log in — keyshop' : 'Create account — keyshop'
+    28	  }, [mode])
+    29	
+    30	  if (me.data && !mutation.isPending && !mutation.isSuccess) return <Navigate to={next} replace />
+    31	
+    32	  const error = mutation.error instanceof ApiError ? mutation.error : null
+    33	  const fieldError = (field: string) => (error?.details?.field === field ? error.message : null)
+    34	  const formError = error && !error.details?.field ? error.message : mutation.isError && !error ? 'Something went wrong. Please try again.' : null
+    35	
+    36	  function submit(e: FormEvent) {
+    37	    e.preventDefault()
+    38	    mutation.mutate(mode === 'login' ? { email, password } : { email, password, displayName }, {
+    39	      onSuccess: () => navigate(next, { replace: true }),
+    40	    })
+    41	  }
+    42	
+    43	  const otherLink = `${mode === 'login' ? '/register' : '/login'}${next !== '/' ? `?next=${encodeURIComponent(next)}` : ''}`
+    44	  return (
+    45	    <div className={styles.page}>
+    46	      <div className={styles.inner}>
+    47	        <p className={styles.greeting} aria-hidden="true">
+    48	          {mode === 'login' ? (
+    49	            <>
+    50	              Hi!
+    51	              <br />
+    52	              It’s nice to
+    53	              <br />
+    54	              see you!
+    55	            </>
+    56	          ) : (
+    57	            <>
+    58	              Join and
+    59	              <br />
+    60	              start playing!
+    61	            </>
+    62	          )}
+    63	        </p>
+    64	        <section className={styles.panel} aria-labelledby="auth-title">
+    65	          <h1 id="auth-title" className={styles.title}>
+    66	            {mode === 'login' ? 'Log in' : 'Create account'}
+    67	          </h1>
+    68	          <p className={styles.switch}>
+    69	            {mode === 'login' ? 'New here? ' : 'Already have an account? '}
+    70	            <Link to={otherLink}>{mode === 'login' ? 'Create account' : 'Log in'}</Link>
+    71	          </p>
+    72	          {next.startsWith('/checkout') && <p className={styles.notice}>Sign in to continue to checkout. Your cart is kept.</p>}
+    73	
+    74	          <form className={styles.form} onSubmit={submit} noValidate aria-describedby={formError ? ids.error : undefined}>
+    75	            {mode === 'register' && (
+    76	              <div className={styles.field}>
+    77	                <label htmlFor={ids.name}>Name (optional)</label>
+    78	                <input id={ids.name} autoComplete="nickname" maxLength={50} value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+    79	              </div>
+    80	            )}
+    81	            <div className={styles.field}>
+    82	              <label htmlFor={ids.email}>E-mail</label>
+    83	              <input
+    84	                id={ids.email}
+    85	                type="email"
+    86	                autoComplete="email"
+    87	                required
+    88	                value={email}
+    89	                onChange={(e) => setEmail(e.target.value)}
+    90	                aria-invalid={!!fieldError('email')}
+    91	              />
+    92	              {fieldError('email') && <p className={styles.fieldError}>{fieldError('email')}</p>}
+    93	            </div>
+    94	            <div className={styles.field}>
+    95	              <label htmlFor={ids.password}>Password</label>
+    96	              <div className={styles.passwordWrap}>
+    97	                <input
+    98	                  id={ids.password}
+    99	                  type={showPassword ? 'text' : 'password'}
+   100	                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+   101	                  required
+   102	                  minLength={8}
+   103	                  value={password}
+   104	                  onChange={(e) => setPassword(e.target.value)}
+   105	                  aria-invalid={!!fieldError('password')}
+   106	                />
+   107	                <button type="button" className={styles.reveal} aria-label={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword((s) => !s)}>
+   108	                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+   109	                </button>
+   110	              </div>
+   111	              {fieldError('password') ? (
+   112	                <p className={styles.fieldError}>{fieldError('password')}</p>
+   113	              ) : (
+   114	                mode === 'register' && <p className={styles.hint}>At least 8 characters.</p>
+   115	              )}
+   116	            </div>
+   117	            {formError && (
+   118	              <p id={ids.error} className={styles.formError} role="alert">
+   119	                {formError}
+   120	              </p>
+   121	            )}
+   122	            <button type="submit" className={styles.submit} disabled={mutation.isPending}>
+   123	              {mutation.isPending ? 'Please wait…' : mode === 'login' ? 'Log in' : 'Create account'}
+   124	            </button>
+   125	          </form>
+   126	
+   127	          {mode === 'login' && (
+   128	            <div className={styles.demo}>
+   129	              <p>
+   130	                Demo account: <code>{DEMO.email}</code> / <code>{DEMO.password}</code>
+   131	              </p>
+   132	              <button
+   133	                type="button"
+   134	                onClick={() => {
+   135	                  setEmail(DEMO.email)
+   136	                  setPassword(DEMO.password)
+   137	                }}
+   138	              >
+   139	                Fill in demo account
+   140	              </button>
+   141	            </div>
+   142	          )}
+   143	        </section>
+   144	      </div>
+   145	    </div>
+   146	  )
+   147	}
+=== features/auth/LoginPage.tsx
+     1	import { AuthPage } from './AuthPage'
+     2	
+     3	export function LoginPage() {
+     4	  return <AuthPage mode="login" />
+     5	}
+=== features/auth/RegisterPage.tsx
+     1	import { AuthPage } from './AuthPage'
+     2	
+     3	export function RegisterPage() {
+     4	  return <AuthPage mode="register" />
+     5	}
+=== features/auth/RequireAuth.tsx
+     1	import type { ReactNode } from 'react'
+     2	import { Navigate, useLocation } from 'react-router'
+     3	import { useMe } from '../../api/auth'
+     4	
+     5	/**
+     6	 * Sends signed-out visitors to the login page and back afterwards. This is only for user
+     7	 * experience: the API enforces authentication on every protected endpoint itself.
+     8	 */
+     9	export function RequireAuth({ children }: { children: ReactNode }) {
+    10	  const me = useMe()
+    11	  const location = useLocation()
+    12	  if (me.isPending) return <div style={{ minHeight: '60vh' }} aria-busy="true" />
+    13	  if (!me.data) return <Navigate to={`/login?next=${encodeURIComponent(location.pathname + location.search)}`} replace />
+    14	  return <>{children}</>
+    15	}
+=== features/cart/CartPage.tsx
+     1	import { Minus, Plus, ShieldCheck, Trash2 } from 'lucide-react'
+     2	import { useEffect } from 'react'
+     3	import { Link, useNavigate } from 'react-router'
+     4	import type { CartLine } from '../../api/types'
+     5	import { Container } from '../../components/Container'
+     6	import { EmptyState, ErrorState } from '../../components/States'
+     7	import { formatCents } from '../../lib/money'
+     8	import { ProposalNote } from '../proposal/ProposalNote'
+     9	import { useDevice } from '../compat/useDevice'
+    10	import { PART_LABEL, verdictFor } from '../compat/verdict'
+    11	import { MAX_QUANTITY } from './guestCart'
+    12	import { useCart } from './useCart'
+    13	import styles from './CartPage.module.css'
+    14	
+    15	export function CartPage() {
+    16	  const { cart, isLoading, isError, error, refetch, setQuantity, remove, signedIn, isUpdating } = useCart()
+    17	  const navigate = useNavigate()
+    18	  useEffect(() => {
+    19	    document.title = 'Cart — keyshop'
+    20	  }, [])
+    21	
+    22	  if (isError) {
+    23	    return (
+    24	      <Container className={styles.page}>
+    25	        <ErrorState error={error} onRetry={refetch} />
+    26	      </Container>
+    27	    )
+    28	  }
+    29	  if (isLoading || !cart) return <Container className={styles.page}><div aria-busy="true" style={{ minHeight: '50vh' }} /></Container>
+    30	
+    31	  if (cart.lines.length === 0) {
+    32	    return (
+    33	      <Container className={styles.page}>
+    34	        <h1 className={styles.h1}>Cart</h1>
+    35	        <EmptyState title="Your cart is empty">
+    36	          <p>Find a game and choose a seller’s offer to add it here.</p>
+    37	          <Link to="/store" className={styles.primaryLink}>
+    38	            Browse the store
+    39	          </Link>
+    40	        </EmptyState>
+    41	      </Container>
+    42	    )
+    43	  }
+    44	
+    45	  const unavailable = cart.lines.filter((l) => !l.available || l.quantity > l.stock)
+    46	  const canCheckout = unavailable.length === 0 && cart.totalCents > 0
+    47	  return (
+    48	    <Container className={styles.page}>
+    49	      <h1 className={styles.h1}>Cart</h1>
+    50	      <div className={styles.layout}>
+    51	        <ul className={styles.lines} aria-busy={isUpdating}>
+    52	          {cart.lines.map((l) => (
+    53	            <Line key={l.offerId} line={l} onQuantity={(q) => setQuantity(l.offerId, q)} onRemove={() => remove(l.offerId)} />
+    54	          ))}
+    55	        </ul>
+    56	        <aside className={styles.summary} aria-label="Order summary">
+    57	          <h2 className={styles.h2}>Summary</h2>
+    58	          <dl className={styles.totals}>
+    59	            <dt>Items</dt>
+    60	            <dd>{cart.count}</dd>
+    61	            <dt className={styles.totalLabel}>Total</dt>
+    62	            <dd className={styles.total}>{formatCents(cart.totalCents)}</dd>
+    63	          </dl>
+    64	          {unavailable.length > 0 && (
+    65	            <p className={styles.warning} role="alert">
+    66	              Some items are sold out or exceed the seller’s stock. Remove them or lower the quantity to continue.
+    67	            </p>
+    68	          )}
+    69	          <button type="button" className={styles.checkout} disabled={!canCheckout} onClick={() => navigate('/checkout')}>
+    70	            {signedIn ? 'Proceed to checkout' : 'Log in and checkout'}
+    71	          </button>
+    72	          <p className={styles.note}>
+    73	            <ShieldCheck size={16} aria-hidden="true" /> Demo shop: payment is simulated and no real money is charged. Prices are checked again at checkout.
+    74	          </p>
+    75	        </aside>
+    76	      </div>
+    77	    </Container>
+    78	  )
+    79	}
+    80	
+    81	function Line({ line: l, onQuantity, onRemove }: { line: CartLine; onQuantity: (q: number) => void; onRemove: () => void }) {
+    82	  const max = Math.min(MAX_QUANTITY, Math.max(l.stock, 1))
+    83	  const device = useDevice()
+    84	  const verdict = device ? verdictFor(device, l.product) : null
+    85	  return (
+    86	    <li className={l.available ? styles.line : `${styles.line} ${styles.lineUnavailable}`}>
+    87	      <Link to={`/p/${l.product.slug}`} className={styles.thumb} tabIndex={-1} aria-hidden="true">
+    88	        <img referrerPolicy="no-referrer" src={l.product.coverUrl} alt="" width={70} height={105} />
+    89	      </Link>
+    90	      <div className={styles.info}>
+    91	        <Link to={`/p/${l.product.slug}`} className={styles.title}>
+    92	          {l.product.title}
+    93	        </Link>
+    94	        <span className={styles.meta}>
+    95	          Seller: <strong>{l.seller.name}</strong> · {l.seller.rating.toFixed(2)}
+    96	        </span>
+    97	        <span className={styles.region}>{l.product.region.name}</span>
+    98	        {!l.available ? (
+    99	          <span className={styles.stockWarning}>No longer available from this seller</span>
+   100	        ) : (
+   101	          l.quantity > l.stock && <span className={styles.stockWarning}>Only {l.stock} left</span>
+   102	        )}
+   103	        {verdict?.status === 'no' && (
+   104	          <span className={styles.compatWarning} role="note">
+   105	            ⚠ Won’t work for you: {verdict.failing.map((f) => PART_LABEL[f]).join(', ')}.{' '}
+   106	            <Link to={`/store?q=${encodeURIComponent(l.product.title.split(/[(:]/)[0]?.trim() ?? '')}`}>Find another version</Link>
+   107	            <ProposalNote id="cart" inline />
+   108	          </span>
+   109	        )}
+   110	      </div>
+   111	      <div className={styles.qty} role="group" aria-label={`Quantity for ${l.product.title}`}>
+   112	        <button type="button" aria-label="Decrease quantity" disabled={l.quantity <= 1} onClick={() => onQuantity(l.quantity - 1)}>
+   113	          <Minus size={16} />
+   114	        </button>
+   115	        <span aria-live="polite">{l.quantity}</span>
+   116	        <button type="button" aria-label="Increase quantity" disabled={l.quantity >= max || !l.available} onClick={() => onQuantity(l.quantity + 1)}>
+   117	          <Plus size={16} />
+   118	        </button>
+   119	      </div>
+   120	      <span className={styles.price}>{formatCents(l.priceCents * l.quantity, l.currency)}</span>
+   121	      <button type="button" className={styles.remove} aria-label={`Remove ${l.product.title}`} onClick={onRemove}>
+   122	        <Trash2 size={18} />
+   123	      </button>
+   124	    </li>
+   125	  )
+   126	}
+=== features/cart/useCart.ts
+     1	import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+     2	import { useSyncExternalStore } from 'react'
+     3	import { useMe } from '../../api/auth'
+     4	import { ApiError, api } from '../../api/client'
+     5	import type { Cart } from '../../api/types'
+     6	import { showToast } from '../../components/toastBus'
+     7	import { guestCart, MAX_QUANTITY } from './guestCart'
+     8	
+     9	/**
+    10	 * One cart interface for the whole app.
+    11	 * - Signed out: lines are kept in the browser (guestCart) and resolved through GET /api/offers.
+    12	 * - Signed in: the cart lives on the server (/api/cart); the guest cart is merged into it at sign-in.
+    13	 * Either way only offer ids and quantities are stored; prices and stock are always live.
+    14	 */
+    15	export function useCart() {
+    16	  const qc = useQueryClient()
+    17	  const me = useMe()
+    18	  const signedIn = !!me.data
+    19	  const guestLines = useSyncExternalStore(guestCart.subscribe, guestCart.get)
+    20	  const guestKey = guestLines.map((l) => `${l.offerId}:${l.quantity}`).join(',')
+    21	
+    22	  const server = useQuery({
+    23	    queryKey: ['cart'],
+    24	    queryFn: ({ signal }) => api.get<Cart>('/cart', { signal }),
+    25	    enabled: signedIn,
+    26	  })
+    27	  const guest = useQuery({
+    28	    queryKey: ['guest-cart', guestKey],
+    29	    queryFn: ({ signal }) => api.get<Cart>(`/offers?items=${guestKey}`, { signal }),
+    30	    enabled: !signedIn && !me.isPending && guestKey !== '',
+    31	    placeholderData: (prev) => prev,
+    32	  })
+    33	
+    34	  const setServer = useMutation({
+    35	    mutationFn: ({ offerId, quantity }: { offerId: number; quantity: number }) =>
+    36	      api.put<Cart>(`/cart/items/${offerId}`, { quantity }),
+    37	    onSuccess: (cart) => qc.setQueryData(['cart'], cart),
+    38	    onError: (e) => showToast(e instanceof ApiError ? e.message : 'Could not update the cart'),
+    39	  })
+    40	  const removeServer = useMutation({
+    41	    mutationFn: (offerId: number) => api.delete<Cart>(`/cart/items/${offerId}`),
+    42	    onSuccess: (cart) => qc.setQueryData(['cart'], cart),
+    43	  })
+    44	
+    45	  const emptyCart: Cart = { lines: [], totalCents: 0, count: 0 }
+    46	  const cart = signedIn ? server.data : guestKey === '' ? emptyCart : guest.data
+    47	  const count = signedIn ? (server.data?.count ?? 0) : guestLines.reduce((n, l) => n + l.quantity, 0)
+    48	  const query = signedIn ? server : guest
+    49	
+    50	  return {
+    51	    cart,
+    52	    count,
+    53	    signedIn,
+    54	    isLoading: me.isPending || (cart === undefined && query.isPending),
+    55	    isError: query.isError,
+    56	    error: query.error,
+    57	    refetch: () => void query.refetch(),
+    58	    isUpdating: setServer.isPending || removeServer.isPending,
+    59	
+    60	    /** Adds quantity of an offer (capped at the stock shown and 10 per line). */
+    61	    add(offerId: number, quantity: number, maxStock: number, label?: string) {
+    62	      const cap = Math.min(MAX_QUANTITY, Math.max(maxStock, 1))
+    63	      if (signedIn) {
+    64	        const current = server.data?.lines.find((l) => l.offerId === offerId)?.quantity ?? 0
+    65	        setServer.mutate(
+    66	          { offerId, quantity: Math.min(current + quantity, cap) },
+    67	          { onSuccess: () => label && showToast(`Added to cart: ${label}`) },
+    68	        )
+    69	      } else {
+    70	        guestCart.add(offerId, quantity, maxStock)
+    71	        if (label) showToast(`Added to cart: ${label}`)
+    72	      }
+    73	    },
+    74	    setQuantity(offerId: number, quantity: number) {
+    75	      if (signedIn) setServer.mutate({ offerId, quantity })
+    76	      else guestCart.set(offerId, quantity)
+    77	    },
+    78	    remove(offerId: number) {
+    79	      if (signedIn) removeServer.mutate(offerId)
+    80	      else guestCart.remove(offerId)
+    81	    },
+    82	  }
+    83	}
+=== features/checkout/CheckoutPage.tsx
+     1	import { ShieldCheck } from 'lucide-react'
+     2	import { useEffect } from 'react'
+     3	import { Link, Navigate, useNavigate } from 'react-router'
+     4	import { ApiError } from '../../api/client'
+     5	import { useCreateOrder } from '../../api/orders'
+     6	import { Container } from '../../components/Container'
+     7	import { ErrorState } from '../../components/States'
+     8	import { formatCents } from '../../lib/money'
+     9	import { useCart } from '../cart/useCart'
+    10	import { Steps } from './Steps'
+    11	import styles from './checkout.module.css'
+    12	
+    13	/** Review the cart one last time, then create the order (which reserves the keys). */
+    14	export function CheckoutPage() {
+    15	  const { cart, isLoading, isError, error, refetch } = useCart()
+    16	  const create = useCreateOrder()
+    17	  const navigate = useNavigate()
+    18	  useEffect(() => {
+    19	    document.title = 'Checkout — keyshop'
+    20	  }, [])
+    21	
+    22	  if (isError) return <Container className={styles.page}><ErrorState error={error} onRetry={refetch} /></Container>
+    23	  if (isLoading || !cart) return <Container className={styles.page}><div aria-busy="true" style={{ minHeight: '50vh' }} /></Container>
+    24	  if (cart.lines.length === 0 && !create.isPending && !create.isSuccess) return <Navigate to="/cart" replace />
+    25	
+    26	  const blocked = cart.lines.some((l) => !l.available || l.quantity > l.stock)
+    27	  const err = create.error instanceof ApiError ? create.error : null
+    28	
+    29	  function placeOrder() {
+    30	    if (!cart) return
+    31	    create.mutate(cart, {
+    32	      onSuccess: (order) => navigate(`/checkout/${order.id}/pay`),
+    33	      onError: (e) => {
+    34	        // Prices or stock changed: reload the cart so the buyer sees the current state.
+    35	        if (e instanceof ApiError && ['price_changed', 'out_of_stock', 'offer_unavailable'].includes(e.code)) refetch()
+    36	      },
+    37	    })
+    38	  }
+    39	
+    40	  return (
+    41	    <Container className={styles.page}>
+    42	      <Steps current="Checkout" />
+    43	      <h1 className={styles.h1}>Checkout</h1>
+    44	      <div className={styles.layout}>
+    45	        <section className={styles.panel} aria-labelledby="review-h">
+    46	          <h2 id="review-h" className={styles.h2}>
+    47	            Review your order
+    48	          </h2>
+    49	          <ul className={styles.items}>
+    50	            {cart.lines.map((l) => (
+    51	              <li key={l.offerId} className={styles.item}>
+    52	                <img referrerPolicy="no-referrer" src={l.product.coverUrl} alt="" width={48} height={72} />
+    53	                <div>
+    54	                  <span className={styles.itemTitle}>{l.product.title}</span>
+    55	                  <span className={styles.itemMeta}>
+    56	                    Seller: {l.seller.name} · {l.quantity} × {formatCents(l.priceCents, l.currency)}
+    57	                  </span>
+    58	                  {!l.available && <span className={styles.warn}>No longer available</span>}
+    59	                  {l.available && l.quantity > l.stock && <span className={styles.warn}>Only {l.stock} left</span>}
+    60	                </div>
+    61	                <strong>{formatCents(l.priceCents * l.quantity, l.currency)}</strong>
+    62	              </li>
+    63	            ))}
+    64	          </ul>
+    65	          <p className={styles.delivery}>Keys are delivered on the order page immediately after payment and stay in your order history.</p>
+    66	        </section>
+    67	
+    68	        <aside className={styles.summary} aria-label="Total">
+    69	          <div className={styles.totalRow}>
+    70	            <span>Total</span>
+    71	            <strong className={styles.total}>{formatCents(cart.totalCents)}</strong>
+    72	          </div>
+    73	          {err && (
+    74	            <p className={styles.error} role="alert">
+    75	              {err.message}
+    76	              {err.code === 'price_changed' && ' The cart now shows the current prices.'}
+    77	            </p>
+    78	          )}
+    79	          {blocked && (
+    80	            <p className={styles.error} role="alert">
+    81	              Fix the items marked above in your <Link to="/cart">cart</Link> first.
+    82	            </p>
+    83	          )}
+    84	          <button type="button" className={styles.primary} disabled={blocked || create.isPending} onClick={placeOrder}>
+    85	            {create.isPending ? 'Reserving your keys…' : 'Continue to payment'}
+    86	          </button>
+    87	          <p className={styles.note}>
+    88	            <ShieldCheck size={16} aria-hidden="true" /> Your keys are reserved for 15 minutes while you pay. Demo shop: no real money is charged.
+    89	          </p>
+    90	          <Link to="/cart" className={styles.back}>
+    91	            Back to cart
+    92	          </Link>
+    93	        </aside>
+    94	      </div>
+    95	    </Container>
+    96	  )
+    97	}
+=== features/checkout/PaymentPage.tsx
+     1	import { CircleAlert, CreditCard, ShieldCheck } from 'lucide-react'
+     2	import { useEffect, useState } from 'react'
+     3	import { Link, Navigate, useNavigate, useParams } from 'react-router'
+     4	import { ApiError } from '../../api/client'
+     5	import { useCancelOrder, useOrder, usePayOrder } from '../../api/orders'
+     6	import { Container } from '../../components/Container'
+     7	import { ErrorState } from '../../components/States'
+     8	import { formatCents } from '../../lib/money'
+     9	import { Steps } from './Steps'
+    10	import styles from './checkout.module.css'
+    11	
+    12	function useCountdown(seconds: number | undefined, fetchedAt: number) {
+    13	  const [now, setNow] = useState(() => Date.now())
+    14	  useEffect(() => {
+    15	    const t = setInterval(() => setNow(Date.now()), 1000)
+    16	    return () => clearInterval(t)
+    17	  }, [])
+    18	  if (seconds === undefined) return null
+    19	  return Math.max(0, seconds - Math.floor((now - fetchedAt) / 1000))
+    20	}
+    21	
+    22	/** Simulated payment: clearly labelled, no card data, but a real payment lifecycle on the server. */
+    23	export function PaymentPage() {
+    24	  const { id = '' } = useParams()
+    25	  const order = useOrder(id)
+    26	  const pay = usePayOrder(id)
+    27	  const cancel = useCancelOrder(id)
+    28	  const navigate = useNavigate()
+    29	  const left = useCountdown(order.data?.status === 'pending_payment' ? order.data.secondsToExpiry : undefined, order.dataUpdatedAt)
+    30	  useEffect(() => {
+    31	    document.title = 'Payment — keyshop'
+    32	  }, [])
+    33	
+    34	  if (order.isError) {
+    35	    return (
+    36	      <Container className={styles.page}>
+    37	        <ErrorState error={order.error} onRetry={() => void order.refetch()} />
+    38	      </Container>
+    39	    )
+    40	  }
+    41	  if (order.isPending) return <Container className={styles.page}><div aria-busy="true" style={{ minHeight: '50vh' }} /></Container>
+    42	  const o = order.data
+    43	  if (o.status === 'paid') return <Navigate to={`/orders/${o.id}`} replace />
+    44	
+    45	  const closed = o.status !== 'pending_payment' || left === 0
+    46	  const err = pay.error instanceof ApiError ? pay.error : null
+    47	
+    48	  return (
+    49	    <Container className={styles.page}>
+    50	      <Steps current="Payment" />
+    51	      <h1 className={styles.h1}>Payment</h1>
+    52	      <div className={styles.layout}>
+    53	        <section className={styles.panel} aria-labelledby="pay-h">
+    54	          <div className={styles.demoBanner}>
+    55	            <CreditCard size={22} aria-hidden="true" />
+    56	            <div>
+    57	              <h2 id="pay-h" className={styles.h2}>
+    58	                Demo payment — no real money is charged
+    59	              </h2>
+    60	              <p>
+    61	                This shop uses a simulated payment provider. Choose the outcome to test both paths. A successful payment
+    62	                marks the order as paid and releases your keys; a declined one keeps them reserved so you can try again.
+    63	              </p>
+    64	            </div>
+    65	          </div>
+    66	
+    67	          {closed ? (
+    68	            <div className={styles.closed} role="alert">
+    69	              <CircleAlert size={20} aria-hidden="true" />
+    70	              <p>
+    71	                {o.status === 'cancelled'
+    72	                  ? 'This order was cancelled and its keys went back on sale.'
+    73	                  : 'The 15-minute reservation for this order ran out and its keys went back on sale.'}{' '}
+    74	                <Link to="/cart">Return to your cart</Link> to check out again.
+    75	              </p>
+    76	            </div>
+    77	          ) : (
+    78	            <>
+    79	              {left !== null && (
+    80	                <p className={styles.timer} aria-live="off">
+    81	                  Keys reserved for <strong>{Math.floor(left / 60)}:{String(left % 60).padStart(2, '0')}</strong>
+    82	                </p>
+    83	              )}
+    84	              {err && (
+    85	                <p className={styles.error} role="alert">
+    86	                  {err.message}
+    87	                </p>
+    88	              )}
+    89	              <div className={styles.payButtons}>
+    90	                <button
+    91	                  type="button"
+    92	                  className={styles.primary}
+    93	                  disabled={pay.isPending || cancel.isPending}
+    94	                  onClick={() => pay.mutate('success', { onSuccess: (paid) => navigate(`/orders/${paid.id}`, { replace: true }) })}
+    95	                >
+    96	                  {pay.isPending && pay.variables === 'success' ? 'Processing…' : `Simulate successful payment · ${formatCents(o.totalCents, o.currency)}`}
+    97	                </button>
+    98	                <button type="button" className={styles.secondary} disabled={pay.isPending || cancel.isPending} onClick={() => pay.mutate('decline')}>
+    99	                  Simulate declined payment
+   100	                </button>
+   101	              </div>
+   102	              <button type="button" className={styles.linkButton} disabled={cancel.isPending} onClick={() => cancel.mutate()}>
+   103	                Cancel order and release the keys
+   104	              </button>
+   105	            </>
+   106	          )}
+   107	        </section>
+   108	
+   109	        <aside className={styles.summary} aria-label="Order summary">
+   110	          <h2 className={styles.h2}>Order summary</h2>
+   111	          <ul className={styles.compactItems}>
+   112	            {o.items.map((it) => (
+   113	              <li key={it.offerId}>
+   114	                <span>
+   115	                  {it.quantity} × {it.title}
+   116	                  <small>Seller: {it.seller}</small>
+   117	                </span>
+   118	                <strong>{formatCents(it.unitPriceCents * it.quantity, o.currency)}</strong>
+   119	              </li>
+   120	            ))}
+   121	          </ul>
+   122	          <div className={styles.totalRow}>
+   123	            <span>Total</span>
+   124	            <strong className={styles.total}>{formatCents(o.totalCents, o.currency)}</strong>
+   125	          </div>
+   126	          <p className={styles.note}>
+   127	            <ShieldCheck size={16} aria-hidden="true" /> Order {o.id.slice(0, 8)}
+   128	          </p>
+   129	        </aside>
+   130	      </div>
+   131	    </Container>
+   132	  )
+   133	}
+=== features/checkout/Steps.tsx
+     1	import styles from './checkout.module.css'
+     2	
+     3	const STEPS = ['Cart', 'Checkout', 'Payment', 'Order and key'] as const
+     4	
+     5	/** Progress through the purchase flow (the same steps as the assignment's diagram). */
+     6	export function Steps({ current }: { current: (typeof STEPS)[number] }) {
+     7	  const index = STEPS.indexOf(current)
+     8	  return (
+     9	    <ol className={styles.steps} aria-label="Checkout progress">
+    10	      {STEPS.map((s, i) => (
+    11	        <li key={s} className={i < index ? styles.stepDone : i === index ? styles.stepCurrent : styles.step} aria-current={i === index ? 'step' : undefined}>
+    12	          <span className={styles.stepNo}>{i + 1}</span> {s}
+    13	        </li>
+    14	      ))}
+    15	    </ol>
+    16	  )
+    17	}

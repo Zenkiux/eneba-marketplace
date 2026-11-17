@@ -15,7 +15,7 @@ var regions = []named{
 }
 
 var productTypes = []named{
-	{"game", "Game"}, {"dlc", "DLC"}, {"gift-card", "Gift card"}, {"subscription", "Subscription"},
+	{"game", "Game"}, {"dlc", "DLC"}, {"gift-card", "Gift card"}, {"subscription", "Subscription"}, {"software", "Software"},
 }
 
 type seller struct {
@@ -181,8 +181,8 @@ type sectionSeed struct {
 var sections = []sectionSeed{
 	{"hero", "banner", "", `{}`},
 	{"categories", "category_strip", "", `{}`},
-	{"top-games", "bestsellers", "Top games", `{"limit": 10, "type": "game"}`},
-	{"deals", "deals", "Best deals right now", `{"limit": 10}`},
-	{"new-releases", "new_releases", "New releases", `{"limit": 10}`},
-	{"upcoming", "upcoming", "Upcoming games", `{"limit": 10}`},
+	{"top-games", "bestsellers", "Top games", `{"limit": 10, "type": "game", "titles": {"lt": "Populiariausi žaidimai", "de": "Top-Spiele", "pl": "Najpopularniejsze gry"}}`},
+	{"deals", "deals", "Best deals right now", `{"limit": 10, "titles": {"lt": "Geriausi pasiūlymai dabar", "de": "Die besten Angebote", "pl": "Najlepsze okazje teraz"}}`},
+	{"new-releases", "new_releases", "New releases", `{"limit": 10, "titles": {"lt": "Naujienos", "de": "Neuerscheinungen", "pl": "Nowości"}}`},
+	{"upcoming", "upcoming", "Upcoming games", `{"limit": 10, "titles": {"lt": "Greitai pasirodysiantys žaidimai", "de": "Kommende Spiele", "pl": "Nadchodzące gry"}}`},
 }

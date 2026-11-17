@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useI18n } from '../../i18n/useI18n'
 import { eurosToCents } from './storeQuery'
 import styles from './StorePage.module.css'
 
@@ -9,6 +10,7 @@ export function PriceFilter({ min, max, onApply }: { min: number | null; max: nu
   const [minText, setMinText] = useState(toText(min))
   const [maxText, setMaxText] = useState(toText(max))
   const [prev, setPrev] = useState({ min, max })
+  const { t } = useI18n()
   if (prev.min !== min || prev.max !== max) {
     setPrev({ min, max })
     setMinText(toText(min))
@@ -23,7 +25,7 @@ export function PriceFilter({ min, max, onApply }: { min: number | null; max: nu
   return (
     <fieldset className={styles.group}>
       <legend className={styles.groupLegend}>
-        <span>Price range (EUR)</span>
+        <span>{t('Price range (EUR)')}</span>
       </legend>
       <form
         className={styles.price}
@@ -32,14 +34,14 @@ export function PriceFilter({ min, max, onApply }: { min: number | null; max: nu
           apply()
         }}
       >
-        <input inputMode="decimal" aria-label="Minimum price in euros" placeholder="Min" value={minText} onChange={(e) => setMinText(e.target.value)} onBlur={apply} aria-invalid={minC === undefined} />
+        <input inputMode="decimal" aria-label={t('Minimum price in euros')} placeholder={t('Min')} value={minText} onChange={(e) => setMinText(e.target.value)} onBlur={apply} aria-invalid={minC === undefined} />
         <span aria-hidden="true">–</span>
-        <input inputMode="decimal" aria-label="Maximum price in euros" placeholder="Max" value={maxText} onChange={(e) => setMaxText(e.target.value)} onBlur={apply} aria-invalid={maxC === undefined} />
+        <input inputMode="decimal" aria-label={t('Maximum price in euros')} placeholder={t('Max')} value={maxText} onChange={(e) => setMaxText(e.target.value)} onBlur={apply} aria-invalid={maxC === undefined} />
         <button type="submit" className={styles.applyPrice} disabled={invalid}>
-          Apply price
+          {t('Apply price')}
         </button>
       </form>
-      {invalid && <p className={styles.priceError}>Enter amounts like 9.99, with the minimum below the maximum.</p>}
+      {invalid && <p className={styles.priceError}>{t('Enter amounts like 9.99, with the minimum below the maximum.')}</p>}
     </fieldset>
   )
 }

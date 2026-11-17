@@ -1,0 +1,64 @@
+.wrap {
+  position: relative;
+  flex: none;
+}
+
+.button {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 4px;
+  border: 0;
+  background: none;
+  font-size: var(--font-size-nav);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.panel {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 10px);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 260px;
+  padding: 18px;
+  background: var(--color-bg-panel);
+  box-shadow: 0 14px 34px rgb(0 0 0 / 45%);
+}
+
+.panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--font-size-nav);
+  font-weight: var(--font-weight-semibold);
+}
+
+.panel select {
+  height: 40px;
+  padding: 0 10px;
+  border: 0;
+  background: var(--color-bg-input);
+  font-weight: var(--font-weight-semibold);
+}
+
+.panel option {
+  background: var(--color-bg-panel);
+}
+
+.note {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-card-title);
+  line-height: 1.5;
+}
+
+.save {
+  height: 40px;
+  border: 0;
+  background: var(--color-cta);
+  color: var(--color-cta-text);
+  font-weight: var(--font-weight-extrabold);
+}

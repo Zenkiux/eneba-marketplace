@@ -109,6 +109,8 @@
   display: flex;
   gap: 4px;
   align-items: center;
+  overflow-x: auto; /* many links (and longer translations) scroll instead of overflowing the page */
+  scrollbar-width: none;
   max-width: var(--content-max-width);
   height: var(--header-nav-height);
   margin: 0 auto;
@@ -147,9 +149,30 @@
   text-decoration: underline;
 }
 
+.willItWork {
+  margin-left: 10px;
+  padding: 6px 12px;
+  border: 1px solid var(--color-positive);
+  color: var(--color-positive);
+  font-size: var(--font-size-nav);
+  font-weight: var(--font-weight-extrabold);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.mobileLocale {
+  display: none;
+}
+
+.switches {
+  display: flex;
+  gap: 18px;
+  margin-left: auto;
+}
+
 @media (width <= 1100px) {
-  .locale {
-    display: none;
+  .top {
+    gap: 20px;
   }
 }
 
@@ -164,6 +187,7 @@
   }
 
   .search,
+  .locale,
   .accountText {
     display: none;
   }
@@ -204,8 +228,34 @@
     font-size: var(--font-size-body);
   }
 
+  .navOpen .switches {
+    flex-direction: column;
+    gap: 14px;
+    margin: 10px 20px;
+  }
+
+  .navOpen .willItWork {
+    margin: 6px 20px;
+    text-align: center;
+  }
+
   .navOpen .promo {
     margin: 10px 20px;
     text-align: center;
+  }
+
+  .navOpen .mobileLocale {
+    display: block;
+    margin: 6px 20px;
+    padding-top: 10px;
+    border-top: 1px solid rgb(255 255 255 / 10%);
+  }
+
+  .navOpen .mobileLocale [role='dialog'] {
+    position: static;
+    width: auto;
+    margin-top: 10px;
+    box-shadow: none;
+    background: var(--color-bg-page);
   }
 }

@@ -1,3 +1,4 @@
+import { getLocale } from '../i18n/locale'
 import { getCatalog } from './catalogChoice'
 import { wakeEnd, wakeStart } from './wake'
 
@@ -97,6 +98,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   const { method = 'GET', body, headers = {}, signal } = options
   const finalHeaders: Record<string, string> = { Accept: 'application/json', ...headers }
   if (getCatalog() === 'eneba') finalHeaders['X-Catalog'] = 'eneba'
+  finalHeaders['Accept-Language'] = getLocale().lang
   const init: RequestInit = { method, credentials: 'same-origin', headers: finalHeaders, signal }
 
   if (body !== undefined) {

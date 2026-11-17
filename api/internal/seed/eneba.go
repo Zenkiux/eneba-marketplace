@@ -10,7 +10,9 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/Zenkiux/eneba-marketplace/api/internal/compat"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/keys"
+	"github.com/Zenkiux/eneba-marketplace/api/internal/search"
 )
 
 // EnebaSnapshot is the file written by e2e/tools/scrape-eneba.mjs (kept local, never committed).
@@ -27,13 +29,25 @@ type EnebaSnapshot struct {
 		Region           string  `json:"region"`
 		ListPriceCents   int64   `json:"listPriceCents"`
 		OfferPricesCents []int64 `json:"offerPricesCents"`
+		Type             string  `json:"type"`
+		Requirements     *struct {
+			Minimum     map[string]string `json:"minimum"`
+			Recommended map[string]string `json:"recommended"`
+		} `json:"requirements"`
 	} `json:"products"`
 }
 
 var enebaPlatformNames = map[string]string{
 	"rockstar": "Rockstar Games Launcher", "ea": "EA app", "ubisoft": "Ubisoft Connect",
-	"battlenet": "Battle.net", "other": "Other",
+	"battlenet": "Battle.net", "microsoft": "Microsoft Store", "other": "Other",
 }
+
+var enebaRegionNames = map[string]string{
+	"latin-america": "Latin America", "turkey": "Turkey", "argentina": "Argentina", "brazil": "Brazil",
+	"rest-of-world": "Rest of World",
+}
+
+var enebaTypes = map[string]bool{"game": true, "dlc": true, "gift-card": true, "subscription": true, "software": true}
 
 // ImportEneba loads a snapshot as catalog 'eneba'. Real titles, cover URLs (Eneba's image CDN)
 // and prices are kept; sellers are our demo sellers and keys are freshly generated fake keys.
@@ -71,21 +85,41 @@ func ImportEneba(ctx context.Context, pool *pgxpool.Pool, box *keys.Box, file st
 			if _, err := tx.Exec(ctx, `INSERT INTO platforms (slug, name) VALUES ($1, $2) ON CONFLICT (slug) DO NOTHING`, p.Platform, name); err != nil {
 				return err
 			}
+			if rn := enebaRegionNames[p.Region]; rn != "" {
+				if _, err := tx.Exec(ctx, `INSERT INTO regions (slug, name) VALUES ($1, $2) ON CONFLICT (slug) DO NOTHING`, p.Region, rn); err != nil {
+					return err
+				}
+			}
+			typ := p.Type
+			if !enebaTypes[typ] {
+				typ = "game"
+			}
+			if _, err := tx.Exec(ctx, `INSERT INTO product_types (slug, name) VALUES ('software', 'Software') ON CONFLICT (slug) DO NOTHING`); err != nil {
+				return err
+			}
 			var productID int64
 			err := tx.QueryRow(ctx, `INSERT INTO products (slug, title, description, cover_url, platform_id, region_id, type_id,
 					release_date, list_price_cents, popularity, catalog, source_url, snapshot_at)
 				VALUES ($1, $2, $3, $4, (SELECT id FROM platforms WHERE slug = $5), (SELECT id FROM regions WHERE slug = $6),
-					(SELECT id FROM product_types WHERE slug = 'game'), $7, $8, $9, 'eneba', $10, $11)
-				ON CONFLICT (slug) DO UPDATE SET title = EXCLUDED.title, cover_url = EXCLUDED.cover_url,
+					(SELECT id FROM product_types WHERE slug = $12), $7, $8, $9, 'eneba', $10, $11)
+				ON CONFLICT (slug) DO UPDATE SET title = EXCLUDED.title, cover_url = EXCLUDED.cover_url, type_id = EXCLUDED.type_id,
+					region_id = EXCLUDED.region_id, platform_id = EXCLUDED.platform_id,
 					list_price_cents = EXCLUDED.list_price_cents, popularity = EXCLUDED.popularity, snapshot_at = EXCLUDED.snapshot_at
 				RETURNING id`,
 				"eneba-"+p.Slug, p.Name,
 				fmt.Sprintf("Listing from an eneba.com snapshot taken on %s, shown for demonstration. Prices are as listed on that day; sellers are demo sellers and keys are fake.", snap.ScrapedAt.Format("2 January 2006")),
-				p.Image, p.Platform, p.Region, p.ReleaseDate, p.ListPriceCents, 1000-i*10, p.URL, snap.ScrapedAt).Scan(&productID)
+				p.Image, p.Platform, p.Region, p.ReleaseDate, p.ListPriceCents, 1000-i*3, p.URL, snap.ScrapedAt, typ).Scan(&productID)
 			if err != nil {
 				return fmt.Errorf("%s: %w", p.Slug, err)
 			}
 			st.Products++
+			var min, rec map[string]string
+			if p.Requirements != nil {
+				min, rec = p.Requirements.Minimum, p.Requirements.Recommended
+			}
+			if err := compat.SaveRequirements(ctx, tx, productID, min, rec); err != nil {
+				return err
+			}
 			for j, price := range p.OfferPricesCents {
 				seller := sellerIDs[(i+j)%len(sellerIDs)]
 				var offerID int64
@@ -115,5 +149,8 @@ func ImportEneba(ctx context.Context, pool *pgxpool.Pool, box *keys.Box, file st
 		}
 		return nil
 	})
+	if err == nil {
+		_, err = search.Refresh(ctx, pool)
+	}
 	return st, err
 }

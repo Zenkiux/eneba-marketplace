@@ -4,6 +4,8 @@ import { OrdersPage } from './features/account/OrdersPage'
 import { LoginPage } from './features/auth/LoginPage'
 import { RegisterPage } from './features/auth/RegisterPage'
 import { RequireAuth } from './features/auth/RequireAuth'
+import { WillItWorkPage } from './features/compat/WillItWorkPage'
+import { ProposalPage } from './features/proposal/ProposalPage'
 import { CartPage } from './features/cart/CartPage'
 import { CheckoutPage } from './features/checkout/CheckoutPage'
 import { PaymentPage } from './features/checkout/PaymentPage'
@@ -21,6 +23,8 @@ export const routes: RouteObject[] = [
       { path: 'store', element: <StorePage /> },
       { path: 'p/:slug', element: <ProductPage /> },
       { path: 'cart', element: <CartPage /> },
+      { path: 'will-it-work', element: <WillItWorkPage /> },
+      { path: 'proposal', element: <ProposalPage /> },
       { path: 'checkout', element: <RequireAuth><CheckoutPage /></RequireAuth> },
       { path: 'checkout/:id/pay', element: <RequireAuth><PaymentPage /></RequireAuth> },
       { path: 'login', element: <LoginPage /> },

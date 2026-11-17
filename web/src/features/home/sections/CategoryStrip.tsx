@@ -4,6 +4,7 @@ import { Link } from 'react-router'
 import { useHomeSection } from '../../../api/catalog'
 import type { Category } from '../../../api/types'
 import { Container } from '../../../components/Container'
+import { useI18n } from '../../../i18n/useI18n'
 import styles from './sections.module.css'
 import type { SectionProps } from './registry'
 
@@ -24,9 +25,10 @@ const icons: Record<string, LucideIcon> = {
 
 export function CategoryStrip({ sectionKey }: SectionProps) {
   const { data, isError } = useHomeSection<{ categories: Category[] }>(sectionKey)
+  const { t } = useI18n()
   if (isError || !data) return null
   return (
-    <nav className={styles.strip} aria-label="Browse categories">
+    <nav className={styles.strip} aria-label={t('Browse categories')}>
       <Container className={styles.stripInner}>
         {data.content.categories.map((c) => {
           const Icon = icons[c.slug] ?? Tag

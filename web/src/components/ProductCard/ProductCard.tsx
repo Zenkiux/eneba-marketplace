@@ -1,6 +1,7 @@
 import { Link } from 'react-router'
 import type { ProductCard as Card } from '../../api/types'
-import { formatCents } from '../../lib/money'
+import { CompatBadge } from '../../features/compat/CompatBadge'
+import { useI18n } from '../../i18n/useI18n'
 import styles from './ProductCard.module.css'
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 /** Eneba-style product card: 2:3 cover with a platform strip, dark info panel, "From" price. */
 export function ProductCard({ product: p, eager = false }: Props) {
   const soldOut = p.minPriceCents === null
+  const { t, money } = useI18n()
   return (
     <Link to={`/p/${p.slug}`} className={styles.card} aria-label={p.title}>
       <div className={styles.cover}>
@@ -22,23 +24,24 @@ export function ProductCard({ product: p, eager = false }: Props) {
         <span className={styles.title}>{p.title}</span>
         <span className={p.region.slug === 'europe' ? styles.regionAlt : styles.region}>{p.region.name}</span>
         {soldOut ? (
-          <span className={styles.soldOut}>Sold out</span>
+          <span className={styles.soldOut}>{t('Sold out')}</span>
         ) : (
           <>
             <span className={styles.from}>
-              From
+              {t('From')}
               {p.discountPercent > 0 && (
                 <>
                   {' '}
-                  <s>{formatCents(p.listPriceCents)}</s> <span className={styles.discount}>-{p.discountPercent}%</span>
+                  <s>{money(p.listPriceCents)}</s> <span className={styles.discount}>-{p.discountPercent}%</span>
                 </>
               )}
             </span>
-            <span className={styles.price}>{formatCents(p.minPriceCents ?? 0)}</span>
+            <span className={styles.price}>{money(p.minPriceCents ?? 0)}</span>
           </>
         )}
+        <CompatBadge product={p} />
         <span className={styles.hoverCta} aria-hidden="true">
-          View offers
+          {t('View offers')}
         </span>
       </div>
     </Link>

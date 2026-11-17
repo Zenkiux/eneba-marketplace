@@ -8,6 +8,9 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/Zenkiux/eneba-marketplace/api/internal/compat"
+	"github.com/Zenkiux/eneba-marketplace/api/internal/search"
 )
 
 // Named is a filter dimension value (platform, region or product type).
@@ -30,6 +33,8 @@ type Card struct {
 	MinPriceCents   *int64  `json:"minPriceCents"` // lowest in-stock offer; nil = sold out
 	DiscountPercent int     `json:"discountPercent"`
 	OfferCount      int     `json:"offerCount"` // offers with stock
+	// Minimum requirements (PC games only) so the UI can show "works for me" badges.
+	ReqMin *compat.Level `json:"reqMin,omitempty"`
 }
 
 // CardSelect is shared by every query that returns cards. The lateral join finds the cheapest
@@ -37,7 +42,8 @@ type Card struct {
 const CardSelect = `
 SELECT p.id, p.slug, p.title, p.cover_url,
        pl.slug, pl.name, r.slug, r.name, t.slug, t.name,
-       to_char(p.release_date, 'YYYY-MM-DD'), p.list_price_cents, s.min_price, s.offer_count` + cardFrom
+       to_char(p.release_date, 'YYYY-MM-DD'), p.list_price_cents, s.min_price, s.offer_count,
+       p.req_min_os, p.req_min_gpu, p.req_min_cpu, p.req_min_ram::float8` + cardFrom
 
 const cardFrom = `
 FROM products p
@@ -54,9 +60,27 @@ LEFT JOIN LATERAL (
 // ScanCard reads one row produced by CardSelect.
 func ScanCard(row pgx.Row) (Card, error) {
 	var c Card
+	var os *string
+	var gpu, cpu *int
+	var ram *float64
 	err := row.Scan(&c.ID, &c.Slug, &c.Title, &c.CoverURL,
 		&c.Platform.Slug, &c.Platform.Name, &c.Region.Slug, &c.Region.Name, &c.Type.Slug, &c.Type.Name,
-		&c.ReleaseDate, &c.ListPriceCents, &c.MinPriceCents, &c.OfferCount)
+		&c.ReleaseDate, &c.ListPriceCents, &c.MinPriceCents, &c.OfferCount, &os, &gpu, &cpu, &ram)
+	if os != nil || gpu != nil || cpu != nil || ram != nil {
+		c.ReqMin = &compat.Level{}
+		if os != nil {
+			c.ReqMin.OS = *os
+		}
+		if gpu != nil {
+			c.ReqMin.GPUScore = *gpu
+		}
+		if cpu != nil {
+			c.ReqMin.CPUScore = *cpu
+		}
+		if ram != nil {
+			c.ReqMin.RAMGB = *ram
+		}
+	}
 	if c.MinPriceCents != nil && c.ListPriceCents > *c.MinPriceCents {
 		c.DiscountPercent = int((c.ListPriceCents - *c.MinPriceCents) * 100 / c.ListPriceCents)
 	}
@@ -65,7 +89,16 @@ func ScanCard(row pgx.Row) (Card, error) {
 
 // ---------------------------------------------------------------- listing
 
+// Works restricts results to products that work for the visitor: key region activates in their
+// country, and either it's for a console they own or their PC meets the minimum requirements.
+type Works struct {
+	Regions  []string // region slugs that activate in the visitor's country
+	Consoles []string // key platforms of owned consoles: psn, xbox, nintendo
+	compat.Device
+}
+
 type Filter struct {
+	Works     *Works
 	Source    string // catalog: SourceDemo or SourceEneba
 	Query     string
 	Platforms []string
@@ -115,9 +148,10 @@ var sorts = map[string]string{
 	"discount":   "(CASE WHEN s.min_price IS NULL THEN -1 ELSE (p.list_price_cents - s.min_price)::float / p.list_price_cents END) DESC",
 	// relevance: exact > prefix > substring > fuzzy, then similarity score.
 	"relevance": `(CASE WHEN lower(p.title) = lower(@q) THEN 0
-	                    WHEN lower(p.title) LIKE @qlike_prefix ESCAPE '\' THEN 1
-	                    WHEN lower(p.title) LIKE @qlike ESCAPE '\' THEN 2 ELSE 3 END) ASC,
-	              word_similarity(lower(@q), lower(p.title)) DESC, p.popularity DESC`,
+	                    WHEN split_part(p.search_text, ' | ', 2) = @qnorm THEN 0
+	                    WHEN split_part(p.search_text, ' | ', 2) LIKE @qnorm || '%' THEN 1
+	                    WHEN p.search_text LIKE ANY(@likes) THEN 2 ELSE 3 END) ASC,
+	              (SELECT max(word_similarity(v, p.search_text)) FROM unnest(@variants::text[]) v) DESC, p.popularity DESC`,
 }
 
 // ValidSort reports whether s is a supported sort key.
@@ -134,11 +168,20 @@ func (f Filter) where(args pgx.NamedArgs, skip string) string {
 	args["catalog"] = f.Source
 	conds := []string{"p.catalog = @catalog"}
 	if f.Query != "" {
+		variants := search.QueryVariants(f.Query)
+		likes := make([]string, len(variants))
+		for i, v := range variants {
+			likes[i] = "%" + escapeLike(v) + "%"
+		}
 		args["q"] = f.Query
-		args["qlike"] = "%" + escapeLike(strings.ToLower(f.Query)) + "%"
-		args["qlike_prefix"] = escapeLike(strings.ToLower(f.Query)) + "%"
+		args["qnorm"] = search.Normalize(f.Query)
+		args["variants"] = variants
+		args["likes"] = likes
 		args["threshold"] = typoThreshold
-		conds = append(conds, `(lower(p.title) LIKE @qlike ESCAPE '\' OR word_similarity(lower(@q), lower(p.title)) >= @threshold)`)
+		// Substring of the search text (title, acronyms, numeral variants, aliases) for any query
+		// variant, or trigram similarity for typos. LIKE's default escape character is '\'.
+		conds = append(conds, `(p.search_text LIKE ANY(@likes)
+			OR (SELECT max(word_similarity(v, p.search_text)) FROM unnest(@variants::text[]) v) >= @threshold)`)
 	}
 	if len(f.Platforms) > 0 && skip != "platform" {
 		args["platforms"] = f.Platforms
@@ -152,6 +195,21 @@ func (f Filter) where(args pgx.NamedArgs, skip string) string {
 		args["types"] = f.Types
 		conds = append(conds, "t.slug = ANY(@types)")
 	}
+	if w := f.Works; w != nil {
+		args["works_regions"] = w.Regions
+		args["works_consoles"] = w.Consoles
+		args["works_pc"] = pcPlatforms()
+		args["works_os"] = w.OS
+		args["works_gpu"] = w.GPUScore
+		args["works_cpu"] = w.CPUScore
+		args["works_ram"] = w.RAMGB
+		conds = append(conds, `r.slug = ANY(@works_regions)`, `(pl.slug = 'keyshop' OR pl.slug = ANY(@works_consoles)
+			OR (pl.slug = ANY(@works_pc)
+			    AND (p.req_min_os IS NULL OR @works_os = '' OR p.req_min_os = @works_os)
+			    AND (p.req_min_gpu IS NULL OR @works_gpu = 0 OR @works_gpu >= p.req_min_gpu)
+			    AND (p.req_min_cpu IS NULL OR @works_cpu = 0 OR @works_cpu >= p.req_min_cpu)
+			    AND (p.req_min_ram IS NULL OR @works_ram::float8 = 0 OR @works_ram::float8 >= p.req_min_ram)))`)
+	}
 	if f.MinPrice != nil {
 		args["min_price"] = *f.MinPrice
 		conds = append(conds, "s.min_price >= @min_price")
@@ -161,6 +219,24 @@ func (f Filter) where(args pgx.NamedArgs, skip string) string {
 		conds = append(conds, "s.min_price <= @max_price")
 	}
 	return strings.Join(conds, " AND ")
+}
+
+func pcPlatforms() []string {
+	var out []string
+	for p := range compat.PCPlatforms {
+		out = append(out, p)
+	}
+	return out
+}
+
+// AllowedRegions lists region slugs whose keys activate in the country.
+func (s *Store) AllowedRegions(ctx context.Context, country string) ([]string, error) {
+	rows, err := s.db.Query(ctx, `SELECT slug FROM regions`)
+	if err != nil {
+		return nil, err
+	}
+	all, err := pgx.CollectRows(rows, pgx.RowTo[string])
+	return compat.RegionsFor(country, all), err
 }
 
 func escapeLike(s string) string {
@@ -283,11 +359,12 @@ type Seller struct {
 
 type Product struct {
 	Card
-	Description string   `json:"description"`
-	Developer   string   `json:"developer"`
-	Publisher   string   `json:"publisher"`
-	Genres      []string `json:"genres"`
-	Offers      []Offer  `json:"offers"` // cheapest in-stock first, sold-out offers last
+	Description  string               `json:"description"`
+	Developer    string               `json:"developer"`
+	Publisher    string               `json:"publisher"`
+	Genres       []string             `json:"genres"`
+	Requirements *compat.Requirements `json:"requirements"`
+	Offers       []Offer              `json:"offers"` // cheapest in-stock first, sold-out offers last
 }
 
 var ErrNotFound = fmt.Errorf("product not found")
@@ -303,8 +380,8 @@ func (s *Store) Product(ctx context.Context, slug string) (Product, error) {
 		return p, err
 	}
 	p.Card = card
-	if err := s.db.QueryRow(ctx, `SELECT description, developer, publisher, genres FROM products WHERE id = $1`, card.ID).
-		Scan(&p.Description, &p.Developer, &p.Publisher, &p.Genres); err != nil {
+	if err := s.db.QueryRow(ctx, `SELECT description, developer, publisher, genres, requirements FROM products WHERE id = $1`, card.ID).
+		Scan(&p.Description, &p.Developer, &p.Publisher, &p.Genres, &p.Requirements); err != nil {
 		return p, err
 	}
 	// Stock is a count only. Key codes are never selected here.

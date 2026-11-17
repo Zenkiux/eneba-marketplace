@@ -209,3 +209,36 @@ func TestCategoriesAndUnknownSection(t *testing.T) {
 		t.Fatalf("unknown section: %d", code)
 	}
 }
+
+func TestSectionTitlesFollowLanguage(t *testing.T) {
+	pool := testdb.New(t)
+	mux := http.NewServeMux()
+	home.NewHandler(pool).Register(mux)
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+	get := func(lang string) layout {
+		req, _ := http.NewRequest("GET", srv.URL+"/api/home", nil)
+		req.Header.Set("Accept-Language", lang)
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer res.Body.Close()
+		var l layout
+		json.NewDecoder(res.Body).Decode(&l)
+		return l
+	}
+	titles := func(l layout) map[string]string {
+		m := map[string]string{}
+		for _, s := range l.Sections {
+			m[s.Key] = s.Title
+		}
+		return m
+	}
+	if got := titles(get("lt-LT,lt;q=0.9"))["top-games"]; got != "Populiariausi žaidimai" {
+		t.Fatalf("Lithuanian title: %q", got)
+	}
+	if got := titles(get("fr-FR"))["top-games"]; got != "Top games" {
+		t.Fatalf("unsupported language should fall back to English: %q", got)
+	}
+}

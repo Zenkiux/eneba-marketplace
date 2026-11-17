@@ -83,6 +83,17 @@
   font-weight: var(--font-weight-semibold);
 }
 
+.compatWarning {
+  color: var(--color-region);
+  font-size: var(--font-size-card-title);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.5;
+}
+
+.compatWarning a {
+  color: var(--color-cta);
+}
+
 .qty {
   display: flex;
   align-items: center;

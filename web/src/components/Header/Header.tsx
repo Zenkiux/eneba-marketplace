@@ -4,7 +4,10 @@ import { Link, NavLink } from 'react-router'
 import { useLogout, useMe } from '../../api/auth'
 import { useCart } from '../../features/cart/useCart'
 import { CatalogNotice, CatalogSwitch } from '../CatalogSwitch'
+import { ProposalSwitch } from '../../features/proposal/ProposalSwitch'
 import { SearchBox } from '../SearchBox'
+import { LocaleSwitcher } from '../LocaleSwitcher'
+import { useI18n } from '../../i18n/useI18n'
 import { Logo } from './Logo'
 import styles from './Header.module.css'
 
@@ -26,6 +29,7 @@ export function Header() {
   const { count } = useCart()
   const me = useMe()
   const logout = useLogout()
+  const { t } = useI18n()
 
   return (
     <header className={styles.header}>
@@ -33,48 +37,48 @@ export function Header() {
         <button
           type="button"
           className={`${styles.iconButton} ${styles.mobileOnly}`}
-          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          aria-label={menuOpen ? t('Close menu') : t('Open menu')}
           aria-expanded={menuOpen}
           aria-controls="site-nav"
           onClick={() => setMenuOpen((o) => !o)}
         >
           {menuOpen ? <X size={26} /> : <Menu size={26} />}
         </button>
-        <Link to="/" className={styles.logo} aria-label="keyshop home">
+        <Link to="/" className={styles.logo} aria-label={t('keyshop home')}>
           <Logo />
         </Link>
         <div className={styles.search}>
           <SearchBox />
         </div>
         <span className={styles.locale}>
-          English EU <span aria-hidden="true">|</span> EUR
+          <LocaleSwitcher />
         </span>
         <div className={styles.actions}>
           <button
             type="button"
             className={`${styles.iconButton} ${styles.mobileOnly}`}
-            aria-label="Search"
+            aria-label={t('Search')}
             aria-expanded={searchOpen}
             onClick={() => setSearchOpen((o) => !o)}
           >
             <Search size={24} />
           </button>
-          <span className={`${styles.iconButton} ${styles.disabled}`} title="Wishlist is not part of this demo">
-            <Heart size={24} aria-label="Wishlist (not available in this demo)" />
+          <span className={`${styles.iconButton} ${styles.disabled}`} title={t('Wishlist is not part of this demo')}>
+            <Heart size={24} aria-label={t('Wishlist (not available in this demo)')} />
           </span>
-          <Link to="/cart" className={`${styles.iconButton} ${styles.cart}`} aria-label={`Cart, ${count} ${count === 1 ? 'item' : 'items'}`}>
+          <Link to="/cart" className={`${styles.iconButton} ${styles.cart}`} aria-label={count === 1 ? t('Cart, 1 item') : t('Cart, {n} items', { n: count })}>
             <ShoppingCart size={24} />
             {count > 0 && <span className={styles.cartCount}>{count}</span>}
           </Link>
           {me.data ? (
             <div className={styles.account}>
-              <Link to="/account/orders" className={styles.iconButton} aria-label="My orders">
+              <Link to="/account/orders" className={styles.iconButton} aria-label={t('My orders')}>
                 <User size={24} />
               </Link>
               <span className={styles.accountText}>
                 <Link to="/account/orders">{me.data.displayName}</Link> <span aria-hidden="true">|</span>{' '}
                 <button type="button" className={styles.linkButton} onClick={() => logout.mutate()}>
-                  Log out
+                  {t('Log out')}
                 </button>
               </span>
             </div>
@@ -82,7 +86,7 @@ export function Header() {
             <Link to="/login" className={styles.account}>
               <User size={24} aria-hidden="true" />
               <span className={styles.accountText}>
-                Log in <span aria-hidden="true">|</span> Register
+                {t('Log in')} <span aria-hidden="true">|</span> {t('Register')}
               </span>
             </Link>
           )}
@@ -93,20 +97,29 @@ export function Header() {
           <SearchBox autoFocus onDone={() => setSearchOpen(false)} />
         </div>
       )}
-      <nav id="site-nav" className={menuOpen ? `${styles.nav} ${styles.navOpen}` : styles.nav} aria-label="Categories">
+      <nav id="site-nav" className={menuOpen ? `${styles.nav} ${styles.navOpen}` : styles.nav} aria-label={t('Categories')}>
         <div className={styles.navInner}>
           <Link to="/store" className={styles.categories} onClick={() => setMenuOpen(false)}>
-            <Menu size={22} aria-hidden="true" /> All products
+            <Menu size={22} aria-hidden="true" /> {t('All products')}
           </Link>
           {navLinks.map((l) => (
             <NavLink key={l.to} to={l.to} className={styles.navLink} onClick={() => setMenuOpen(false)}>
-              {l.label}
+              {t(l.label)}
             </NavLink>
           ))}
           <Link to="/store?sort=discount" className={styles.promo} onClick={() => setMenuOpen(false)}>
-            Deals
+            {t('Deals')}
           </Link>
-          <CatalogSwitch />
+          <Link to="/will-it-work" className={styles.willItWork} onClick={() => setMenuOpen(false)}>
+            {t('Will it work for me?')}
+          </Link>
+          <span className={styles.mobileLocale}>
+            <LocaleSwitcher />
+          </span>
+          <span className={styles.switches}>
+            <ProposalSwitch />
+            <CatalogSwitch />
+          </span>
         </div>
       </nav>
       <CatalogNotice />

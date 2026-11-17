@@ -14,10 +14,12 @@ import (
 	"github.com/Zenkiux/eneba-marketplace/api/internal/auth"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/cart"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/catalog"
+	"github.com/Zenkiux/eneba-marketplace/api/internal/compat"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/config"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/home"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/httpx"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/keys"
+	"github.com/Zenkiux/eneba-marketplace/api/internal/money"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/orders"
 )
 
@@ -39,6 +41,8 @@ func NewRouter(cfg config.Config, pool *pgxpool.Pool) (http.Handler, *orders.Ser
 	authHandler.Register(mux)
 	catalog.NewHandler(catalog.NewStore(pool)).Register(mux)
 	cart.NewHandler(cart.NewStore(pool)).Register(mux)
+	compat.NewHandler(cfg.Prod()).Register(mux)
+	money.Register(mux)
 	box, err := keys.NewBox(cfg.KeyEncryption)
 	if err != nil {
 		return nil, nil, err

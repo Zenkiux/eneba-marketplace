@@ -1,0 +1,249 @@
+.page {
+  padding-top: 30px;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.h1 {
+  font-size: var(--font-size-store-h1);
+  font-weight: var(--font-weight-bold);
+}
+
+.h2 {
+  font-size: 2rem;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.3;
+}
+
+.lead {
+  max-width: 760px;
+  margin: 10px 0 28px;
+  color: var(--color-text-soft);
+  line-height: 1.6;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 30px;
+  align-items: start;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px;
+  background: var(--color-bg-filter);
+}
+
+.detect,
+.save {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  border: 0;
+  background: var(--color-cta);
+  color: var(--color-cta-text);
+  font-size: var(--font-size-button);
+  font-weight: var(--font-weight-extrabold);
+}
+
+.detect:disabled,
+.save:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.note {
+  padding: 10px 12px;
+  border-left: 3px solid var(--color-cta);
+  background: var(--color-bg-row);
+  font-size: var(--font-size-card-title);
+  line-height: 1.5;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--font-size-nav);
+  font-weight: var(--font-weight-semibold);
+}
+
+.field span {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.field select,
+.field input,
+.search {
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  background: var(--color-bg-input);
+  font-weight: var(--font-weight-semibold);
+}
+
+.field select option {
+  background: var(--color-bg-panel);
+}
+
+.warn {
+  color: var(--color-cta);
+  font-size: var(--font-size-card-title);
+}
+
+.consoles {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: var(--font-size-nav);
+}
+
+.consoles legend {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+  font-weight: var(--font-weight-semibold);
+}
+
+.consoles label {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.consoles input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-cta);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.clear {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-cta);
+  font-size: var(--font-size-nav);
+}
+
+.privacy {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-card-title);
+  line-height: 1.5;
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 34px;
+  min-width: 0;
+}
+
+.empty {
+  padding: 30px;
+  background: var(--color-bg-row);
+}
+
+.resultsHead {
+  display: flex;
+  gap: 16px;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.more {
+  color: var(--color-cta);
+  font-size: var(--font-size-nav);
+  font-weight: var(--font-weight-semibold);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.check .search {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.checkList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checkList li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--color-bg-row);
+  font-size: var(--font-size-nav);
+}
+
+.checkList a {
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+}
+
+.badgeOk,
+.badgeNo,
+.badgeUnknown {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  font-size: var(--font-size-card-title);
+  font-weight: var(--font-weight-extrabold);
+  line-height: 1.3;
+}
+
+.badgeOk {
+  color: var(--color-positive);
+}
+
+.badgeNo {
+  color: var(--color-region);
+}
+
+.badgeUnknown {
+  color: var(--color-text-muted);
+}
+
+@media (width <= 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .h1 {
+    font-size: 2.4rem;
+  }
+}
