@@ -46,7 +46,7 @@ function OrderView({ o }: { o: Order }) {
       <ul className={styles.keyList}>
         {o.items.map((it) => (
           <li key={it.offerId} className={styles.keyItem}>
-            <img src={it.coverUrl} alt="" width={64} height={96} />
+            <img referrerPolicy="no-referrer" src={it.coverUrl} alt="" width={64} height={96} />
             <div className={styles.keyBody}>
               <Link to={`/p/${it.productSlug}`} className={styles.itemTitle}>
                 {it.title}

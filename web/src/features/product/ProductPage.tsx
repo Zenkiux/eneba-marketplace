@@ -48,7 +48,7 @@ function Product({ p }: { p: ProductDetail }) {
       </nav>
 
       <div className={styles.top}>
-        <img className={styles.cover} src={p.coverUrl} alt={`${p.title} cover`} width={200} height={300} />
+        <img className={styles.cover} referrerPolicy="no-referrer" src={p.coverUrl} alt={`${p.title} cover`} width={200} height={300} />
         <div className={styles.summary}>
           <h1 className={styles.h1}>{p.title}</h1>
           <ul className={styles.facts}>

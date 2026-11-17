@@ -135,10 +135,10 @@ type Category struct {
 // categories lists product types and platforms that have products, for the icon strip.
 func categories(ctx context.Context, db *pgxpool.Pool, _ Section, _ sectionConfig) (any, error) {
 	rows, err := db.Query(ctx, `
-		SELECT 'type', t.slug, t.name, count(p.id)::int FROM product_types t JOIN products p ON p.type_id = t.id GROUP BY t.id
+		SELECT 'type', t.slug, t.name, count(p.id)::int FROM product_types t JOIN products p ON p.type_id = t.id AND p.catalog = $1 GROUP BY t.id
 		UNION ALL
-		SELECT 'platform', pl.slug, pl.name, count(p.id)::int FROM platforms pl JOIN products p ON p.platform_id = pl.id GROUP BY pl.id
-		ORDER BY 1 DESC, 4 DESC`)
+		SELECT 'platform', pl.slug, pl.name, count(p.id)::int FROM platforms pl JOIN products p ON p.platform_id = pl.id AND p.catalog = $1 GROUP BY pl.id
+		ORDER BY 1 DESC, 4 DESC`, catalog.SourceFrom(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -165,10 +165,10 @@ const (
 
 func productRow(order string) Provider {
 	return func(ctx context.Context, db *pgxpool.Pool, _ Section, cfg sectionConfig) (any, error) {
-		args := []any{cfg.Limit}
-		typeFilter := ""
+		args := []any{cfg.Limit, catalog.SourceFrom(ctx)}
+		typeFilter := "AND p.catalog = $2"
 		if cfg.Type != "" {
-			typeFilter = "AND t.slug = $2"
+			typeFilter += " AND t.slug = $3"
 			args = append(args, cfg.Type)
 		}
 		q := catalog.CardSelect + " " + fmt.Sprintf(order, typeFilter) + " LIMIT $1"

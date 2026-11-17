@@ -40,3 +40,17 @@ export function useHomeSection<T>(key: string) {
     queryFn: ({ signal }) => api.get<HomeSection<T>>(`/home/sections/${encodeURIComponent(key)}`, { signal }),
   })
 }
+
+export interface CatalogInfo {
+  key: 'demo' | 'eneba'
+  products: number
+  snapshotAt: string | null
+}
+
+export function useCatalogs() {
+  return useQuery({
+    queryKey: ['catalogs'],
+    queryFn: ({ signal }) => api.get<{ catalogs: CatalogInfo[] }>('/catalogs', { signal }),
+    staleTime: 10 * 60_000,
+  })
+}

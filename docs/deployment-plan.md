@@ -21,6 +21,7 @@ Consequence for the app: a request that arrives while Render is asleep can take 
 3. Render: New → Blueprint from the GitHub repo (`render.yaml`: root `api/`, build `go build -o bin/server ./cmd/server`, start `./bin/server`). Env: `DATABASE_URL`, `KEY_ENCRYPTION_KEY` (32 random bytes, base64), `APP_ENV=prod`, `TRUSTED_ORIGINS=https://<vercel-domain>`. Migrations run on boot.
 4. Seeding: `SEED_IF_EMPTY=true` (in `render.yaml`) makes the server seed an empty database on first boot; later restarts leave data alone. Render's free tier has no shell or one-off jobs.
 5. Vercel: import repo, root directory `web/` (settings come from `web/vercel.json`); replace `RENDER_SERVICE_HOST` in `web/vercel.json` with the Render hostname.
+5b. Optional Eneba catalog: from your laptop, `cd e2e && node tools/scrape-eneba.mjs` (writes `data/eneba-snapshot.json`, gitignored), then `cd api && DATABASE_URL=<Neon URL> KEY_ENCRYPTION_KEY=<same key as Render> APP_ENV=prod TRUSTED_ORIGINS=<vercel origin> go run ./cmd/import-eneba`. The switch appears automatically once the snapshot is in the database.
 6. Check through the real proxy: `Origin` / `Sec-Fetch-Site` reach the API; the `__Host-sid` cookie is set on the Vercel domain; a cross-site POST is rejected. Record results in `docs/testing.md`.
 7. Run Playwright against the production URL; then a manual pass in a clean browser profile.
 

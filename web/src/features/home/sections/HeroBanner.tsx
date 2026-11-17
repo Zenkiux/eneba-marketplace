@@ -32,7 +32,7 @@ export function HeroBanner({ sectionKey }: SectionProps) {
       {current && (
         <div className={styles.main}>
           <Link to={current.ctaHref} className={styles.tile}>
-            <img src={current.imageUrl} alt={`${current.title}. ${current.subtitle}`} />
+            <img referrerPolicy="no-referrer" src={current.imageUrl} alt={`${current.title}. ${current.subtitle}`} />
           </Link>
           {main.length > 1 && (
             <>
@@ -53,7 +53,7 @@ export function HeroBanner({ sectionKey }: SectionProps) {
       )}
       {side.map((b) => (
         <Link key={b.title} to={b.ctaHref} className={`${styles.tile} ${styles.side}`}>
-          <img src={b.imageUrl} alt={`${b.title}. ${b.subtitle}`} loading="lazy" />
+          <img referrerPolicy="no-referrer" src={b.imageUrl} alt={`${b.title}. ${b.subtitle}`} loading="lazy" />
         </Link>
       ))}
     </section>

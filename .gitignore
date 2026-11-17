@@ -32,3 +32,6 @@ api/bin/
 # Licensed source photos are inputs only; rendered covers in web/public are committed
 e2e/tools/photos/
 e2e/node_modules/
+
+# Scraped eneba.com snapshot: local only, never committed
+data/

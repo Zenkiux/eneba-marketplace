@@ -30,7 +30,7 @@ The PDF says specs are "intentionally vague" and that "a few features done exten
 | Recommendations ("Recommended for you", "Gamers also viewed") | Would need user behaviour data; "Best sellers" and "Deals" cover the required block types. |
 | Refunds / order cancellation after payment | Not required; cancel exists only for unpaid orders. |
 | Microservices | A modular monolith with one provider per homepage block meets "its own backend service or database" without extra deployables. |
-| Real game titles and cover art | No rights to the artwork; fictional catalog with our own covers instead. |
+| Real game titles and cover art by default | The default catalog is fictional with our own covers. Real Eneba listings are available only through the opt-in "Eneba catalog" switch (decision 23), loaded from a local snapshot that is not part of the repository. |
 
 ## Revisit if time remains (in this order)
 

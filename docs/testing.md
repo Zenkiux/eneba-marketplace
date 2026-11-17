@@ -79,3 +79,11 @@ Automated — Playwright (`cd e2e && npx playwright test`, local dev servers): 7
 - Note: the per-IP registration limit (10/min) can be hit by many rapid local E2E runs.
 
 Manual (browser): demo account checkout of the KeyHarbor offer → payment page with 15:00 countdown → decline shows message, keys stay reserved → success → `/orders/<id>` shows key `DEMO-DJKEV-…`, cart badge 0 → "My orders" lists it as Paid.
+
+## 2026-11-17 — optional Eneba catalog switch
+
+- Scraper run once (`node e2e/tools/scrape-eneba.mjs --limit=36`): 2 listing pages + 36 product pages, 3 s apart, images/fonts not downloaded; 31 products saved, 5 skipped (no structured product data). Snapshot check: every product has 4–5 offer prices, all ≤ list price.
+- `go run ./cmd/import-eneba` twice: 31 products / 149 offers / 1840 keys, then 0 new keys (idempotent).
+- Go test `TestCatalogSwitchIsolatesProducts`: default and malformed `X-Catalog` → demo catalog only; `X-Catalog: eneba` → snapshot products only; demo search doesn't find snapshot products; `/api/catalogs` lists both; responses carry `Vary: X-Catalog`.
+- Manual (browser): switch appears only when a snapshot is imported; on → banner "Showing a snapshot of eneba.com listings from 2026-11-17 …", homepage rows show real titles/covers/prices (e.g. Minecraft Java & Bedrock €15.30); off → our catalog returns, banner hidden. First attempt kept stale rows on screen (`removeQueries` doesn't refetch mounted queries) → switched to `resetQueries`.
+- Full suites after the change: Go all packages pass; vitest 19 passed; Playwright 7 passed (tests run with the switch off).

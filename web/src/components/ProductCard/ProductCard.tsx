@@ -15,7 +15,7 @@ export function ProductCard({ product: p, eager = false }: Props) {
   return (
     <Link to={`/p/${p.slug}`} className={styles.card} aria-label={p.title}>
       <div className={styles.cover}>
-        <img src={p.coverUrl} alt="" loading={eager ? 'eager' : 'lazy'} width={225} height={337} />
+        <img src={p.coverUrl} alt="" loading={eager ? 'eager' : 'lazy'} width={225} height={337} referrerPolicy="no-referrer" />
         <span className={styles.strip}>{p.platform.name}</span>
       </div>
       <div className={styles.info}>

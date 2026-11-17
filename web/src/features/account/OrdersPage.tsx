@@ -34,7 +34,7 @@ export function OrdersPage() {
               <Link to={o.status === 'pending_payment' ? `/checkout/${o.id}/pay` : `/orders/${o.id}`} className={styles.orderRow}>
                 <div className={styles.orderCovers} aria-hidden="true">
                   {o.items.slice(0, 3).map((it) => (
-                    <img key={it.offerId} src={it.coverUrl} alt="" width={40} height={60} />
+                    <img key={it.offerId} referrerPolicy="no-referrer" src={it.coverUrl} alt="" width={40} height={60} />
                   ))}
                 </div>
                 <div className={styles.orderInfo}>

@@ -49,7 +49,7 @@ export function CheckoutPage() {
           <ul className={styles.items}>
             {cart.lines.map((l) => (
               <li key={l.offerId} className={styles.item}>
-                <img src={l.product.coverUrl} alt="" width={48} height={72} />
+                <img referrerPolicy="no-referrer" src={l.product.coverUrl} alt="" width={48} height={72} />
                 <div>
                   <span className={styles.itemTitle}>{l.product.title}</span>
                   <span className={styles.itemMeta}>

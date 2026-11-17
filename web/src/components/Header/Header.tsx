@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link, NavLink } from 'react-router'
 import { useLogout, useMe } from '../../api/auth'
 import { useCart } from '../../features/cart/useCart'
+import { CatalogNotice, CatalogSwitch } from '../CatalogSwitch'
 import { SearchBox } from '../SearchBox'
 import { Logo } from './Logo'
 import styles from './Header.module.css'
@@ -105,8 +106,10 @@ export function Header() {
           <Link to="/store?sort=discount" className={styles.promo} onClick={() => setMenuOpen(false)}>
             Deals
           </Link>
+          <CatalogSwitch />
         </div>
       </nav>
+      <CatalogNotice />
     </header>
   )
 }

@@ -463,6 +463,33 @@ a.itemTitle:hover {
     grid-template-columns: 1fr;
   }
 
+  /* Steps: numbers only, except the current step's label, so they fit on one line. */
+  .steps {
+    flex-wrap: nowrap;
+    gap: 10px;
+    font-size: var(--font-size-card-title);
+  }
+
+  .step,
+  .stepDone {
+    font-size: 0;
+  }
+
+  .step .stepNo,
+  .stepDone .stepNo {
+    font-size: var(--font-size-card-title);
+  }
+
+  .code code {
+    font-size: 1.4rem;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .code button {
+    margin-left: 0;
+  }
+
   .h1 {
     font-size: 2.2rem;
   }

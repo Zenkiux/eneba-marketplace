@@ -35,3 +35,16 @@ Screenshots after fixes: [home desktop](app/home-desktop.png), [home mobile](app
 | V14 | Cart | both | No Eneba reference captured (cart needs items; not inspected) | — | Built from measured components (offer-row background, featured-offer panel, yellow CTA) | noted |
 
 Result: product, login and cart accepted (no open high items). Screenshots: [product desktop](app/product-desktop.png), [product mobile](app/product-mobile.png), [login desktop](app/login-desktop.png), [login mobile](app/login-mobile.png).
+
+## Review #3 — 2026-11-17 (cart, checkout, payment, order, history, 404)
+
+Captured with `node e2e/visual/capture-flow.mjs` (signs up a throwaway account, buys two offers, screenshots each step at 1280 and 375). No Eneba references exist for these screens (account + purchase needed); they were checked against the measured component language and the rest of our app.
+
+| ID | Screen | Viewport | Difference / issue | Severity | Fix | Status |
+|---|---|---|---|---|---|---|
+| V15 | Checkout, payment, order | mobile | Step indicator wrapped onto two lines | medium | Numbers only for other steps; label for the current step | fixed |
+| V16 | Order | mobile | Key code broke across lines (hard to read/copy) | medium | Smaller, non-wrapping key text on narrow screens | fixed |
+| V17 | 404 | both | Eneba: "Highscore! 404" with playful ghosts and an outlined button | — | Same structure with our own copy ("Level not found! 404") and original pixel sprites | matches |
+| V18 | Order history | desktop | Long multi-item titles joined on one line | low | — | open |
+
+Result: all flow screens accepted (no open high items). Screenshots: `app/{cart,checkout,payment,order,orders,notfound}-{desktop,mobile}.png`.

@@ -80,7 +80,7 @@ function Line({ line: l, onQuantity, onRemove }: { line: CartLine; onQuantity: (
   return (
     <li className={l.available ? styles.line : `${styles.line} ${styles.lineUnavailable}`}>
       <Link to={`/p/${l.product.slug}`} className={styles.thumb} tabIndex={-1} aria-hidden="true">
-        <img src={l.product.coverUrl} alt="" width={70} height={105} />
+        <img referrerPolicy="no-referrer" src={l.product.coverUrl} alt="" width={70} height={105} />
       </Link>
       <div className={styles.info}>
         <Link to={`/p/${l.product.slug}`} className={styles.title}>

@@ -66,6 +66,7 @@ func ScanCard(row pgx.Row) (Card, error) {
 // ---------------------------------------------------------------- listing
 
 type Filter struct {
+	Source    string // catalog: SourceDemo or SourceEneba
 	Query     string
 	Platforms []string
 	Regions   []string
@@ -130,7 +131,8 @@ func NewStore(db *pgxpool.Pool) *Store { return &Store{db: db} }
 // are computed: each facet shows how many results you'd get by choosing that value, given the
 // other active filters (the same behaviour as Eneba's filter counts).
 func (f Filter) where(args pgx.NamedArgs, skip string) string {
-	conds := []string{"true"}
+	args["catalog"] = f.Source
+	conds := []string{"p.catalog = @catalog"}
 	if f.Query != "" {
 		args["q"] = f.Query
 		args["qlike"] = "%" + escapeLike(strings.ToLower(f.Query)) + "%"
@@ -201,11 +203,13 @@ func (s *Store) List(ctx context.Context, f Filter) (Page, error) {
 func (s *Store) facet(ctx context.Context, f Filter, dim, alias, table string) ([]FacetValue, error) {
 	args := pgx.NamedArgs{}
 	where := f.where(args, dim)
+	col := map[string]string{"platforms": "platform_id", "regions": "region_id", "product_types": "type_id"}[table]
 	q := fmt.Sprintf(`SELECT d.slug, d.name, count(x.id)::int
 		FROM %s d
 		LEFT JOIN (SELECT p.id, %s.slug AS dslug %s WHERE %s) x ON x.dslug = d.slug
+		WHERE EXISTS (SELECT 1 FROM products px WHERE px.%s = d.id AND px.catalog = @catalog)
 		GROUP BY d.id, d.slug, d.name ORDER BY count(x.id) DESC, d.name`,
-		table, alias, cardFrom, where)
+		table, alias, cardFrom, where, col)
 	rows, err := s.db.Query(ctx, q, args)
 	if err != nil {
 		return nil, err
@@ -217,9 +221,29 @@ func (s *Store) facet(ctx context.Context, f Filter, dim, alias, table string) (
 }
 
 // Suggest returns up to limit best matches for the header search box.
-func (s *Store) Suggest(ctx context.Context, query string, limit int) ([]Card, error) {
-	p, err := s.List(ctx, Filter{Query: query, Sort: "relevance", Page: 1, PageSize: limit})
+func (s *Store) Suggest(ctx context.Context, source, query string, limit int) ([]Card, error) {
+	p, err := s.List(ctx, Filter{Source: source, Query: query, Sort: "relevance", Page: 1, PageSize: limit})
 	return p.Items, err
+}
+
+type CatalogInfo struct {
+	Key        string  `json:"key"`
+	Products   int     `json:"products"`
+	SnapshotAt *string `json:"snapshotAt"`
+}
+
+// Catalogs lists the catalogs that have products (the frontend shows the switch only if the
+// Eneba snapshot was imported).
+func (s *Store) Catalogs(ctx context.Context) ([]CatalogInfo, error) {
+	rows, err := s.db.Query(ctx, `SELECT catalog, count(*)::int, to_char(max(snapshot_at), 'YYYY-MM-DD')
+		FROM products GROUP BY catalog ORDER BY catalog = 'demo' DESC, catalog`)
+	if err != nil {
+		return nil, err
+	}
+	return pgx.CollectRows(rows, func(r pgx.CollectableRow) (CatalogInfo, error) {
+		var c CatalogInfo
+		return c, r.Scan(&c.Key, &c.Products, &c.SnapshotAt)
+	})
 }
 
 // Dimensions returns all values of a filter dimension (used by the store's filter panel).

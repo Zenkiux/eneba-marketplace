@@ -1,3 +1,4 @@
+import { getCatalog } from './catalogChoice'
 import { wakeEnd, wakeStart } from './wake'
 
 /** Base path for every API call. Vite proxies it in dev; Vercel rewrites it in production. */
@@ -95,6 +96,7 @@ function looksAsleep(response: Response, payload: unknown): boolean {
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, headers = {}, signal } = options
   const finalHeaders: Record<string, string> = { Accept: 'application/json', ...headers }
+  if (getCatalog() === 'eneba') finalHeaders['X-Catalog'] = 'eneba'
   const init: RequestInit = { method, credentials: 'same-origin', headers: finalHeaders, signal }
 
   if (body !== undefined) {

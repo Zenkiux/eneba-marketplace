@@ -133,7 +133,7 @@ export function SearchBox({ autoFocus = false, onDone }: { autoFocus?: boolean; 
                 goToProduct(p.slug)
               }}
             >
-              <img src={p.coverUrl} alt="" width={36} height={54} />
+              <img referrerPolicy="no-referrer" src={p.coverUrl} alt="" width={36} height={54} />
               <span className={styles.optTitle}>{p.title}</span>
               <span className={styles.optPrice}>
                 {p.minPriceCents === null ? 'Sold out' : formatCents(p.minPriceCents)}

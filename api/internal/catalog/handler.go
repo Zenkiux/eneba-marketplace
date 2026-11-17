@@ -28,6 +28,7 @@ func (h *Handler) Register(mux *http.ServeMux) {
 	mux.Handle("GET /api/platforms", h.dimension("platforms"))
 	mux.Handle("GET /api/regions", h.dimension("regions"))
 	mux.Handle("GET /api/types", h.dimension("product_types"))
+	mux.Handle("GET /api/catalogs", httpx.Handler(h.catalogs))
 }
 
 func bad(msg string) error { return httpx.NewError(http.StatusBadRequest, "bad_request", msg) }
@@ -101,6 +102,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
+	f.Source = SourceFrom(r.Context())
 	page, err := h.store.List(r.Context(), f)
 	if err != nil {
 		return err
@@ -117,7 +119,7 @@ func (h *Handler) suggest(w http.ResponseWriter, r *http.Request) error {
 	items := []Card{}
 	if q != "" {
 		var err error
-		if items, err = h.store.Suggest(r.Context(), q, 6); err != nil {
+		if items, err = h.store.Suggest(r.Context(), SourceFrom(r.Context()), q, 6); err != nil {
 			return err
 		}
 	}
@@ -146,4 +148,13 @@ func (h *Handler) dimension(table string) http.Handler {
 		httpx.JSON(w, http.StatusOK, map[string]any{"items": items})
 		return nil
 	})
+}
+
+func (h *Handler) catalogs(w http.ResponseWriter, r *http.Request) error {
+	list, err := h.store.Catalogs(r.Context())
+	if err != nil {
+		return err
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"catalogs": list})
+	return nil
 }

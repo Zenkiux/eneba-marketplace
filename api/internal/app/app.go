@@ -60,7 +60,7 @@ func NewRouter(cfg config.Config, pool *pgxpool.Pool) (http.Handler, *orders.Ser
 	cop.SetDenyHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		httpx.Fail(w, r, httpx.NewError(http.StatusForbidden, "cross_origin", "Cross-origin request blocked"))
 	}))
-	return securityHeaders(logRequests(cop.Handler(authHandler.Middleware(mux)))), orderSvc, nil
+	return securityHeaders(logRequests(cop.Handler(authHandler.Middleware(catalog.SourceMiddleware(mux))))), orderSvc, nil
 }
 
 func securityHeaders(next http.Handler) http.Handler {
