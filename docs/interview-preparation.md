@@ -9,8 +9,8 @@ keyshop is an Eneba-style marketplace: a **React + TypeScript** single-page app 
 ## 2. How a request flows
 
 ```
-Browser → Vercel (static React app)
-        → /api/* rewritten to Render → Go server
+Browser → Cloudflare (HTTPS, keyshop.zenkiux.com) → Cloudflare Tunnel → Go server on the Mac
+        (serves the built React app and /api from one origin)
             securityHeaders → logRequests → CrossOriginProtection → auth.Middleware → catalog.SourceMiddleware → router → handler → service/store → PostgreSQL
 ```
 
@@ -100,7 +100,7 @@ Frontend: `web/src/api/orders.ts` (idempotency key per cart+total in `sessionSto
 | Why a monolith if blocks need "their own service"? | Each block has its own provider and endpoint; separate deployables would add ops cost and failure modes without any evaluated benefit. |
 | Why server sessions, not JWT? | Instant revocation on logout, nothing sensitive in the browser, simple. Cost: one indexed lookup per request. |
 | How is CSRF prevented? | `SameSite=Lax` cookie + Go's `CrossOriginProtection` (checks `Sec-Fetch-Site`/`Origin` on non-GET) + JSON-only bodies (a cross-site HTML form can't send `application/json`). Tested. |
-| Why Vercel rewrite to Render? | Browser sees one origin → first-party cookie, no CORS, works in Safari. |
+| How is it hosted? | Go server + PostgreSQL on an always-on Mac, published through a Cloudflare Tunnel: HTTPS at the edge, outbound-only connection, server bound to localhost, launchd restarts it. One origin → first-party cookie, no CORS. A free cloud setup (Vercel → Render → Neon) is ready as fallback. |
 | Why keys as rows, not a stock counter? | A counter can't say *which* key a buyer got; rows + row locks make double-selling structurally impossible and testable. |
 | Why `SKIP LOCKED`? | Buyers don't wait for each other; each takes a different free key. |
 | Why idempotency keys? | Double clicks, refreshes and network retries return the first result instead of creating a second order or payment. |

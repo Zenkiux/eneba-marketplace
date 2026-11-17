@@ -1,4 +1,36 @@
-# Deployment plan
+# Deployment
+
+## Live: https://keyshop.zenkiux.com (deployed 2026-11-17)
+
+| Part | Where | Notes |
+|---|---|---|
+| Website + API | Go server on the owner's always-on Mac (`~/.keyshop/bin/server`) | Serves the built React app and `/api` from one origin; listens on `127.0.0.1:8090` only |
+| Database | PostgreSQL 16 on the same Mac (`keyshop_prod`) | Homebrew service, starts at boot; separate from the development database |
+| Public access | Cloudflare Tunnel (free plan), tunnel `keyshop` | Outbound-only connection to Cloudflare; DNS `keyshop.zenkiux.com` → tunnel; only that hostname is routed, everything else 404 |
+
+Chosen by the owner over Vercel/Render/Neon: no cold starts, own domain for the portfolio, link shared privately with the Eneba team. Trade-off: availability depends on the Mac being on and online. Cloudflare Tunnel is a free-tier service, but the PDF's example is a cloud host, so the cloud setup below stays ready as a fallback.
+
+### How it runs
+- `scripts/mac-host/deploy.sh` builds the API and website, copies them to `~/.keyshop`, writes launchd agents and (re)starts them:
+  - `com.zenkiux.keyshop.api` — `set -a; . ~/.keyshop/prod.env; exec ~/.keyshop/bin/server` (RunAtLoad, KeepAlive)
+  - `com.zenkiux.keyshop.tunnel` — `cloudflared tunnel run keyshop` (RunAtLoad, KeepAlive)
+- `scripts/mac-host/deploy.sh status` shows both services and the health check. Logs: `~/.keyshop/logs/`.
+- Secrets: `~/.keyshop/prod.env` (chmod 600): `APP_ENV=prod`, `LISTEN_ADDR`, `DATABASE_URL`, `KEY_ENCRYPTION_KEY` (generated with `openssl rand -base64 32`, never printed), `TRUSTED_ORIGINS=https://keyshop.zenkiux.com`, `STATIC_DIR`, `SEED_IF_EMPTY=true`. Tunnel credentials: `~/.cloudflared/` (chmod 600).
+- Migrations run on start; the empty production database seeded itself on first start.
+- Eneba snapshot imported with `set -a; . ~/.keyshop/prod.env; ~/.keyshop/bin/import-eneba -file data/eneba-snapshot.json`.
+
+### Production behaviour
+- HTTPS by Cloudflare; plain HTTP is redirected to HTTPS by the app (`X-Forwarded-Proto`).
+- Cookie `__Host-sid; Secure; HttpOnly; SameSite=Lax; Path=/`.
+- Headers: CSP (self + Eneba image CDN), `X-Frame-Options: DENY`, HSTS, `X-Robots-Tag: noindex, nofollow`, `nosniff`; API `Cache-Control: no-store`.
+- Rate limiting uses `CF-Connecting-IP` (the server is reachable only through the tunnel).
+
+### Redeploy after a change
+```bash
+scripts/mac-host/deploy.sh
+```
+
+## Fallback: free cloud hosting (not used)
 
 | Part | Service (free tier) | Notes |
 |---|---|---|

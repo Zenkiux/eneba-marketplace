@@ -90,7 +90,12 @@ func RequireUser(next http.Handler) http.Handler {
 
 func (h *Handler) clientIP(r *http.Request) string {
 	if h.trustProxy {
-		// Behind Vercel → Render the client is the first X-Forwarded-For entry. It can be spoofed
+		// Behind Cloudflare (tunnel) the edge sets CF-Connecting-IP; the server only listens on
+		// localhost, so the header can only come from cloudflared.
+		if ip := r.Header.Get("CF-Connecting-IP"); ip != "" {
+			return ip
+		}
+		// Behind other proxies the client is the first X-Forwarded-For entry. It can be spoofed
 		// by a client, so this limiter is best-effort (documented in architecture.md).
 		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
 			return strings.TrimSpace(strings.Split(xff, ",")[0])

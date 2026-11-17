@@ -4,7 +4,7 @@ Submission for the **Eneba Intern Assignment 2027**: a marketplace web app in En
 
 | | |
 |---|---|
-| **Live app** | _deployment pending — see [docs/deployment-plan.md](docs/deployment-plan.md)_ |
+| **Live app** | **https://keyshop.zenkiux.com** |
 | **Demo account** | `demo@example.test` / `demo-password-2027` (or create your own) |
 | **AI conversation history** | [docs/agent-chat-history.md](docs/agent-chat-history.md) (Claude Code, complete) · ChatGPT planning chat: CHATGPT_TRANSCRIPT_URL |
 
@@ -32,18 +32,18 @@ The full purchase flow from the assignment's diagram — **Homepage or Search �
 - **Backend:** Go (standard library HTTP router), REST/JSON, `pgx`, `goose` migrations, `bcrypt`.
 - **Database:** PostgreSQL 16 (`pg_trgm`, `citext`).
 - **Tests:** Go integration tests on real PostgreSQL, Vitest, Playwright.
-- **Hosting (free tier):** Vercel (frontend) → Render (Go API) → Neon (PostgreSQL).
+- **Hosting:** a Mac that stays on runs the Go server (API + built website) and PostgreSQL as background services; **Cloudflare Tunnel** (free plan) publishes it at `keyshop.zenkiux.com` over HTTPS. Free cloud alternative (Vercel → Render → Neon) is ready in the repo (`web/vercel.json`, `render.yaml`).
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  B[Browser] -->|"/ (static SPA)"| V[Vercel]
-  V -->|"rewrite /api/*"| R[Render: Go API]
-  R --> N[(Neon PostgreSQL)]
+  B[Browser] -->|HTTPS keyshop.zenkiux.com| C[Cloudflare edge]
+  C -->|Cloudflare Tunnel, outbound only| G[Go server on the Mac: API + website]
+  G --> P[(PostgreSQL on the Mac)]
 ```
 
-The browser only talks to the Vercel domain; Vercel forwards `/api/*` to the Go API, so the session cookie is first-party and no CORS is needed. The Go service is a **modular monolith**: `catalog`, `home`, `auth`, `cart`, `orders` modules, each with handler → service → SQL. Details: [docs/architecture.md](docs/architecture.md).
+The Go server serves both the website and `/api` from one origin, so the session cookie is first-party and no CORS is needed. It listens only on `127.0.0.1`; the tunnel makes an outbound connection to Cloudflare, so no port is opened on the home network. The Go service is a **modular monolith**: `catalog`, `home`, `auth`, `cart`, `orders` modules, each with handler → service → SQL. Details: [docs/architecture.md](docs/architecture.md).
 
 **How keys are kept consistent.** Every key is a database row with a status (`available`, `reserved`, `sold`) and a link to the order item that holds it; a `CHECK` constraint ties the two together. Checkout reserves keys with `SELECT … FOR UPDATE SKIP LOCKED`, all lines or none; every transaction takes locks in the same order (orders → offers → keys) so they can't deadlock; order creation and payment are idempotent (`Idempotency-Key`), so double clicks and retries can't create duplicates; unpaid reservations expire after 15 minutes and are swept back into stock. Tests include 50 buyers racing for 3 keys, concurrent duplicate requests, an injected failure mid-transaction and a mixed-operation stress run, each followed by an invariant check.
 
@@ -92,7 +92,7 @@ BASE_URL=https://<deployed-app> npx playwright test   # same tests against produ
 
 Depth went into the required purchase journey; wishlists, reviews, cashback, social login, e-mail delivery, a seller dashboard and an admin UI were left out on purpose — reasons in [docs/scope-decisions.md](docs/scope-decisions.md).
 
-- **Free hosting sleeps.** The API host sleeps after 15 idle minutes; the first request then takes up to a minute. The app shows "Waking up the server…" and retries automatically.
+- **Availability depends on the host Mac** (power, network). Services restart automatically at login and after crashes; the free cloud setup in the repo is the fallback. (The client still retries if the API is briefly unreachable.)
 - **Simulated payment** — chosen deliberately (the PDF allows it); the order/payment lifecycle on the server is real.
 - **Rate limiting is in memory** (single instance, best effort).
 - **Cart, checkout and order pages** have no Eneba reference screenshots (they need an account and items); they reuse Eneba's measured components.

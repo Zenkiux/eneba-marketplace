@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react'
 import { onWakeChange } from '../api/wake'
 import styles from './WakeNotice.module.css'
 
-/** Shown while the free-tier API server is starting up after sleeping. */
+/** Shown while the API is unreachable or starting up; requests are retried automatically. */
 export function WakeNotice() {
   const [waking, setWaking] = useState(false)
   useEffect(() => onWakeChange(setWaking), [])
   if (!waking) return null
   return (
     <div className={styles.notice} role="status">
-      Waking up the server… The free hosting plan sleeps when idle; this can take up to a minute.
+      Connecting to the server… retrying automatically. This can take up to a minute.
     </div>
   )
 }

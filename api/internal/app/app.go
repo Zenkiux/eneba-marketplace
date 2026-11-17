@@ -6,6 +6,7 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -46,6 +47,9 @@ func NewRouter(cfg config.Config, pool *pgxpool.Pool) (http.Handler, *orders.Ser
 	orders.NewHandler(orderSvc).Register(mux)
 	home.NewHandler(pool).Register(mux)
 	mux.Handle("/api/", httpx.Handler(func(w http.ResponseWriter, r *http.Request) error { return httpx.ErrNotFound }))
+	if cfg.StaticDir != "" {
+		mux.Handle("/", staticSite(cfg.StaticDir))
+	}
 
 	// Cross-site request protection for every state-changing request (Go 1.25+): rejects
 	// non-GET/HEAD/OPTIONS requests whose Sec-Fetch-Site / Origin show another origin, unless that
@@ -60,15 +64,26 @@ func NewRouter(cfg config.Config, pool *pgxpool.Pool) (http.Handler, *orders.Ser
 	cop.SetDenyHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		httpx.Fail(w, r, httpx.NewError(http.StatusForbidden, "cross_origin", "Cross-origin request blocked"))
 	}))
-	return securityHeaders(logRequests(cop.Handler(authHandler.Middleware(catalog.SourceMiddleware(mux))))), orderSvc, nil
+	return securityHeaders(cfg.Prod(), logRequests(cop.Handler(authHandler.Middleware(catalog.SourceMiddleware(mux))))), orderSvc, nil
 }
 
-func securityHeaders(next http.Handler) http.Handler {
+func securityHeaders(prod bool, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		h := w.Header()
 		h.Set("X-Content-Type-Options", "nosniff")
-		h.Set("Cache-Control", "no-store") // API responses can be user-specific
-		h.Set("Referrer-Policy", "no-referrer")
+		if strings.HasPrefix(r.URL.Path, "/api/") {
+			h.Set("Cache-Control", "no-store") // API responses can be user-specific
+			h.Set("Referrer-Policy", "no-referrer")
+		}
+		if prod {
+			// Behind Cloudflare: send plain-HTTP visitors to HTTPS (the session cookie is Secure-only).
+			if r.Header.Get("X-Forwarded-Proto") == "http" {
+				http.Redirect(w, r, "https://"+r.Host+r.URL.RequestURI(), http.StatusMovedPermanently)
+				return
+			}
+			h.Set("X-Robots-Tag", "noindex, nofollow") // shared by link only; keep it out of search engines
+			h.Set("Strict-Transport-Security", "max-age=31536000")
+		}
 		next.ServeHTTP(w, r)
 	})
 }

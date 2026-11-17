@@ -91,3 +91,12 @@ Manual (browser): demo account checkout of the KeyHarbor offer → payment page 
 ## 2026-11-17 — CI with Playwright
 
 - GitHub Actions run on f53bb06 (Linux): api (gofmt, vet, `go test -race`), web (typecheck, lint, stylelint, vitest, build), e2e (fresh Postgres → seed → API + Vite → all Playwright tests incl. the database-driven homepage test) and transcript link check — all succeeded.
+
+## 2026-11-17 — production (https://keyshop.zenkiux.com)
+
+- `BASE_URL=https://keyshop.zenkiux.com E2E_DATABASE_URL=postgres:///keyshop_prod npx playwright test` → **7 passed** (both purchase journeys, sign-in redirects, store URL state, mobile, design tokens, homepage driven by the production database).
+- Through the real Cloudflare path: register sets `__Host-sid=…; Path=/; HttpOnly; Secure; SameSite=Lax`; cross-site POST → 403; same-origin login with wrong password → 401; Eneba cover from `imgproxy.eneba.games` → 200; unknown hostname on the tunnel → 530 (not routed).
+- Found: plain `http://` served the page (and login can't work there because the cookie is Secure-only). Fix: production redirects `X-Forwarded-Proto: http` to HTTPS (test added) → now `301 https://keyshop.zenkiux.com/store?q=a`.
+- Server listens on 127.0.0.1 only: request to the Mac's LAN address on :8090 → connection refused.
+- Go: `TestStaticSiteServesSPA` (SPA fallback, security/noindex headers, immutable asset caching, `/api/*` stays JSON 404, path traversal → index.html, HTTP→HTTPS redirect).
+- Transcript verifier bug found while committing: 3 tool results containing `\r\n` (from `curl -I` headers) were reported as mismatches because the verifier read the Markdown with Python's universal-newline translation. The export was correct. Fix: all transcript reads/writes are byte-exact (`newline=""`); verify passes on all blocks and the tamper test still fails as expected.

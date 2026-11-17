@@ -58,13 +58,24 @@ SECRET_PATTERNS = [
 SYSTEM_REMINDER = re.compile(r"<system-reminder>.*?</system-reminder>\s*", re.S)
 
 
+def rd(path) -> str:
+    """Read text exactly as stored (no newline translation: tool output may contain \\r\\n)."""
+    with open(path, encoding="utf-8", errors="replace", newline="") as fh:
+        return fh.read()
+
+
+def wr(path, text: str) -> None:
+    with open(path, "w", encoding="utf-8", newline="") as fh:
+        fh.write(text)
+
+
 # ---------------------------------------------------------------- redaction
 class Redactor:
     def __init__(self) -> None:
         self.counts: Counter[str] = Counter()
         self.private: list[str] = []
         if PRIVATE_FILE.exists():
-            self.private = [s.strip() for s in PRIVATE_FILE.read_text().splitlines()
+            self.private = [s.strip() for s in rd(PRIVATE_FILE).splitlines()
                             if s.strip() and not s.startswith("#")]
         home = str(Path.home())
         self.home = home
@@ -366,9 +377,9 @@ def export() -> int:
                             continue
                         if src.suffix.lower() in (".txt", ".json", ".md", ".log", ""):
                             dst = OUT_DIR / "persisted" / src.name
-                            dst.write_text(red(src.read_text(errors="replace")))
+                            wr(dst, red(rd(src)))
                             copied_persisted.add(src.name)
-                            manifest.setdefault("persisted", []).append({"name": src.name, "source": red(str(src)), "sha256": sha(dst.read_text())})
+                            manifest.setdefault("persisted", []).append({"name": src.name, "source": red(str(src)), "sha256": sha(rd(dst))})
                             rel = dst.relative_to(DOCS).as_posix()
                             body.append(f"> Output saved by Claude Code to a separate file, copied verbatim to [{rel}]({rel})\n")
                         else:
@@ -380,10 +391,10 @@ def export() -> int:
                     if len(text) > INLINE_LIMIT:
                         safe = re.sub(r"[^A-Za-z0-9_-]", "_", tid or uid)
                         f = OUT_DIR / "results" / f"{safe}.txt"
-                        f.write_text(red(text))
+                        wr(f, red(text))
                         rel = f.relative_to(DOCS).as_posix()
                         body.append(f"> Full result ({len(text):,} characters) stored verbatim in [{rel}]({rel})\n")
-                        manifest["blocks"].append({"id": uid, "kind": kind, "fenced": None, "file": rel, "sha256": sha(f.read_text())})
+                        manifest["blocks"].append({"id": uid, "kind": kind, "fenced": None, "file": rel, "sha256": sha(rd(f))})
                     else:
                         emit(uid, kind, text, fenced=True, lang="text")
                 elif kind == "user_binary":
@@ -393,7 +404,7 @@ def export() -> int:
         manifest["sessions"].append({**s, "path": to_portable(s["path"]), "counts": dict(counts)})
         totals.update(counts)
 
-    chatgpt = CHATGPT_LINK_FILE.read_text().strip() if CHATGPT_LINK_FILE.exists() else CHATGPT_PLACEHOLDER
+    chatgpt = rd(CHATGPT_LINK_FILE).strip() if CHATGPT_LINK_FILE.exists() else CHATGPT_PLACEHOLDER
     head = [
         "# AI conversation history — Eneba Intern Assignment 2027\n",
         "Complete, chronological export of every Claude Code session used to build this project, "
@@ -431,7 +442,7 @@ def export() -> int:
         head += [f"- {k}: {v}\n" for k, v in sorted(red.counts.items())]
     else:
         head.append("- none\n")
-    OUT_MD.write_text("".join(head) + "".join(body))
+    wr(OUT_MD, "".join(head) + "".join(body))
 
     ex = ["# Items not reproduced in agent-chat-history.md\n\n",
           "## Binary payloads\n\n| Time | Tool / id | Item | Reason |\n|---|---|---|---|\n"]
@@ -441,9 +452,9 @@ def export() -> int:
     ex.append(f"\nReasoning steps stored without text: {totals['thinking_not_stored']}\n")
     ex.append("\nAlso omitted: `toolUseResult` fields (a structured duplicate of each tool result shown in the main file) "
               "and `<system-reminder>` blocks injected by the harness into user messages.\n")
-    (OUT_DIR / "EXCLUSIONS.md").write_text("".join(ex))
+    wr(OUT_DIR / "EXCLUSIONS.md", "".join(ex))
     manifest["redactor_private_count"] = len(red.private)
-    (OUT_DIR / "sessions.json").write_text(json.dumps(manifest, indent=1))
+    wr(OUT_DIR / "sessions.json", json.dumps(manifest, indent=1))
     print(f"exported {len(manifest['sessions'])} session file(s), {len(manifest['blocks'])} blocks -> {OUT_MD.relative_to(REPO)}")
     print("totals:", dict(totals))
     return 0
@@ -466,8 +477,8 @@ def verify(final: bool) -> int:
     if not OUT_MD.exists():
         print("FAIL: docs/agent-chat-history.md missing")
         return 1
-    md = OUT_MD.read_text()
-    manifest = json.loads((OUT_DIR / "sessions.json").read_text())
+    md = rd(OUT_MD)
+    manifest = json.loads(rd(OUT_DIR / "sessions.json"))
     red = Redactor()
     BLOCK_RE = block_re(manifest["nonce"])
     found = {m.group(1): (m.group(2), m.group(3)) for m in BLOCK_RE.finditer(md)}
@@ -524,7 +535,7 @@ def verify(final: bool) -> int:
             f = DOCS / meta["file"]
             if not f.exists():
                 errors.append(f"linked result file missing: {meta['file']}")
-            elif f.read_text() != text:
+            elif rd(f) != text:
                 bad += 1
                 errors.append(f"result file differs from source: {meta['file']}")
             if f"]({meta['file']})" not in md:
@@ -540,7 +551,7 @@ def verify(final: bool) -> int:
                 errors.append(f"content mismatch in block {uid} ({kind})")
     for p in manifest.get("persisted", []):
         f = OUT_DIR / "persisted" / p["name"]
-        if not f.exists() or sha(f.read_text()) != p["sha256"]:
+        if not f.exists() or sha(rd(f)) != p["sha256"]:
             errors.append(f"persisted file missing or changed: {p['name']}")
 
     # 3. Counts per kind.
@@ -559,7 +570,7 @@ def verify(final: bool) -> int:
     # 5. No private strings or secrets in anything that will be published.
     pubs = [OUT_MD] + list((OUT_DIR).rglob("*.txt")) + list((OUT_DIR).rglob("*.md"))
     for f in pubs:
-        hits = leaks(f.read_text(errors="replace"), red)
+        hits = leaks(rd(f), red)
         if hits:
             errors.append(f"possible secret/private data in {f.relative_to(REPO)}: {sorted(set(hits))}")
     if not red.private:

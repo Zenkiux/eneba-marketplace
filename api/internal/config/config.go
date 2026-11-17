@@ -15,6 +15,7 @@ type Config struct {
 	DatabaseURL    string   // PostgreSQL connection string
 	KeyEncryption  []byte   // 32 bytes for AES-256-GCM (digital keys at rest)
 	TrustedOrigins []string // origins allowed to send state-changing requests
+	StaticDir      string   // if set, also serve the built frontend from this folder (single-origin hosting)
 }
 
 func (c Config) Prod() bool { return c.Env == "prod" }
@@ -23,7 +24,8 @@ func (c Config) Prod() bool { return c.Env == "prod" }
 func Load() (Config, error) {
 	c := Config{
 		Env:         getenv("APP_ENV", "dev"),
-		Addr:        ":" + getenv("PORT", "8080"),
+		Addr:        getenv("LISTEN_ADDR", ":"+getenv("PORT", "8080")),
+		StaticDir:   os.Getenv("STATIC_DIR"),
 		DatabaseURL: getenv("DATABASE_URL", "postgres:///eneba?sslmode=disable"),
 	}
 	if c.Env != "dev" && c.Env != "prod" {

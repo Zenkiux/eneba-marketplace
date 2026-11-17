@@ -80,13 +80,13 @@ Independent re-check of every row against the PDF, with evidence. "Done (local)"
 | R10 | done (local) | `orders_test.go` 16 tests incl. 50-buyer race, concurrent duplicates/pays, fault injection, mixed stress with invariant checks (10 consecutive `-race` runs); `orders_test.go` (app) HTTP codes; both Playwright journeys end with a `DEMO-` key, also shown again in order history. |
 | R11 | done (local) | `auth_test.go` (7 tests: cookies, hashing, expiry, generic errors, cross-site 403, form 415, rate limit, prod cookie flags); cart/order endpoints 401 when signed out; other user's order 404; `purchase.spec.ts` sign-in redirects. |
 | R12 | done (local) | Tokens from measurements (`eneba-design-reference.md`, `tokens.css`); stylelint bans raw hex and rounded corners; style assertions in Playwright. |
-| R13 | done (local) | Two Playwright journeys follow the diagram exactly (Homepage / Search → Product → Cart → Checkout with sign-in → Payment → Order and key); step indicator in the UI mirrors it. **Production run pending.** |
+| R13 | verified on production | Two Playwright journeys follow the diagram exactly (Homepage / Search → Product → Cart → Checkout with sign-in → Payment → Order and key); both pass against https://keyshop.zenkiux.com. |
 | T1 | done | React 19 + TypeScript strict; `tsc -b` in CI. |
 | T2 | done | Go REST API (`api/`). |
 | T3 | done | PostgreSQL, migrations `api/migrations/` applied on start and in CI. |
 | T4 | done | `architecture.md`, `scope-decisions.md`. |
 | D1 | done | Public repo github.com/Zenkiux/eneba-marketplace (opened logged-out: 200). |
-| D2 | **open** | Not deployed yet — needs Neon/Render/Vercel accounts (`deployment-plan.md`). Highest remaining risk. |
+| D2 | done | https://keyshop.zenkiux.com — Go server + PostgreSQL on the always-on Mac, published via Cloudflare Tunnel (free plan); see `deployment-plan.md`. Playwright suite 7/7 against the public URL. |
 | D3 | in progress | `docs/agent-chat-history.md` complete and verified so far; final export, `--final` verify and ChatGPT link pending. |
 
-Remaining before submission: deploy (D2), run Playwright against production (R13), ChatGPT link (R1b, D3), final transcript export, submission e-mail (R0).
+Remaining before submission: ChatGPT link (R1b, D3), final transcript export, submission e-mail (R0).

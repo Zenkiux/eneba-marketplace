@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -258,5 +260,45 @@ func TestProductionCookieAttributes(t *testing.T) {
 	}
 	if r.header.Get("Cache-Control") != "no-store" || r.header.Get("X-Content-Type-Options") != "nosniff" {
 		t.Error("security headers missing")
+	}
+}
+
+func TestStaticSiteServesSPA(t *testing.T) {
+	dir := t.TempDir()
+	os.MkdirAll(filepath.Join(dir, "assets"), 0o755)
+	os.WriteFile(filepath.Join(dir, "index.html"), []byte("<!doctype html><title>app</title>"), 0o644)
+	os.WriteFile(filepath.Join(dir, "assets", "app-123.js"), []byte("console.log(1)"), 0o644)
+	pool := testdb.New(t)
+	h, _, err := app.NewRouter(config.Config{Env: "prod", TrustedOrigins: []string{"https://keyshop.example"}, KeyEncryption: testdb.Key, StaticDir: dir}, pool)
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv := httptest.NewServer(h)
+	defer srv.Close()
+	get := func(p string) *http.Response {
+		res, err := http.Get(srv.URL + p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		res.Body.Close()
+		return res
+	}
+	if r := get("/store?q=x"); r.StatusCode != 200 || r.Header.Get("Content-Security-Policy") == "" || r.Header.Get("X-Robots-Tag") == "" {
+		t.Fatalf("SPA route: %d %v", r.StatusCode, r.Header)
+	}
+	if r := get("/assets/app-123.js"); !strings.Contains(r.Header.Get("Cache-Control"), "immutable") {
+		t.Fatalf("asset caching: %v", r.Header.Get("Cache-Control"))
+	}
+	if r := get("/api/nope"); r.StatusCode != 404 || r.Header.Get("Cache-Control") != "no-store" {
+		t.Fatalf("unknown API path must stay a JSON 404: %d", r.StatusCode)
+	}
+	req, _ := http.NewRequest("GET", srv.URL+"/store?q=x", nil)
+	req.Header.Set("X-Forwarded-Proto", "http")
+	res, err := (&http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}).Do(req)
+	if err != nil || res.StatusCode != 301 || !strings.HasPrefix(res.Header.Get("Location"), "https://") {
+		t.Fatalf("plain HTTP should redirect to HTTPS: %v %v", res, err)
+	}
+	if r := get("/../../etc/passwd"); r.StatusCode != 200 { // cleaned path → index.html, never a file outside dir
+		t.Fatalf("path traversal: %d", r.StatusCode)
 	}
 }
