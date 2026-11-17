@@ -1,5 +1,3 @@
 .main {
-  max-width: var(--content-max-width);
-  margin: 0 auto;
-  padding: 0 var(--gutter);
+  min-height: 60vh;
 }

@@ -15,6 +15,16 @@
   --color-region: #e76a8c;
   --color-positive: #84e916;
   --border-search: 1px solid var(--color-text);
+  --color-bg-nav: rgb(0 0 0 / 25%); /* category nav bar */
+  --color-bg-filter: #5825cc; /* store filter panel */
+  --color-bg-chip: #2c0e6c; /* active-filter chips */
+  --color-bg-input: rgb(0 0 0 / 20%); /* price inputs */
+  --color-bg-cover-strip: rgb(0 0 0 / 55%); /* platform strip on covers */
+  --color-region-alt: #23c299; /* second region colour (Europe) */
+  --color-text-crumb: rgb(255 255 255 / 70%);
+  --color-checkbox-border: rgb(255 255 255 / 70%);
+  --color-promo: #e8336d; /* highlighted nav pill (estimate) */
+  --color-overlay: rgb(10 2 30 / 80%);
 
   /* Typography (html font-size is 10px, so 1rem = 10px) */
   --font-family: "Metropolis", Arial, Helvetica, sans-serif;
@@ -46,7 +56,11 @@
   --filter-column-width: 220px;
   --offer-row-padding: 20px;
   --button-height-small: 35px;
+  --font-size-store-h1: 3rem; /* 30px */
+  --font-size-crumb: 1.4rem;
 
-  /* Shape */
+  /* Shape: square corners everywhere except chips and checkboxes (measured) */
   --radius: 0;
+  --radius-pill: 15px;
+  --radius-checkbox: 3px;
 }

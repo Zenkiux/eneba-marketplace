@@ -36,3 +36,14 @@ Automated (`go test -count=1 ./...`, each test on its own clone of a migrated + 
 - home: 6 tests pass — reorder/rename/disable/add sections in DB changes `/api/home` and section output; banner edits and expiry; a product with 10 paid units becomes the top best seller; a price drop makes the top deal; upcoming vs new releases don't overlap; categories; unknown section → 404.
 - Boot with `SEED_IF_EMPTY=true` on an empty database → seeded 58 products / 231 offers / 2799 keys, API served them.
 - CI (GitHub Actions, Linux, `-race`): `TestSortOrders` failed — "alpha_desc out of order at 13". Cause: the same `en_US.UTF-8` collation sorts differently on Linux (glibc ignores punctuation) and macOS, so A–Z order depended on the server OS (Neon runs Linux). Fix: alphabetical sorts use `COLLATE "C"`. Local re-run passes; CI run on fb84a4c (Linux, -race): api, web and transcript jobs all succeeded.
+
+## 2026-11-17 — day 3 (part 1): header, search, homepage, store
+
+Automated:
+- `npm test` (vitest): money formatting (8) + store URL state (6: round-trip of every filter, default sorts, junk values ignored, API query always has sort/page_size, toggling resets page, euro→cent parsing) → 14 passed.
+- `tsc -b`, `eslint .`, `stylelint` → pass. Disabled stylelint `no-descending-specificity` (rule-order noise in CSS Modules).
+
+Manual (browser, local dev servers):
+- Homepage renders only what `/api/home` lists; each block loads separately (banners, category strip, 4 product rows).
+- Header search, typo "hollow crwn": dropdown shows 5 Hollow Crown listings with prices; Enter → `/store?q=hollow%20crwn`, H1 "Results for “hollow crwn”", 5 results, top result Hollow Crown (PC) Steam GLOBAL.
+- Visual review #1 (home, store; desktop + mobile): see `docs/design/visual-review.md` — 2 high, 2 medium issues found and fixed.

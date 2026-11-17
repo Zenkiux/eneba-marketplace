@@ -45,10 +45,10 @@ function coverHTML(c) {
     *{margin:0;box-sizing:border-box}
     body{width:${W}px;height:${H}px;position:relative;overflow:hidden;font-family:M,sans-serif;color:#fff}
     .shade{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.78) 0%,rgba(0,0,0,.25) 34%,rgba(0,0,0,0) 52%)}
-    .text{position:absolute;left:40px;right:40px;bottom:${c.motif === 'giftcard' ? 300 : 70}px;text-align:center}
+    .text{position:absolute;left:40px;right:40px;bottom:${c.motif === 'giftcard' ? 300 : 96}px;text-align:center}
     .title{font-weight:800;font-size:${c.title.length > 12 ? 60 : c.title.length > 9 ? 68 : 80}px;line-height:.95;text-transform:uppercase;letter-spacing:1px;text-shadow:0 4px 18px rgba(0,0,0,.55)}
     .sub{margin-top:14px;font-weight:600;font-size:30px;letter-spacing:6px;text-transform:uppercase;text-shadow:0 2px 10px rgba(0,0,0,.6)}
-    .studio{position:absolute;bottom:26px;left:0;right:0;text-align:center;font-weight:600;font-size:16px;letter-spacing:4px;text-transform:uppercase;opacity:.75}
+    .studio{position:absolute;bottom:58px;left:0;right:0;text-align:center;font-weight:600;font-size:16px;letter-spacing:4px;text-transform:uppercase;opacity:.75}
     .value{position:absolute;left:0;right:0;bottom:130px;text-align:center;font-weight:800;font-size:64px;color:${c.palette[2]}}
     .badge{position:absolute;top:26px;right:26px;background:${c.palette[2]};color:#000;font-weight:800;font-size:22px;padding:8px 14px}
   </style></head><body>${background(c, W, H)}<div class="shade"></div>${badge}

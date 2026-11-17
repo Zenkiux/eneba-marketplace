@@ -1,0 +1,8 @@
+.notice {
+  padding: 10px var(--gutter);
+  background: var(--color-cta);
+  color: var(--color-cta-text);
+  font-size: var(--font-size-nav);
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+}

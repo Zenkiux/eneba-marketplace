@@ -1,14 +1,19 @@
-import { Outlet } from 'react-router'
+import { Outlet, ScrollRestoration } from 'react-router'
+import { Footer } from './Footer'
 import { Header } from './Header'
+import { WakeNotice } from './WakeNotice'
 import styles from './Layout.module.css'
 
 export function Layout() {
   return (
     <>
       <Header />
+      <WakeNotice />
       <main className={styles.main}>
         <Outlet />
       </main>
+      <Footer />
+      <ScrollRestoration />
     </>
   )
 }

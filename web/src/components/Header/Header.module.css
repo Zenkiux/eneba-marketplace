@@ -1,18 +1,175 @@
 .header {
-  height: var(--header-top-height);
+  position: relative;
+  z-index: 20;
 }
 
-.inner {
+.top {
   display: flex;
+  gap: 30px;
   align-items: center;
   max-width: var(--content-max-width);
-  height: 100%;
+  margin: 0 auto;
+  padding: 20px var(--gutter);
+}
+
+.logo {
+  display: flex;
+  flex: none;
+  color: var(--color-text);
+}
+
+.search {
+  flex: 1;
+  max-width: 550px;
+}
+
+.locale {
+  flex: none;
+  font-size: var(--font-size-nav);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  margin-left: auto;
+}
+
+.iconButton {
+  display: flex;
+  padding: 4px;
+  border: 0;
+  background: none;
+  color: var(--color-text);
+}
+
+.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.account {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: var(--font-size-nav);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.mobileOnly,
+.mobileSearch {
+  display: none;
+}
+
+.nav {
+  background: var(--color-bg-nav);
+}
+
+.navInner {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  max-width: var(--content-max-width);
+  height: var(--header-nav-height);
   margin: 0 auto;
   padding: 0 var(--gutter);
 }
 
-.wordmark {
-  font-size: var(--font-size-h2);
+.categories,
+.navLink {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 0 10px;
+  font-size: var(--font-size-nav);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.categories {
+  padding-left: 0;
+}
+
+.promo {
+  margin-left: 10px;
+  padding: 6px 16px;
+  border: 1px solid rgb(255 255 255 / 40%);
+  background: var(--color-promo);
+  font-size: var(--font-size-nav);
   font-weight: var(--font-weight-extrabold);
   text-decoration: none;
+}
+
+.account:hover .accountText,
+.navLink:hover,
+.categories:hover {
+  text-decoration: underline;
+}
+
+@media (width <= 1100px) {
+  .locale {
+    display: none;
+  }
+}
+
+@media (width <= 900px) {
+  .top {
+    gap: 12px;
+    padding: 10px 12px;
+  }
+
+  .mobileOnly {
+    display: flex;
+  }
+
+  .search,
+  .accountText {
+    display: none;
+  }
+
+  .actions {
+    gap: 8px;
+  }
+
+  .mobileSearch {
+    display: block;
+    padding: 0 12px 12px;
+  }
+
+  .nav {
+    display: none;
+  }
+
+  .navOpen {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    display: block;
+    background: var(--color-bg-panel);
+  }
+
+  .navOpen .navInner {
+    flex-direction: column;
+    gap: 0;
+    align-items: stretch;
+    height: auto;
+    padding: 8px 0;
+  }
+
+  .navOpen .categories,
+  .navOpen .navLink {
+    padding: 14px 20px;
+    font-size: var(--font-size-body);
+  }
+
+  .navOpen .promo {
+    margin: 10px 20px;
+    text-align: center;
+  }
 }

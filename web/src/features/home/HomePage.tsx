@@ -1,26 +1,29 @@
-import { useQuery } from '@tanstack/react-query'
-import { api } from '../../api/client'
+import { useHomeLayout } from '../../api/catalog'
+import { Container } from '../../components/Container'
+import { ErrorState } from '../../components/States'
+import { sectionComponents } from './sections/registry-components'
 
-interface Health {
-  status: string
-}
-
+/**
+ * The homepage has no content of its own: it asks the API which blocks to show (and in which
+ * order), then each block fetches its own content from its own endpoint.
+ */
 export function HomePage() {
-  const health = useQuery({
-    queryKey: ['healthz'],
-    queryFn: ({ signal }) => api.get<Health>('/healthz', { signal }),
-    retry: false,
-  })
-
-  let apiStatus: string
-  if (health.isPending) apiStatus = 'checking…'
-  else if (health.isError) apiStatus = `unreachable (${health.error.message})`
-  else apiStatus = health.data.status
-
+  const { data, isPending, isError, error, refetch } = useHomeLayout()
+  if (isError) {
+    return (
+      <Container>
+        <ErrorState error={error} onRetry={() => void refetch()} />
+      </Container>
+    )
+  }
+  if (isPending) return <div style={{ minHeight: '80vh' }} aria-busy="true" />
   return (
     <>
-      <h1>Home</h1>
-      <p>API status: {apiStatus}</p>
+      <h1 className="visuallyHidden">keyshop — digital game keys</h1>
+      {data.sections.map((s) => {
+        const Section = sectionComponents[s.type]
+        return Section ? <Section key={s.key} sectionKey={s.key} title={s.title} /> : null
+      })}
     </>
   )
 }

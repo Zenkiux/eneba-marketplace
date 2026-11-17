@@ -1,0 +1,28 @@
+.footer {
+  margin-top: 80px;
+  background: var(--color-bg-panel);
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: 40px var(--gutter);
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  font-size: var(--font-size-nav);
+  font-weight: var(--font-weight-semibold);
+}
+
+.note {
+  max-width: 720px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-card-title);
+  line-height: 1.6;
+}

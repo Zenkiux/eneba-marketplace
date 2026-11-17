@@ -1,0 +1,61 @@
+.wrap {
+  position: relative;
+}
+
+.row {
+  display: grid;
+  grid-auto-columns: var(--card-width);
+  grid-auto-flow: column;
+  gap: 20px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.row::-webkit-scrollbar {
+  display: none;
+}
+
+.row > * {
+  scroll-snap-align: start;
+}
+
+.arrow {
+  position: absolute;
+  z-index: 2;
+  top: 40%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 60px;
+  border: 0;
+  background: var(--color-overlay);
+  color: var(--color-text);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.left {
+  left: 0;
+}
+
+.right {
+  right: 0;
+}
+
+.arrow:focus-visible,
+.wrap:hover .arrow {
+  opacity: 1;
+}
+
+@media (width <= 900px) {
+  .row {
+    grid-auto-columns: 150px;
+    gap: 12px;
+  }
+
+  .arrow {
+    display: none;
+  }
+}

@@ -1,20 +1,42 @@
 {
-  "extends": ["stylelint-config-standard"],
+  "extends": [
+    "stylelint-config-standard"
+  ],
   "rules": {
     "color-no-hex": true,
     "declaration-property-value-allowed-list": {
-      "/^border(-(top|bottom|start|end)-(left|right|start|end))?-radius$/": ["/^0$/", "/^var\\(--[a-z0-9-]+\\)$/"]
+      "/^border(-(top|bottom|start|end)-(left|right|start|end))?-radius$/": [
+        "/^0$/",
+        "/^var\\(--[a-z0-9-]+\\)$/"
+      ]
     },
     "selector-class-pattern": [
       "^[a-z][a-zA-Z0-9]*$",
-      { "message": "Use camelCase class names (CSS Modules)." }
+      {
+        "message": "Use camelCase class names (CSS Modules)."
+      }
     ],
-    "value-keyword-case": ["lower", { "camelCaseSvgKeywords": true, "ignoreKeywords": ["Arial", "Helvetica", "Metropolis"] }]
+    "value-keyword-case": [
+      "lower",
+      {
+        "camelCaseSvgKeywords": true,
+        "ignoreKeywords": [
+          "Arial",
+          "Helvetica",
+          "Metropolis"
+        ]
+      }
+    ],
+    "no-descending-specificity": null
   },
   "overrides": [
     {
-      "files": ["src/styles/tokens.css"],
-      "rules": { "color-no-hex": null }
+      "files": [
+        "src/styles/tokens.css"
+      ],
+      "rules": {
+        "color-no-hex": null
+      }
     }
   ]
 }

@@ -1,3 +1,5 @@
+import { wakeEnd, wakeStart } from './wake'
+
 /** Base path for every API call. Vite proxies it in dev; Vercel rewrites it in production. */
 export const API_BASE = '/api'
 
@@ -65,9 +67,30 @@ async function readJson(response: Response): Promise<unknown> {
   }
 }
 
+const WAKE_STATUSES = new Set([502, 503, 504])
+const WAKE_RETRY_DELAYS_MS = [1500, 3000, 5000, 8000, 10000, 12000, 15000, 15000]
+
+const sleep = (ms: number, signal?: AbortSignal) =>
+  new Promise<void>((resolve, reject) => {
+    const t = setTimeout(resolve, ms)
+    signal?.addEventListener('abort', () => {
+      clearTimeout(t)
+      reject(new DOMException('Aborted', 'AbortError'))
+    })
+  })
+
+function looksAsleep(response: Response, payload: unknown): boolean {
+  if (WAKE_STATUSES.has(response.status)) return true
+  // The host's "service waking up" page is HTML with status 200.
+  const type = response.headers.get('content-type') ?? ''
+  return response.ok && payload === undefined && type.includes('text/html')
+}
+
 /**
  * Typed JSON request against the API. `path` is relative to {@link API_BASE}, e.g. `/healthz`.
  * The response type is not validated at runtime; callers own the contract.
+ * GET requests are retried while the API host is waking from sleep (see wake.ts); other methods
+ * are never retried automatically.
  */
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, headers = {}, signal } = options
@@ -79,17 +102,33 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     init.body = JSON.stringify(body)
   }
 
-  let response: Response
+  const retryable = method === 'GET'
+  let waking = false
   try {
-    response = await fetch(`${API_BASE}${path}`, init)
-  } catch (cause) {
-    if (cause instanceof DOMException && cause.name === 'AbortError') throw cause
-    throw new ApiError(0, 'network_error', 'Could not reach the server')
+    for (let attempt = 0; ; attempt++) {
+      let response: Response
+      try {
+        response = await fetch(`${API_BASE}${path}`, init)
+      } catch (cause) {
+        if (cause instanceof DOMException && cause.name === 'AbortError') throw cause
+        throw new ApiError(0, 'network_error', 'Could not reach the server')
+      }
+      const payload = await readJson(response)
+      const delay = WAKE_RETRY_DELAYS_MS[attempt]
+      if (retryable && delay !== undefined && looksAsleep(response, payload)) {
+        if (!waking) {
+          waking = true
+          wakeStart()
+        }
+        await sleep(delay, signal)
+        continue
+      }
+      if (!response.ok) throw toApiError(response.status, response.statusText, payload)
+      return payload as T
+    }
+  } finally {
+    if (waking) wakeEnd()
   }
-
-  const payload = await readJson(response)
-  if (!response.ok) throw toApiError(response.status, response.statusText, payload)
-  return payload as T
 }
 
 export const api = {

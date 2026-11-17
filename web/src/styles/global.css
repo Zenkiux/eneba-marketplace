@@ -63,3 +63,15 @@ h6,
 p {
   overflow-wrap: break-word;
 }
+
+/* Accessible-only text (headings for screen readers). */
+
+/* Global (not a CSS Module) on purpose: used as className="visuallyHidden". */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

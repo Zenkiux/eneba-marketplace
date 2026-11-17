@@ -1,0 +1,371 @@
+.page {
+  padding-top: 24px;
+}
+
+.crumbs {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--color-text-crumb);
+  font-size: var(--font-size-crumb);
+}
+
+.crumbs a {
+  text-decoration: none;
+}
+
+.crumbs a:hover {
+  text-decoration: underline;
+}
+
+.h1 {
+  margin: 14px 0 30px;
+  font-size: var(--font-size-store-h1);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.25;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: var(--filter-column-width) 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ---------------------------------------------------------------- filters */
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.filtersHead,
+.showResults {
+  display: none;
+}
+
+.group {
+  min-width: 0;
+  padding: 15px 20px 18px;
+  border: 0;
+  background: var(--color-bg-filter);
+}
+
+.groupLegend {
+  float: left;
+  width: 100%;
+  padding: 0;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-extrabold);
+}
+
+.groupLegend button {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-weight: inherit;
+  text-align: left;
+}
+
+.groupLegend button svg {
+  margin-left: auto;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-left: auto;
+  border-radius: var(--radius-pill);
+  background: var(--color-cta);
+  color: var(--color-cta-text);
+  font-size: 1.1rem;
+}
+
+.badge + svg {
+  margin-left: 0;
+}
+
+.options {
+  display: flex;
+  clear: both;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 12px;
+}
+
+.option {
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 6px 0;
+  font-size: var(--font-size-nav);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+.option input {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  border: 2px solid var(--color-checkbox-border);
+  border-radius: var(--radius-checkbox);
+  cursor: pointer;
+}
+
+.option input:checked {
+  border-color: var(--color-cta);
+  background: var(--color-cta);
+  box-shadow: inset 0 0 0 3px var(--color-bg-filter);
+}
+
+.option input:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
+}
+
+.optionEmpty {
+  opacity: 0.5;
+}
+
+.optionCount {
+  color: var(--color-text-soft);
+}
+
+.price {
+  display: flex;
+  clear: both;
+  gap: 8px;
+  align-items: center;
+  padding-top: 12px;
+}
+
+.price input {
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  background: var(--color-bg-input);
+  font-weight: var(--font-weight-semibold);
+}
+
+.price input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.price input[aria-invalid="true"] {
+  outline: 2px solid var(--color-region);
+}
+
+.applyPrice {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.priceError {
+  margin-top: 8px;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-card-title);
+  line-height: 1.4;
+}
+
+/* ---------------------------------------------------------------- results */
+.results {
+  min-width: 0;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  min-height: 30px;
+}
+
+.chip,
+.filtersButton {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  height: 30px;
+  padding: 5px 15px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-chip);
+  font-size: var(--font-size-nav);
+  font-weight: var(--font-weight-semibold);
+}
+
+.filtersButton {
+  display: none;
+}
+
+.clear {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-cta);
+  font-size: var(--font-size-body);
+}
+
+.clear:hover {
+  text-decoration: underline;
+}
+
+.toolbar {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 18px 0 20px;
+}
+
+.count {
+  font-size: var(--font-size-nav);
+}
+
+.sort {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.sort select {
+  height: 40px;
+  padding: 0 10px;
+  border: 0;
+  background: transparent;
+  font-size: var(--font-size-nav);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.sort option {
+  background: var(--color-bg-panel);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.stale {
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.pagination {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 40px;
+}
+
+.pagination button,
+.gap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 10px;
+  border: 0;
+  background: var(--color-bg-row);
+  font-weight: var(--font-weight-semibold);
+}
+
+.gap {
+  background: none;
+}
+
+.pagination .current {
+  background: var(--color-cta);
+  color: var(--color-cta-text);
+}
+
+.pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------------- mobile */
+@media (width <= 900px) {
+  .h1 {
+    margin-bottom: 18px;
+    font-size: 2.2rem;
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .filters {
+    display: none;
+  }
+
+  .filtersOpen {
+    position: fixed;
+    z-index: 50;
+    inset: 0;
+    display: flex;
+    overflow-y: auto;
+    padding-bottom: 80px;
+    background: var(--color-bg-page);
+  }
+
+  .filtersHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    font-size: 2rem;
+    font-weight: var(--font-weight-extrabold);
+  }
+
+  .closeFilters {
+    display: flex;
+    border: 0;
+    background: none;
+  }
+
+  .showResults {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    left: 20px;
+    display: block;
+    height: 48px;
+    border: 0;
+    background: var(--color-cta);
+    color: var(--color-cta-text);
+    font-size: var(--font-size-button);
+    font-weight: var(--font-weight-extrabold);
+  }
+
+  .filtersButton {
+    display: inline-flex;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .toolbar {
+    flex-wrap: wrap;
+  }
+}
