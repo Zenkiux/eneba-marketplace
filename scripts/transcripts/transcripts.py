@@ -145,7 +145,17 @@ def discover() -> list[dict]:
                     for i, line in enumerate(fh):
                         if i > 400:
                             break
-                        if repo_s in line and ('"cwd"' in line or '"relocatedCwd"' in line):
+                        if repo_s not in line:
+                            continue
+                        # Match the session's working directory only; a tool result that merely
+                        # mentions this repo's path (e.g. a disk listing) must not pull it in.
+                        try:
+                            rec = json.loads(line)
+                        except json.JSONDecodeError:
+                            continue
+                        cwds = [rec.get("cwd"), rec.get("relocatedCwd")] if isinstance(rec, dict) else []
+                        if any(isinstance(c, str) and (c == repo_s or c.startswith(repo_s + os.sep))
+                               for c in cwds):
                             files[f] = "main"
                             for s in f.with_suffix("").glob("subagents/*.jsonl"):
                                 files[s] = "subagent"
