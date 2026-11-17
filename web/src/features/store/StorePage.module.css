@@ -407,3 +407,39 @@
     flex-wrap: wrap;
   }
 }
+
+.moreValues {
+  align-self: flex-start;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--color-text);
+  font-size: var(--font-size-nav);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.countryFilter {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 15px 20px 18px;
+  background: var(--color-bg-filter);
+  font-size: var(--font-size-nav);
+  font-weight: var(--font-weight-extrabold);
+}
+
+.countryFilter select {
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid rgb(255 255 255 / 40%);
+  background: var(--color-bg-input);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+}
+
+.countryFilter option {
+  background: var(--color-bg-panel);
+}

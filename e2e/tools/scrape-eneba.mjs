@@ -17,7 +17,10 @@ import { fileURLToPath } from 'node:url'
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const OUT = join(root, 'data/eneba-snapshot.json')
 const perSource = Number(process.argv.find((a) => a.startsWith('--per-source='))?.split('=')[1] ?? 24)
-const PAUSE_MS = 3000
+// --details: only visit products already in the snapshot that have no `details` yet (genres,
+// languages, publisher, developers, works-on, rating) — no listing pages.
+const detailsOnly = process.argv.includes('--details')
+const PAUSE_MS = Number(process.argv.find((a) => a.startsWith('--pause='))?.split('=')[1] ?? 3000)
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const B = 'https://www.eneba.com/store'
 
@@ -83,6 +86,14 @@ async function listingSlugs(url) {
 async function product(slug, fallbackType) {
   await page.goto(`https://www.eneba.com/${slug}`, { waitUntil: 'domcontentloaded', timeout: 60000 })
   await page.waitForTimeout(2000)
+  // Lower sections (genres, "Other details") render only once scrolled into view.
+  await page.evaluate(async () => {
+    for (let y = 0; y < document.body.scrollHeight; y += 800) {
+      window.scrollTo(0, y)
+      await new Promise((r) => setTimeout(r, 150))
+    }
+  })
+  await page.waitForTimeout(500)
   const data = await page.evaluate(() => {
     const ld = [...document.querySelectorAll('script[type="application/ld+json"]')]
       .map((s) => { try { return JSON.parse(s.textContent) } catch { return null } })
@@ -112,7 +123,26 @@ async function product(slug, fallbackType) {
         }
       }
     }
-    return ld ? { name: ld.name, image: ld.image, releaseDate: ld.releaseDate ?? null, lowPrice: ld.offers?.lowPrice, prices, crumbs, req } : null
+    // "Other details" label/value rows and the genre tags under "Product Details".
+    const details = {}
+    for (const l of ['Languages', 'Release date', 'Publisher', 'Developers', 'Works on']) {
+      const el = [...document.querySelectorAll('main *')].find((e) => e.children.length === 0 && e.innerText?.trim() === l && !e.closest('a,button'))
+      if (!el) continue
+      let row = el.parentElement
+      let val = row.innerText.replace(l, '').trim()
+      for (let i = 0; i < 2 && !val; i++) {
+        row = row.parentElement
+        val = row.innerText.replace(l, '').trim()
+      }
+      details[l] = val.split(/\n+/).map((v) => v.trim()).filter(Boolean)
+    }
+    // Genre tags under "Product Details" link to /store/<genre>-games?…itm_medium=genre.
+    const genres = [...new Set([...document.querySelectorAll('a[href*="itm_medium=genre"]')].map((a) => a.innerText.trim()))]
+      .filter((v) => v && v.length < 40)
+      .slice(0, 12)
+    const rating = ld?.aggregateRating ? { value: Number(ld.aggregateRating.ratingValue), count: Number(ld.aggregateRating.ratingCount) } : null
+    const extra = { genres, languages: details['Languages'] ?? [], publisher: details['Publisher']?.[0] ?? '', developers: details['Developers'] ?? [], worksOn: details['Works on'] ?? [], rating }
+    return ld ? { name: ld.name, image: ld.image, releaseDate: ld.releaseDate ?? null, lowPrice: ld.offers?.lowPrice, prices, crumbs, req, extra } : null
   })
   if (!data?.name || !data.image) return null
   const distinct = [...new Set(data.prices)].filter((p) => p > 0)
@@ -124,11 +154,12 @@ async function product(slug, fallbackType) {
     slug, url: `https://www.eneba.com/${slug}`, name: data.name, image: data.image, releaseDate: data.releaseDate,
     type: typeFromCrumbs(data.crumbs, fallbackType), platform: platformOf(slug), region: regionOf(slug),
     listPriceCents: listPrice, offerPricesCents: offers, requirements: Object.keys(data.req).length ? data.req : null,
+    details: data.extra,
   }
 }
 
 const added = []
-for (const src of SOURCES) {
+for (const src of detailsOnly ? [] : SOURCES) {
   const queue = []
   for (const url of src.urls) {
     try {
@@ -166,6 +197,26 @@ for (const [slug, old] of known) {
     known.set(slug, { ...old, type: old.type ?? 'game', requirements: null })
   }
   await sleep(PAUSE_MS)
+}
+if (detailsOnly) {
+  let n = 0
+  for (const [slug, old] of known) {
+    if (old.details && old.details.genres !== null) continue // genres null = selector failed earlier; revisit
+    try {
+      const p = await product(slug, old.type ?? 'game')
+      if (p) {
+        // keep the listing-time type/prices; take requirements/details from the fresh visit
+        known.set(slug, { ...old, details: p.details, requirements: old.requirements ?? p.requirements })
+        n++
+        console.log(`[details ${n}] ${old.name}: ${p.details.genres.slice(0, 3).join(', ')}${p.details.rating ? ` · ${p.details.rating.value}/5` : ''}`)
+      }
+    } catch (e) {
+      console.log(`[details] skip ${slug}: ${e.message.split('\n')[0]}`)
+    }
+    // save progress every 20 products so an interrupted run isn't lost
+    if (n % 20 === 0) writeFileSync(OUT, JSON.stringify({ source: 'https://www.eneba.com', scrapedAt: previous.scrapedAt, products: [...known.values()] }, null, 1))
+    await sleep(PAUSE_MS)
+  }
 }
 await browser.close()
 

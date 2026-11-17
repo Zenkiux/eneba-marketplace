@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/jackc/pgx/v5"
@@ -22,13 +23,38 @@ type Section struct {
 	Key    string          `json:"key"`
 	Type   string          `json:"type"`
 	Title  string          `json:"title"`
+	More   string          `json:"more,omitempty"` // "See all" link (store URL), from config
 	config json.RawMessage `json:"-"`
 }
 
 type sectionConfig struct {
 	Limit  int               `json:"limit"`
 	Type   string            `json:"type"`   // optional product type filter, e.g. "game"
+	More   string            `json:"more"`   // "See all" link
 	Titles map[string]string `json:"titles"` // translated titles by language code, e.g. {"lt": "…"}
+	// Slugs of products the visitor viewed (sent by the browser as ?viewed=a,b,c); used by the
+	// "recently viewed" and "recommended" rows. Never stored on the server.
+	Viewed []string `json:"-"`
+}
+
+var slugRe = regexp.MustCompile(`^[a-z0-9-]{1,200}$`)
+
+func viewedFrom(r *http.Request) []string {
+	var out []string
+	for _, s := range strings.Split(r.URL.Query().Get("viewed"), ",") {
+		if s = strings.TrimSpace(s); slugRe.MatchString(s) && len(out) < 20 {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
+func moreLink(raw json.RawMessage) string {
+	var c sectionConfig
+	if len(raw) > 0 && json.Unmarshal(raw, &c) == nil && strings.HasPrefix(c.More, "/") {
+		return c.More
+	}
+	return ""
 }
 
 // Lang picks the first supported language from Accept-Language ("lt-LT,lt;q=0.9" → "lt").
@@ -59,12 +85,15 @@ type Provider func(ctx context.Context, db *pgxpool.Pool, s Section, cfg section
 // providers is the registry of block types. Adding a block type = one function here plus one
 // React component; the order and titles are data.
 var providers = map[string]Provider{
-	"banner":         banners,
-	"category_strip": categories,
-	"bestsellers":    productRow(bestsellersOrder),
-	"deals":          productRow(dealsOrder),
-	"new_releases":   productRow(newReleasesOrder),
-	"upcoming":       productRow(upcomingOrder),
+	"banner":          banners,
+	"category_strip":  categories,
+	"bestsellers":     productRow(bestsellersOrder),
+	"deals":           productRow(dealsOrder),
+	"new_releases":    productRow(newReleasesOrder),
+	"upcoming":        productRow(upcomingOrder),
+	"recently_viewed": recentlyViewed,
+	"recommended":     recommended,
+	"genres":          genres,
 }
 
 type Handler struct{ db *pgxpool.Pool }
@@ -86,6 +115,7 @@ func (h *Handler) layout(w http.ResponseWriter, r *http.Request) error {
 		var s Section
 		err := r.Scan(&s.Key, &s.Type, &s.Title, &s.config)
 		s.Title = localTitle(s.Title, s.config, lang)
+		s.More = moreLink(s.config)
 		return s, err
 	})
 	if err != nil {
@@ -118,12 +148,14 @@ func (h *Handler) section(w http.ResponseWriter, r *http.Request) error {
 	if cfg.Limit < 1 || cfg.Limit > 24 {
 		cfg.Limit = 10
 	}
+	cfg.Viewed = viewedFrom(r)
 	content, err := provider(r.Context(), h.db, s, cfg)
 	if err != nil {
 		return err
 	}
 	w.Header().Add("Vary", "Accept-Language")
-	httpx.JSON(w, http.StatusOK, map[string]any{"key": s.Key, "type": s.Type, "title": localTitle(s.Title, s.config, Lang(r)), "content": content})
+	httpx.JSON(w, http.StatusOK, map[string]any{"key": s.Key, "type": s.Type, "title": localTitle(s.Title, s.config, Lang(r)),
+		"more": moreLink(s.config), "content": content})
 	return nil
 }
 
@@ -207,4 +239,59 @@ func productRow(order string) Provider {
 		items, err := pgx.CollectRows(rows, func(r pgx.CollectableRow) (catalog.Card, error) { return catalog.ScanCard(r) })
 		return map[string]any{"products": items}, err
 	}
+}
+
+func cards(ctx context.Context, db *pgxpool.Pool, q string, args ...any) (any, error) {
+	rows, err := db.Query(ctx, q, args...)
+	if err != nil {
+		return nil, err
+	}
+	items, err := pgx.CollectRows(rows, func(r pgx.CollectableRow) (catalog.Card, error) { return catalog.ScanCard(r) })
+	return map[string]any{"products": items}, err
+}
+
+// recentlyViewed returns the products the browser says it viewed, in that order (newest first).
+func recentlyViewed(ctx context.Context, db *pgxpool.Pool, _ Section, cfg sectionConfig) (any, error) {
+	if len(cfg.Viewed) == 0 {
+		return map[string]any{"products": []catalog.Card{}}, nil
+	}
+	return cards(ctx, db, catalog.CardSelect+` WHERE p.slug = ANY($1) AND p.catalog = $2
+		ORDER BY array_position($1::text[], p.slug) LIMIT $3`, cfg.Viewed, catalog.SourceFrom(ctx), cfg.Limit)
+}
+
+// recommended: in-stock products sharing genres, platform or type with what the visitor viewed,
+// ranked by how much they share and then popularity; without history, the most popular ones.
+func recommended(ctx context.Context, db *pgxpool.Pool, _ Section, cfg sectionConfig) (any, error) {
+	viewed := cfg.Viewed
+	if viewed == nil {
+		viewed = []string{}
+	}
+	return cards(ctx, db, catalog.CardSelect+`
+		LEFT JOIN LATERAL (
+			SELECT coalesce(sum(cardinality(ARRAY(SELECT unnest(v.genres) INTERSECT SELECT unnest(p.genres)))), 0)
+			     + 2 * count(*) FILTER (WHERE v.platform_id = p.platform_id)
+			     + count(*) FILTER (WHERE v.type_id = p.type_id) AS score
+			FROM products v WHERE v.slug = ANY($1)
+		) m ON true
+		WHERE p.catalog = $2 AND s.min_price IS NOT NULL AND NOT (p.slug = ANY($1))
+		ORDER BY m.score DESC, p.popularity DESC, p.id LIMIT $3`, viewed, catalog.SourceFrom(ctx), cfg.Limit)
+}
+
+type Genre struct {
+	Name  string `json:"name"`
+	Count int    `json:"count"`
+}
+
+// genres: the most common genres of the catalog with product counts ("Categories" on Eneba).
+func genres(ctx context.Context, db *pgxpool.Pool, _ Section, cfg sectionConfig) (any, error) {
+	rows, err := db.Query(ctx, `SELECT g, count(*)::int FROM products p, unnest(p.genres) g
+		WHERE p.catalog = $1 GROUP BY g ORDER BY count(*) DESC, g LIMIT $2`, catalog.SourceFrom(ctx), cfg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	items, err := pgx.CollectRows(rows, func(r pgx.CollectableRow) (Genre, error) {
+		var g Genre
+		return g, r.Scan(&g.Name, &g.Count)
+	})
+	return map[string]any{"genres": items}, err
 }

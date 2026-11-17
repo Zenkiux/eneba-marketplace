@@ -1,5 +1,5 @@
-import { BadgeCheck, CalendarDays, CircleCheck, KeyRound, Monitor, ShieldCheck } from 'lucide-react'
-import { useEffect } from 'react'
+import { BadgeCheck, CalendarDays, CircleCheck, KeyRound, Lock, Monitor, ShieldCheck, Zap } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { ApiError } from '../../api/client'
 import { useProduct } from '../../api/catalog'
@@ -11,6 +11,10 @@ import { useCart } from '../cart/useCart'
 import { ProductCompat } from '../compat/ProductCompat'
 import { NotFoundPage } from '../not-found/NotFoundPage'
 import { ratingLabel } from './rating'
+import { Reviews, Stars } from './Reviews'
+import { recordViewed } from './viewed'
+import { useRelated } from '../../api/reviews'
+import { ProductRow } from '../../components/ProductRow'
 import { WishlistButton } from '../wishlist/WishlistButton'
 import styles from './ProductPage.module.css'
 
@@ -19,7 +23,10 @@ export function ProductPage() {
   const { data: p, isPending, isError, error, refetch } = useProduct(slug)
 
   useEffect(() => {
-    if (p) document.title = `${p.title} — keyshop`
+    if (p) {
+      document.title = `${p.title} — keyshop`
+      recordViewed(p.slug)
+    }
   }, [p])
 
   if (isError && error instanceof ApiError && error.status === 404) return <NotFoundPage />
@@ -34,9 +41,27 @@ export function ProductPage() {
   return <Product p={p} />
 }
 
+const OS_NAME: Record<string, string> = { windows: 'Windows', mac: 'Mac', linux: 'Linux' }
+
+/** "Gamers also viewed": products sharing genres/platform (from the API). */
+function AlsoViewed({ slug }: { slug: string }) {
+  const { data, isPending } = useRelated(slug)
+  const { t } = useI18n()
+  if (!isPending && !data?.items.length) return null
+  return (
+    <section className={styles.section} aria-labelledby="also-h">
+      <h2 id="also-h" className={styles.h2}>
+        {t('Gamers also viewed')}
+      </h2>
+      <ProductRow products={data?.items ?? []} loading={isPending} />
+    </section>
+  )
+}
+
 function Product({ p }: { p: ProductDetail }) {
   const inStock = p.offers.filter((o) => o.stock > 0)
   const featured = inStock[0]
+  const [shownOffers, setShownOffers] = useState(5)
   const { t, money, intl } = useI18n()
   return (
     <Container className={styles.page}>
@@ -88,6 +113,14 @@ function Product({ p }: { p: ProductDetail }) {
               </li>
             )}
           </ul>
+          {p.worksOn.length > 0 && (
+            <p className={styles.worksOn}>
+              {t('Works on:')} <strong>{p.worksOn.map((o) => OS_NAME[o] ?? o).join(', ')}</strong>{' '}
+              <a href="#compat-h" className={styles.checkReq}>
+                {t('Check requirements')}
+              </a>
+            </p>
+          )}
         </div>
 
         <aside className={styles.featured} aria-label={t('Featured offer')}>
@@ -102,7 +135,11 @@ function Product({ p }: { p: ProductDetail }) {
               )}
               <span className={styles.bigPrice}>{money(featured.priceCents)}</span>
               <span className={styles.featuredSeller}>
-                {t('Sold by')} <strong>{featured.seller.name}</strong> · {featured.seller.rating.toFixed(2)} {t(ratingLabel(featured.seller.rating))}
+                {t('Sold by')}{' '}
+                <Link to={`/seller/${featured.seller.slug}`} className={styles.sellerLink}>
+                  <strong>{featured.seller.name}</strong>
+                </Link>{' '}
+                · {featured.seller.rating.toFixed(2)} {t(ratingLabel(featured.seller.rating))}
               </span>
               <OfferButtons offer={featured} productTitle={p.title} big />
               {p.offers.length > 1 && (
@@ -117,9 +154,17 @@ function Product({ p }: { p: ProductDetail }) {
               <p className={styles.soldOutText}>{t('Every seller is currently out of keys for this product.')}</p>
             </>
           )}
-          <p className={styles.safe}>
-            <ShieldCheck size={18} aria-hidden="true" /> {t('Demo checkout — no real money is charged')}
-          </p>
+          <ul className={styles.trust}>
+            <li>
+              <ShieldCheck size={18} aria-hidden="true" /> {t('Safe checkout: demo payment, no real money is charged')}
+            </li>
+            <li>
+              <Lock size={18} aria-hidden="true" /> {t('Data encryption: HTTPS everywhere, keys stored encrypted')}
+            </li>
+            <li>
+              <Zap size={18} aria-hidden="true" /> {t('Instant delivery: the key appears right after payment')}
+            </li>
+          </ul>
         </aside>
       </div>
 
@@ -129,39 +174,89 @@ function Product({ p }: { p: ProductDetail }) {
         </h2>
         <p className={styles.sectionNote}>{t('Compare sellers and choose the offer you want. Seller names and ratings are demo data.')}</p>
         <ul className={styles.offers}>
-          {p.offers.map((o) => (
+          {p.offers.slice(0, shownOffers).map((o) => (
             <OfferRow key={o.id} offer={o} productTitle={p.title} listPriceCents={p.listPriceCents} />
           ))}
         </ul>
+        {p.offers.length > shownOffers && (
+          <button type="button" className={styles.loadMore} onClick={() => setShownOffers(p.offers.length)}>
+            {t('Load {n} more offers', { n: p.offers.length - shownOffers })}
+          </button>
+        )}
       </section>
 
-      <ProductCompat p={p} />
+      <AlsoViewed slug={p.slug} />
+      <Reviews slug={p.slug} />
 
       <section className={styles.section} aria-labelledby="details-h">
         <h2 id="details-h" className={styles.h2}>
           {t('Product details')}
         </h2>
-        <div className={styles.details}>
-          <p className={styles.description}>{p.description}</p>
-          <dl className={styles.meta}>
-            <dt>{t('Developer')}</dt>
-            <dd>{p.developer}</dd>
-            <dt>{t('Publisher')}</dt>
-            <dd>{p.publisher}</dd>
-            {p.releaseDate && (
-              <>
-                <dt>{t('Release date')}</dt>
-                <dd>{formatDate(p.releaseDate, intl)}</dd>
-              </>
+        {p.genres.length > 0 && (
+          <ul className={styles.tags}>
+            {p.genres.map((g) => (
+              <li key={g}>
+                <Link to={`/store?genre=${encodeURIComponent(g)}`}>{t(g)}</Link>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className={styles.detailsBox}>
+          <div className={styles.detailsTitle}>
+            <h3>{p.title.split(/ \(|:/)[0]}</h3>
+            {p.rating && (
+              <span className={styles.ratingLine}>
+                <Stars value={p.rating.value} size={18} />
+                <strong>{p.rating.value.toFixed(2)}</strong> / 5 {t('from {n} ratings', { n: p.rating.count.toLocaleString(intl) })}
+              </span>
             )}
-            <dt>{t('Genres')}</dt>
-            <dd>{p.genres.join(', ')}</dd>
-            <dt>{t('Platform')}</dt>
-            <dd>{p.platform.name}</dd>
-            <dt>{t('Region')}</dt>
-            <dd>{p.region.name}</dd>
-          </dl>
+          </div>
+          <p className={styles.description}>{p.description}</p>
         </div>
+      </section>
+
+      <ProductCompat p={p} />
+
+      <section className={styles.section} aria-labelledby="other-h">
+        <h2 id="other-h" className={styles.h2}>
+          {t('Other details')}
+        </h2>
+        <dl className={styles.meta}>
+          {p.languages.length > 0 && (
+            <>
+              <dt>{t('Languages')}</dt>
+              <dd>{p.languages.join(', ')}</dd>
+            </>
+          )}
+          {p.releaseDate && (
+            <>
+              <dt>{t('Release date')}</dt>
+              <dd>{formatDate(p.releaseDate, intl)}</dd>
+            </>
+          )}
+          {p.publisher && (
+            <>
+              <dt>{t('Publisher')}</dt>
+              <dd>{p.publisher}</dd>
+            </>
+          )}
+          {p.developer && (
+            <>
+              <dt>{t('Developers')}</dt>
+              <dd>{p.developer}</dd>
+            </>
+          )}
+          {p.worksOn.length > 0 && (
+            <>
+              <dt>{t('Works on')}</dt>
+              <dd>{p.worksOn.map((o) => OS_NAME[o] ?? o).join(', ')}</dd>
+            </>
+          )}
+          <dt>{t('Platform')}</dt>
+          <dd>{p.platform.name}</dd>
+          <dt>{t('Region')}</dt>
+          <dd>{p.region.name}</dd>
+        </dl>
       </section>
     </Container>
   )
@@ -174,7 +269,9 @@ function OfferRow({ offer: o, productTitle, listPriceCents }: { offer: Offer; pr
     <li className={o.stock > 0 ? styles.offer : `${styles.offer} ${styles.offerSoldOut}`}>
       <div className={styles.sellerCol}>
         <span className={styles.sellerName}>
-          {o.seller.name}
+          <Link to={`/seller/${o.seller.slug}`} className={styles.sellerLink}>
+            {o.seller.name}
+          </Link>
           {o.seller.verified && <BadgeCheck size={16} className={styles.verified} aria-label={t('Verified seller')} />}
         </span>
         <span className={styles.sellerRating}>

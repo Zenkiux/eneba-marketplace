@@ -79,5 +79,39 @@ func Reparse(ctx context.Context, pool *pgxpool.Pool) (int, error) {
 			return 0, err
 		}
 	}
+	if err := fillWorksOn(ctx, tx); err != nil {
+		return 0, err
+	}
 	return len(items), tx.Commit(ctx)
+}
+
+// fillWorksOn derives "Works on" (windows/mac/linux) for PC products that don't have it from
+// the store page: the operating systems named in their requirements, or Windows when a PC key
+// lists none. Console keys stay empty.
+func fillWorksOn(ctx context.Context, tx pgx.Tx) error {
+	_, err := tx.Exec(ctx, `UPDATE products p SET works_on = ARRAY(
+			SELECT DISTINCT os FROM (
+				SELECT 'windows' AS os WHERE p.requirements IS NULL
+				   OR coalesce(p.requirements->'rawMinimum'->>'System requirements', '') ~* 'win'
+				   OR p.req_min_os IS NULL OR p.req_min_os = 'windows'
+				UNION SELECT 'mac' WHERE p.req_min_os = 'mac' OR p.requirements::text ~* 'mac ?os|os x'
+				UNION SELECT 'linux' WHERE p.req_min_os = 'linux' OR p.requirements::text ~* 'linux|steamos|ubuntu'
+			) o ORDER BY os DESC)
+		FROM platforms pl
+		WHERE pl.id = p.platform_id AND cardinality(p.works_on) = 0
+		  AND pl.slug IN ('steam', 'gog', 'epic', 'ea', 'ubisoft', 'rockstar', 'battlenet', 'microsoft', 'other')`)
+	return err
+}
+
+// FillWorksOn runs fillWorksOn in its own transaction (used after seeding).
+func FillWorksOn(ctx context.Context, pool *pgxpool.Pool) error {
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+	if err := fillWorksOn(ctx, tx); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
 }

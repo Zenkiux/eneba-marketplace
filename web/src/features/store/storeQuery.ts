@@ -7,6 +7,9 @@ export interface StoreState {
   platform: string[]
   region: string[]
   type: string[]
+  genre: string[]
+  os: string[] // windows | mac | linux ("Operating system" filter)
+  country: string // ISO code: keys that activate there ("Country" filter); '' = all countries
   minPrice: number | null // cents
   maxPrice: number | null // cents
   sort: string
@@ -44,6 +47,9 @@ export function parseStoreParams(params: URLSearchParams): StoreState {
     platform: list(params.get('platform')),
     region: list(params.get('region')),
     type: list(params.get('type')),
+    genre: list(params.get('genre')),
+    os: list(params.get('os_filter')),
+    country: /^[A-Z]{2}$/.test(params.get('country') ?? '') ? params.get('country')! : '',
     minPrice: cents(params.get('min_price')),
     maxPrice: cents(params.get('max_price')),
     sort: params.get('sort') ?? (q ? RELEVANCE.value : 'popular'),
@@ -58,6 +64,9 @@ export function toUrlParams(s: StoreState): URLSearchParams {
   if (s.platform.length) p.set('platform', s.platform.join(','))
   if (s.region.length) p.set('region', s.region.join(','))
   if (s.type.length) p.set('type', s.type.join(','))
+  if (s.genre.length) p.set('genre', s.genre.join(','))
+  if (s.os.length) p.set('os_filter', s.os.join(','))
+  if (s.country) p.set('country', s.country)
   if (s.minPrice !== null) p.set('min_price', String(s.minPrice))
   if (s.maxPrice !== null) p.set('max_price', String(s.maxPrice))
   const defaultSort = s.q ? RELEVANCE.value : 'popular'
@@ -73,12 +82,13 @@ export function toApiQuery(s: StoreState, works?: URLSearchParams | null): strin
   p.delete('works')
   p.set('sort', s.sort)
   p.set('page_size', String(PAGE_SIZE))
+  if (s.q && s.page === 1) p.set('log', '1') // counts towards "Trending searches"
   if (s.works && works) works.forEach((v, k) => p.set(k, v))
   return p.toString()
 }
 
 /** Toggle one value in a multi-select filter; any filter change goes back to page 1. */
-export function toggle(s: StoreState, key: 'platform' | 'region' | 'type', value: string): StoreState {
+export function toggle(s: StoreState, key: 'platform' | 'region' | 'type' | 'genre' | 'os', value: string): StoreState {
   const has = s[key].includes(value)
   return { ...s, [key]: has ? s[key].filter((v) => v !== value) : [...s[key], value], page: 1 }
 }

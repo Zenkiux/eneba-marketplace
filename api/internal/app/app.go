@@ -20,7 +20,9 @@ import (
 	"github.com/Zenkiux/eneba-marketplace/api/internal/httpx"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/keys"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/money"
+	"github.com/Zenkiux/eneba-marketplace/api/internal/newsletter"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/orders"
+	"github.com/Zenkiux/eneba-marketplace/api/internal/reviews"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/wishlist"
 )
 
@@ -52,6 +54,8 @@ func NewRouter(cfg config.Config, pool *pgxpool.Pool) (http.Handler, *orders.Ser
 	orders.NewHandler(orderSvc).Register(mux)
 	home.NewHandler(pool).Register(mux)
 	wishlist.NewHandler(pool).Register(mux)
+	reviews.NewHandler(pool).Register(mux)
+	newsletter.NewHandler(pool).Register(mux)
 	mux.Handle("/api/", httpx.Handler(func(w http.ResponseWriter, r *http.Request) error { return httpx.ErrNotFound }))
 	if cfg.StaticDir != "" {
 		mux.Handle("/", staticSite(cfg.StaticDir))

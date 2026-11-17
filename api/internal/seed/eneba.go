@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -34,6 +35,18 @@ type EnebaSnapshot struct {
 			Minimum     map[string]string `json:"minimum"`
 			Recommended map[string]string `json:"recommended"`
 		} `json:"requirements"`
+		// From the product page: genre tags, "Other details" and the schema.org rating.
+		Details *struct {
+			Genres     []string `json:"genres"`
+			Languages  []string `json:"languages"`
+			Publisher  string   `json:"publisher"`
+			Developers []string `json:"developers"`
+			WorksOn    []string `json:"worksOn"`
+			Rating     *struct {
+				Value float64 `json:"value"`
+				Count int     `json:"count"`
+			} `json:"rating"`
+		} `json:"details"`
 	} `json:"products"`
 }
 
@@ -120,6 +133,24 @@ func ImportEneba(ctx context.Context, pool *pgxpool.Pool, box *keys.Box, file st
 			if err := compat.SaveRequirements(ctx, tx, productID, min, rec); err != nil {
 				return err
 			}
+			if d := p.Details; d != nil {
+				works := []string{}
+				for _, w := range d.WorksOn {
+					if f := compat.OSFamily(w); f != "" {
+						works = append(works, f)
+					}
+				}
+				var rating *float64
+				count := 0
+				if d.Rating != nil && d.Rating.Count > 0 && d.Rating.Value >= 1 && d.Rating.Value <= 5 {
+					rating, count = &d.Rating.Value, d.Rating.Count
+				}
+				if _, err := tx.Exec(ctx, `UPDATE products SET genres = $2, languages = $3, publisher = $4, developer = $5,
+						works_on = $6, ext_rating = $7, ext_rating_count = $8 WHERE id = $1`,
+					productID, nonNil(d.Genres), nonNil(d.Languages), d.Publisher, strings.Join(d.Developers, ", "), works, rating, count); err != nil {
+					return err
+				}
+			}
 			for j, price := range p.OfferPricesCents {
 				seller := sellerIDs[(i+j)%len(sellerIDs)]
 				var offerID int64
@@ -150,7 +181,16 @@ func ImportEneba(ctx context.Context, pool *pgxpool.Pool, box *keys.Box, file st
 		return nil
 	})
 	if err == nil {
-		_, err = search.Refresh(ctx, pool)
+		if err = compat.FillWorksOn(ctx, pool); err == nil {
+			_, err = search.Refresh(ctx, pool)
+		}
 	}
 	return st, err
+}
+
+func nonNil(s []string) []string {
+	if s == nil {
+		return []string{}
+	}
+	return s
 }

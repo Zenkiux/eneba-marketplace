@@ -22,9 +22,19 @@ export function useSuggestions(q: string) {
   return useQuery({
     queryKey: ['suggest', q],
     queryFn: ({ signal }) =>
-      api.get<{ items: ProductCard[] }>(`/search/suggest?q=${encodeURIComponent(q)}`, { signal }),
+      api.get<{ items: ProductCard[]; total: number; phrases: string[] }>(`/search/suggest?q=${encodeURIComponent(q)}`, { signal }),
     enabled: q.trim().length >= 2,
     staleTime: 60_000,
+  })
+}
+
+/** "Trending searches" shown when the search box is focused and empty. */
+export function useTrending(enabled: boolean) {
+  return useQuery({
+    queryKey: ['trending'],
+    queryFn: ({ signal }) => api.get<{ items: string[] }>('/search/trending', { signal }),
+    enabled,
+    staleTime: 5 * 60_000,
   })
 }
 
@@ -35,10 +45,13 @@ export function useHomeLayout() {
   })
 }
 
-export function useHomeSection<T>(key: string) {
+/** One homepage block. `viewed` (recently viewed slugs) is sent only by blocks that use it. */
+export function useHomeSection<T>(key: string, viewed?: string[]) {
+  const qs = viewed ? `?viewed=${encodeURIComponent(viewed.join(','))}` : ''
   return useQuery({
-    queryKey: ['home', key],
-    queryFn: ({ signal }) => api.get<HomeSection<T>>(`/home/sections/${encodeURIComponent(key)}`, { signal }),
+    queryKey: ['home', key, viewed ?? null],
+    queryFn: ({ signal }) => api.get<HomeSection<T>>(`/home/sections/${encodeURIComponent(key)}${qs}`, { signal }),
+    placeholderData: (prev) => prev,
   })
 }
 

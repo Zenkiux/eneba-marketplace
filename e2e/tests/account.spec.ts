@@ -3,7 +3,7 @@ import { uniqueEmail } from './helpers'
 
 async function register(page: import('@playwright/test').Page, email: string) {
   await page.goto('/register')
-  await page.getByLabel('E-mail').fill(email)
+  await page.getByLabel('E-mail', { exact: true }).fill(email)
   await page.getByLabel('Password', { exact: true }).fill('e2e-password-123')
   await page.getByRole('button', { name: 'Create account' }).click()
   await expect(page.getByRole('button', { name: 'User menu' })).toBeVisible()
@@ -15,7 +15,7 @@ test('account area: menu, overview, sidebar, profile, password, login history', 
 
   // Header user menu like Eneba's.
   await page.getByRole('button', { name: 'User menu' }).click()
-  await expect(page.getByRole('link', { name: 'Keys library' })).toBeVisible()
+  await expect(page.locator('header').getByRole('link', { name: 'Keys library' })).toBeVisible()
   await page.getByRole('link', { name: 'My account' }).first().click()
   await expect(page).toHaveURL(/\/account$/)
   await expect(page.getByRole('heading', { level: 1, name: 'Overview' })).toBeVisible()

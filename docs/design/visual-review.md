@@ -81,3 +81,28 @@ Reference: my.eneba.com measured while signed in to the owner's account (compute
 | 7 | Product | PC check was one line ("Below minimum: …") | medium | CYRI-style table (part · your PC · minimum · recommended, ✓/✗/?) | fixed |
 
 Mobile (375 px): sidebar becomes an off-canvas menu from the top bar; no horizontal scroll (scrollWidth = 375).
+
+## Review #6 — 2026-11-17 (full-site comparison with eneba.com, excluding real payments)
+
+Method: page structure and computed styles read from eneba.com (homepage, store, product page, search box, footer) at 1280 px, compared with the same pages here; then Playwright screenshots of the result. Eneba started answering with a Cloudflare 429 challenge during the comparison (our scraper was running at the same time), so browsing was paused and the scraper slowed to one page per 6 s; no challenge was bypassed.
+
+| # | Page | Difference on eneba.com | Severity | Change | Status |
+|---|---|---|---|---|---|
+| 1 | Home | "Recently viewed" row | high | Row fed by the slugs this browser viewed (localStorage → `?viewed=`), live cards from the API | fixed |
+| 2 | Home | "Recommended for you" + "See all" | high | Server ranks products sharing genres / platform / type with what was viewed; popular ones without history | fixed |
+| 3 | Home | Gift-card best-seller rows | medium | New DB section row (`bestsellers`, type gift-card) — no code change needed for the row itself | fixed |
+| 4 | Home | "Categories" genre tiles with product counts | medium | New `genres` section type; tiles open `/store?genre=…` | fixed |
+| 5 | Home | "See all"/"Show all" on rows | medium | `more` link in section config, rendered beside the heading | fixed |
+| 6 | Footer | Six link columns, newsletter, locale button, legal line, dark `rgb(0 0 0 / 70%)` | high | Rebuilt; newsletter stores sign-ups (`POST /api/newsletter`); all links go to real pages (new Help page) | fixed |
+| 7 | Store | Country, Operating system and Genres filters | high | Server-side filters + facet counts (`country`, `os_filter`, `genre`) | fixed |
+| 8 | Store | "N more" / "Show less" on long filter lists | low | First 8 values, selected ones always visible | fixed |
+| 9 | Cards | Hover shows "Add to cart" + "View offers" | medium | Adds the cheapest in-stock offer (`cheapestOfferId` on cards) | fixed |
+| 10 | Product | Trust box under the featured offer | medium | Safe checkout / encryption / instant delivery (honest wording, no invented trust score) | fixed |
+| 11 | Product | "Works on: Windows · Check requirements" | low | `works_on` from Eneba's "Other details" or derived from requirements | fixed |
+| 12 | Product | "Load N more offers" | low | First 5 offers, then a button | fixed |
+| 13 | Product | "Gamers also viewed" row | medium | `GET /api/products/{slug}/related` | fixed |
+| 14 | Product | "Reviews: N" with Review now / Load more | high | Real reviews: only buyers (paid order) can write one per product, edit or delete it | fixed |
+| 15 | Product | Genre tags, "x / 5 from N ratings", "Other details" (languages, release date, publisher, developers, works on) | medium | Eneba snapshot rating combined with keyshop reviews; details scraped from product pages | fixed |
+| 16 | Search | "Trending searches" on focus; phrase completions; type label, struck list price, "Show all N results" | medium | `GET /api/search/trending` (submitted searches, topped up with popular titles), `phrases` + `total` in suggest | fixed |
+
+Not copied, on purpose: real payments, cashback, Enebium/loyalty, seller (vendor) pages, the promotional campaign links in Eneba's category bar, app-store and Trustpilot badges, review "helpful" votes and auto-translation, SEO text blocks, and the cookie banner (this site sets only the session cookie).

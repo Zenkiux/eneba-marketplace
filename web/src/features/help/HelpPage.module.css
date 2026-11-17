@@ -1,0 +1,57 @@
+.page {
+  max-width: 900px;
+  padding-top: 30px;
+  padding-bottom: 40px;
+}
+
+.h1 {
+  font-size: var(--font-size-store-h1);
+  font-weight: var(--font-weight-bold);
+}
+
+.toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 20px 0 10px;
+  font-size: var(--font-size-nav);
+  font-weight: var(--font-weight-semibold);
+}
+
+.section {
+  padding: 26px 0;
+  border-bottom: 1px solid rgb(255 255 255 / 12%);
+  color: var(--color-text-soft);
+  line-height: 1.7;
+  scroll-margin-top: 20px;
+}
+
+.section h2 {
+  margin-bottom: 12px;
+  color: var(--color-text);
+  font-size: 2.2rem;
+  font-weight: var(--font-weight-bold);
+}
+
+.section p + p {
+  margin-top: 10px;
+}
+
+.section ol,
+.section ul {
+  padding-left: 22px;
+}
+
+.section dt {
+  margin-top: 14px;
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.section dd {
+  margin: 4px 0 0;
+}
+
+.section a {
+  color: var(--color-cta);
+}

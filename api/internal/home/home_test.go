@@ -22,6 +22,7 @@ type section[T any] struct {
 	Key     string `json:"key"`
 	Type    string `json:"type"`
 	Title   string `json:"title"`
+	More    string `json:"more"`
 	Content T      `json:"content"`
 }
 
@@ -76,7 +77,7 @@ func TestLayoutIsDatabaseDriven(t *testing.T) {
 	pool, get := setup(t)
 	var l layout
 	get("/api/home", &l)
-	if len(l.Sections) != 6 || l.Sections[0].Type != "banner" {
+	if len(l.Sections) != 10 || l.Sections[0].Type != "banner" {
 		t.Fatalf("unexpected seeded layout: %v", keys(l))
 	}
 
@@ -240,5 +241,39 @@ func TestSectionTitlesFollowLanguage(t *testing.T) {
 	}
 	if got := titles(get("fr-FR"))["top-games"]; got != "Top games" {
 		t.Fatalf("unsupported language should fall back to English: %q", got)
+	}
+}
+
+type genreList struct {
+	Genres []home.Genre `json:"genres"`
+}
+
+func TestRecentlyViewedRecommendedAndGenres(t *testing.T) {
+	_, get := setup(t)
+	var empty section[products]
+	get("/api/home/sections/recently-viewed", &empty)
+	if len(empty.Content.Products) != 0 {
+		t.Fatal("no history → no recently viewed products")
+	}
+	viewed := "starfall-odyssey-steam-global,hollow-crown-steam-global"
+	var rv section[products]
+	get("/api/home/sections/recently-viewed?viewed="+viewed+",not-a-product,BAD%20SLUG", &rv)
+	if len(rv.Content.Products) != 2 || rv.Content.Products[0].Slug != "starfall-odyssey-steam-global" {
+		t.Fatalf("recently viewed must keep the browser's order and ignore unknown slugs: %+v", rv.Content.Products)
+	}
+	var rec section[products]
+	get("/api/home/sections/recommended?viewed="+viewed, &rec)
+	if len(rec.Content.Products) == 0 || rec.More == "" {
+		t.Fatalf("recommended: %+v", rec)
+	}
+	for _, p := range rec.Content.Products {
+		if p.Slug == "starfall-odyssey-steam-global" {
+			t.Fatal("recommended must not repeat what was viewed")
+		}
+	}
+	var g section[genreList]
+	get("/api/home/sections/genres", &g)
+	if len(g.Content.Genres) < 3 || g.Content.Genres[0].Count < g.Content.Genres[len(g.Content.Genres)-1].Count {
+		t.Fatalf("genres should be sorted by count: %+v", g.Content.Genres)
 	}
 }

@@ -25,6 +25,9 @@ func (h *Handler) Register(mux *http.ServeMux) {
 	mux.Handle("GET /api/products", httpx.Handler(h.list))
 	mux.Handle("GET /api/products/{slug}", httpx.Handler(h.product))
 	mux.Handle("GET /api/search/suggest", httpx.Handler(h.suggest))
+	mux.Handle("GET /api/search/trending", httpx.Handler(h.trending))
+	mux.Handle("GET /api/sellers/{slug}", httpx.Handler(h.seller))
+	mux.Handle("GET /api/products/{slug}/related", httpx.Handler(h.related))
 	mux.Handle("GET /api/platforms", h.dimension("platforms"))
 	mux.Handle("GET /api/regions", h.dimension("regions"))
 	mux.Handle("GET /api/types", h.dimension("product_types"))
@@ -43,6 +46,24 @@ func ParseFilter(v url.Values) (Filter, error) {
 	f.Platforms = list(v.Get("platform"))
 	f.Regions = list(v.Get("region"))
 	f.Types = list(v.Get("type"))
+	f.Genres = list(v.Get("genre"))
+	for _, g := range f.Genres {
+		if utf8.RuneCountInString(g) > 40 {
+			return f, bad("Unknown genre")
+		}
+	}
+	f.OS = list(v.Get("os_filter"))
+	for _, o := range f.OS {
+		if o != "windows" && o != "mac" && o != "linux" {
+			return f, bad("os_filter must be windows, mac or linux")
+		}
+	}
+	if c := strings.ToUpper(strings.TrimSpace(v.Get("country"))); c != "" && v.Get("works") != "1" {
+		if len(c) != 2 || c[0] < 'A' || c[0] > 'Z' || c[1] < 'A' || c[1] > 'Z' {
+			return f, bad("country must be a two-letter code")
+		}
+		f.Country = c
+	}
 	var err error
 	if f.MinPrice, err = cents(v.Get("min_price")); err != nil {
 		return f, err
@@ -103,6 +124,11 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	f.Source = SourceFrom(r.Context())
+	if f.Country != "" {
+		if f.CountryRegions, err = h.store.AllowedRegions(r.Context(), f.Country); err != nil {
+			return err
+		}
+	}
 	if r.URL.Query().Get("works") == "1" {
 		w, err := parseWorks(r)
 		if err != nil {
@@ -117,6 +143,10 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
+	// A search submitted from the store (first page) counts towards "Trending searches".
+	if f.Query != "" && f.Page == 1 && r.URL.Query().Get("log") == "1" && page.Total > 0 {
+		h.store.LogSearch(r.Context(), f.Query)
+	}
 	httpx.JSON(w, http.StatusOK, page)
 	return nil
 }
@@ -126,14 +156,15 @@ func (h *Handler) suggest(w http.ResponseWriter, r *http.Request) error {
 	if utf8.RuneCountInString(q) > maxQueryLen {
 		return bad("Search text is too long (max 100 characters)")
 	}
-	items := []Card{}
+	items, total, phrases := []Card{}, 0, []string{}
 	if q != "" {
 		var err error
-		if items, err = h.store.Suggest(r.Context(), SourceFrom(r.Context()), q, 6); err != nil {
+		if items, total, err = h.store.Suggest(r.Context(), SourceFrom(r.Context()), q, 6); err != nil {
 			return err
 		}
+		phrases = Phrases(q, items, 4)
 	}
-	httpx.JSON(w, http.StatusOK, map[string]any{"query": q, "items": items})
+	httpx.JSON(w, http.StatusOK, map[string]any{"query": q, "items": items, "total": total, "phrases": phrases})
 	return nil
 }
 
@@ -213,4 +244,26 @@ func parseWorks(r *http.Request) (*Works, error) {
 		return nil, bad("country must be a two-letter code like LT")
 	}
 	return w, nil
+}
+
+func (h *Handler) trending(w http.ResponseWriter, r *http.Request) error {
+	items, err := h.store.Trending(r.Context(), SourceFrom(r.Context()), 10)
+	if err != nil {
+		return err
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"items": items})
+	return nil
+}
+
+// related: "Gamers also viewed" — products sharing genres, then platform/type.
+func (h *Handler) related(w http.ResponseWriter, r *http.Request) error {
+	items, err := h.store.Related(r.Context(), r.PathValue("slug"), 10)
+	if errors.Is(err, ErrNotFound) {
+		return httpx.ErrNotFound
+	}
+	if err != nil {
+		return err
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"items": items})
+	return nil
 }

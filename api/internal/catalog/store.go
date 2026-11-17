@@ -33,6 +33,8 @@ type Card struct {
 	MinPriceCents   *int64  `json:"minPriceCents"` // lowest in-stock offer; nil = sold out
 	DiscountPercent int     `json:"discountPercent"`
 	OfferCount      int     `json:"offerCount"` // offers with stock
+	// Cheapest in-stock offer, for the card's "Add to cart" button.
+	CheapestOfferID *int64 `json:"cheapestOfferId"`
 	// Minimum requirements (PC games only) so the UI can show "works for me" badges.
 	ReqMin *compat.Level `json:"reqMin,omitempty"`
 }
@@ -43,7 +45,7 @@ const CardSelect = `
 SELECT p.id, p.slug, p.title, p.cover_url,
        pl.slug, pl.name, r.slug, r.name, t.slug, t.name,
        to_char(p.release_date, 'YYYY-MM-DD'), p.list_price_cents, s.min_price, s.offer_count,
-       p.req_min_os, p.req_min_gpu, p.req_min_cpu, p.req_min_ram::float8, p.req_min_unchecked` + cardFrom
+       p.req_min_os, p.req_min_gpu, p.req_min_cpu, p.req_min_ram::float8, p.req_min_unchecked, s.cheapest_offer` + cardFrom
 
 const cardFrom = `
 FROM products p
@@ -51,7 +53,8 @@ JOIN platforms pl ON pl.id = p.platform_id
 JOIN regions r ON r.id = p.region_id
 JOIN product_types t ON t.id = p.type_id
 LEFT JOIN LATERAL (
-    SELECT min(o.price_cents) AS min_price, count(*)::int AS offer_count
+    SELECT min(o.price_cents) AS min_price, count(*)::int AS offer_count,
+           (array_agg(o.id ORDER BY o.price_cents, o.id))[1] AS cheapest_offer
     FROM offers o
     WHERE o.product_id = p.id AND o.active
       AND EXISTS (SELECT 1 FROM offer_keys k WHERE k.offer_id = o.id AND k.status = 'available')
@@ -66,7 +69,7 @@ func ScanCard(row pgx.Row) (Card, error) {
 	var unchecked []string
 	err := row.Scan(&c.ID, &c.Slug, &c.Title, &c.CoverURL,
 		&c.Platform.Slug, &c.Platform.Name, &c.Region.Slug, &c.Region.Name, &c.Type.Slug, &c.Type.Name,
-		&c.ReleaseDate, &c.ListPriceCents, &c.MinPriceCents, &c.OfferCount, &os, &gpu, &cpu, &ram, &unchecked)
+		&c.ReleaseDate, &c.ListPriceCents, &c.MinPriceCents, &c.OfferCount, &os, &gpu, &cpu, &ram, &unchecked, &c.CheapestOfferID)
 	if os != nil || gpu != nil || cpu != nil || ram != nil || len(unchecked) > 0 {
 		c.ReqMin = &compat.Level{Unchecked: unchecked}
 		if os != nil {
@@ -105,17 +108,24 @@ type Filter struct {
 	Platforms []string
 	Regions   []string
 	Types     []string
-	MinPrice  *int64 // cents, inclusive, compared with the lowest in-stock offer
-	MaxPrice  *int64
-	Sort      string
-	Page      int // 1-based
-	PageSize  int
+	Genres    []string // any of these genres
+	OS        []string // works on any of these: windows, mac, linux
+	Country   string   // keys that activate in this country (ISO code)
+	// Regions allowed in Country (filled by the handler).
+	CountryRegions []string
+	MinPrice       *int64 // cents, inclusive, compared with the lowest in-stock offer
+	MaxPrice       *int64
+	Sort           string
+	Page           int // 1-based
+	PageSize       int
 }
 
 type Facets struct {
 	Platforms []FacetValue `json:"platforms"`
 	Regions   []FacetValue `json:"regions"`
 	Types     []FacetValue `json:"types"`
+	Genres    []FacetValue `json:"genres"`
+	OS        []FacetValue `json:"os"`
 }
 
 type FacetValue struct {
@@ -213,6 +223,18 @@ func (f Filter) where(args pgx.NamedArgs, skip string) string {
 			    AND (p.req_min_cpu IS NULL OR @works_cpu >= p.req_min_cpu)
 			    AND (p.req_min_ram IS NULL OR @works_ram::float8 >= p.req_min_ram)))`)
 	}
+	if len(f.Genres) > 0 && skip != "genre" {
+		args["genres"] = f.Genres
+		conds = append(conds, "p.genres && @genres::text[]")
+	}
+	if len(f.OS) > 0 && skip != "os" {
+		args["os_filter"] = f.OS
+		conds = append(conds, "p.works_on && @os_filter::text[]")
+	}
+	if f.Country != "" {
+		args["country_regions"] = f.CountryRegions
+		conds = append(conds, "r.slug = ANY(@country_regions)")
+	}
 	if f.MinPrice != nil {
 		args["min_price"] = *f.MinPrice
 		conds = append(conds, "s.min_price >= @min_price")
@@ -276,7 +298,39 @@ func (s *Store) List(ctx context.Context, f Filter) (Page, error) {
 	if page.Facets.Types, err = s.facet(ctx, f, "type", "t", "product_types"); err != nil {
 		return Page{}, err
 	}
+	if page.Facets.Genres, err = s.arrayFacet(ctx, f, "genre", "genres", 40); err != nil {
+		return Page{}, err
+	}
+	if page.Facets.OS, err = s.arrayFacet(ctx, f, "os", "works_on", 3); err != nil {
+		return Page{}, err
+	}
 	return page, nil
+}
+
+var osNames = map[string]string{"windows": "Windows", "mac": "Mac", "linux": "Linux"}
+
+// arrayFacet counts values of an array column (genres, works_on) among the filtered products,
+// leaving that dimension's own filter out (same rule as the other facets).
+func (s *Store) arrayFacet(ctx context.Context, f Filter, dim, column string, limit int) ([]FacetValue, error) {
+	args := pgx.NamedArgs{"facet_limit": limit}
+	where := f.where(args, dim)
+	q := fmt.Sprintf(`SELECT v, count(*)::int FROM (SELECT p.%s AS vals %s WHERE %s) x, unnest(x.vals) v
+		GROUP BY v ORDER BY count(*) DESC, v LIMIT @facet_limit`, column, cardFrom, where)
+	rows, err := s.db.Query(ctx, q, args)
+	if err != nil {
+		return nil, err
+	}
+	return pgx.CollectRows(rows, func(r pgx.CollectableRow) (FacetValue, error) {
+		var v FacetValue
+		if err := r.Scan(&v.Slug, &v.Count); err != nil {
+			return v, err
+		}
+		v.Name = v.Slug
+		if n, ok := osNames[v.Slug]; ok {
+			v.Name = n
+		}
+		return v, nil
+	})
 }
 
 func (s *Store) facet(ctx context.Context, f Filter, dim, alias, table string) ([]FacetValue, error) {
@@ -300,9 +354,9 @@ func (s *Store) facet(ctx context.Context, f Filter, dim, alias, table string) (
 }
 
 // Suggest returns up to limit best matches for the header search box.
-func (s *Store) Suggest(ctx context.Context, source, query string, limit int) ([]Card, error) {
+func (s *Store) Suggest(ctx context.Context, source, query string, limit int) ([]Card, int, error) {
 	p, err := s.List(ctx, Filter{Source: source, Query: query, Sort: "relevance", Page: 1, PageSize: limit})
-	return p.Items, err
+	return p.Items, p.Total, err
 }
 
 type CatalogInfo struct {
@@ -362,12 +416,21 @@ type Seller struct {
 
 type Product struct {
 	Card
-	Description  string               `json:"description"`
-	Developer    string               `json:"developer"`
-	Publisher    string               `json:"publisher"`
-	Genres       []string             `json:"genres"`
+	Description string   `json:"description"`
+	Developer   string   `json:"developer"`
+	Publisher   string   `json:"publisher"`
+	Genres      []string `json:"genres"`
+	Languages   []string `json:"languages"`
+	WorksOn     []string `json:"worksOn"`
+	// Rating: the Eneba snapshot's rating (if any) combined with keyshop buyers' reviews.
+	Rating       *Rating              `json:"rating"`
 	Requirements *compat.Requirements `json:"requirements"`
 	Offers       []Offer              `json:"offers"` // cheapest in-stock first, sold-out offers last
+}
+
+type Rating struct {
+	Value float64 `json:"value"` // 1–5
+	Count int     `json:"count"`
 }
 
 var ErrNotFound = fmt.Errorf("product not found")
@@ -383,9 +446,19 @@ func (s *Store) Product(ctx context.Context, slug string) (Product, error) {
 		return p, err
 	}
 	p.Card = card
-	if err := s.db.QueryRow(ctx, `SELECT description, developer, publisher, genres, requirements FROM products WHERE id = $1`, card.ID).
-		Scan(&p.Description, &p.Developer, &p.Publisher, &p.Genres, &p.Requirements); err != nil {
+	var r Rating
+	if err := s.db.QueryRow(ctx, `SELECT p.description, p.developer, p.publisher, p.genres, p.requirements, p.languages, p.works_on,
+			coalesce(round(((coalesce(p.ext_rating, 0) * p.ext_rating_count + coalesce(rv.total, 0))
+			      / nullif(p.ext_rating_count + coalesce(rv.n, 0), 0))::numeric, 2), 0)::float8,
+			p.ext_rating_count + coalesce(rv.n, 0)
+		FROM products p
+		LEFT JOIN LATERAL (SELECT count(*)::int AS n, sum(rating)::float8 AS total FROM product_reviews WHERE product_id = p.id) rv ON true
+		WHERE p.id = $1`, card.ID).
+		Scan(&p.Description, &p.Developer, &p.Publisher, &p.Genres, &p.Requirements, &p.Languages, &p.WorksOn, &r.Value, &r.Count); err != nil {
 		return p, err
+	}
+	if r.Count > 0 {
+		p.Rating = &r
 	}
 	// Stock is a count only. Key codes are never selected here.
 	rows, err := s.db.Query(ctx, `

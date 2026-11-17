@@ -5,6 +5,7 @@ import { defineConfig, devices } from '@playwright/test'
 //   BASE_URL=https://<app>.vercel.app npx playwright test
 export default defineConfig({
   testDir: './tests',
+  globalTeardown: './teardown.ts',
   timeout: 90_000, // a sleeping free-tier API can take ~1 minute to wake up
   expect: { timeout: 15_000 },
   retries: process.env.CI ? 1 : 0,

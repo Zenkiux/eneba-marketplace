@@ -2,6 +2,67 @@
   margin-top: 40px;
 }
 
+.headRow {
+  display: flex;
+  gap: 16px;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.headRow .heading {
+  margin-bottom: 0;
+}
+
+.more {
+  display: inline-flex;
+  flex: none;
+  gap: 4px;
+  align-items: center;
+  font-size: var(--font-size-nav);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+}
+
+.more:hover {
+  text-decoration: underline;
+}
+
+.genres {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.genre {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: flex-end;
+  height: 110px;
+  padding: 16px 18px;
+  background: var(--color-bg-panel);
+  text-decoration: none;
+}
+
+.genre:hover {
+  background: var(--color-bg-filter);
+}
+
+.genreCount {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-card-title);
+  font-weight: var(--font-weight-semibold);
+}
+
+.genreName {
+  font-size: 1.8rem;
+  font-weight: var(--font-weight-extrabold);
+}
+
 .heading {
   margin-bottom: 20px;
   font-size: var(--font-size-h2);

@@ -125,6 +125,14 @@ func ensureTemplate(ctx context.Context, admin *pgx.Conn, tpl string) error {
 	if _, err := admin.Exec(ctx, fmt.Sprintf(`CREATE DATABASE %s`, tpl)); err != nil {
 		return err
 	}
+	// If building fails, don't leave a half-built template behind: it would be reused (and look
+	// empty) by every later run with the same fingerprint.
+	ok := false
+	defer func() {
+		if !ok {
+			admin.Exec(context.Background(), fmt.Sprintf(`DROP DATABASE IF EXISTS %s WITH (FORCE)`, tpl))
+		}
+	}()
 	pool, err := db.Open(ctx, withDB(baseURL(), tpl))
 	if err != nil {
 		return err
@@ -137,6 +145,9 @@ func ensureTemplate(ctx context.Context, admin *pgx.Conn, tpl string) error {
 	if err != nil {
 		return err
 	}
-	_, err = seed.Run(ctx, pool, box, seed.Options{})
-	return err
+	if _, err = seed.Run(ctx, pool, box, seed.Options{}); err != nil {
+		return err
+	}
+	ok = true
+	return nil
 }

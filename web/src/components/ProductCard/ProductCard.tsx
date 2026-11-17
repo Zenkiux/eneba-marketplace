@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 import type { ProductCard as Card } from '../../api/types'
 import { CompatBadge } from '../../features/compat/CompatBadge'
 import { WishlistButton } from '../../features/wishlist/WishlistButton'
+import { useCart } from '../../features/cart/useCart'
 import { useI18n } from '../../i18n/useI18n'
 import styles from './ProductCard.module.css'
 
@@ -47,8 +48,20 @@ export function ProductCard({ product: p, eager = false }: Props) {
           </span>
         </div>
       </Link>
+      {p.cheapestOfferId && <QuickAdd offerId={p.cheapestOfferId} title={p.title} />}
       <WishlistButton productId={p.id} title={p.title} className={styles.heart} />
     </div>
+  )
+}
+
+/** Eneba's hover "Add to cart": adds the cheapest in-stock offer (the server re-checks stock and price). */
+function QuickAdd({ offerId, title }: { offerId: number; title: string }) {
+  const { add } = useCart()
+  const { t } = useI18n()
+  return (
+    <button type="button" className={styles.quickAdd} aria-label={t('Add to cart: {label}', { label: title })} onClick={() => add(offerId, 1, 10, title)}>
+      {t('Add to cart')}
+    </button>
   )
 }
 

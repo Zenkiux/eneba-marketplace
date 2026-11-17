@@ -6,6 +6,8 @@ export interface Named {
 }
 
 export interface ProductCard {
+  /** Cheapest in-stock offer (null when sold out), for the card's "Add to cart". */
+  cheapestOfferId?: number | null
   id: number
   slug: string
   title: string
@@ -33,7 +35,7 @@ export interface ProductPage {
   page: number
   pageSize: number
   sort: string
-  facets: { platforms: FacetValue[]; regions: FacetValue[]; types: FacetValue[] }
+  facets: { platforms: FacetValue[]; regions: FacetValue[]; types: FacetValue[]; genres: FacetValue[]; os: FacetValue[] }
 }
 
 export interface Seller {
@@ -73,6 +75,10 @@ export interface ProductDetail extends ProductCard {
   developer: string
   publisher: string
   genres: string[]
+  languages: string[]
+  worksOn: string[] // windows | mac | linux
+  /** Eneba snapshot rating combined with keyshop buyers' reviews (null when there are none). */
+  rating: { value: number; count: number } | null
   requirements: Requirements | null
   offers: Offer[]
 }
@@ -81,6 +87,8 @@ export interface HomeSectionRef {
   key: string
   type: string
   title: string
+  /** "See all" link into the store, when the section has one. */
+  more?: string
 }
 
 export interface HomeSection<T = unknown> extends HomeSectionRef {

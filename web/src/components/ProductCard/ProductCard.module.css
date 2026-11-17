@@ -110,20 +110,75 @@
   align-items: center;
   justify-content: center;
   height: var(--button-height-small);
-  background: var(--color-cta);
-  color: var(--color-cta-text);
+  border: 1px solid var(--color-text);
+  background: var(--color-bg-panel);
+  color: var(--color-text);
   font-size: var(--font-size-button);
   opacity: 0;
   transition: opacity 0.15s ease;
 }
 
-.card:hover .hoverCta,
+/* On hover the two buttons cover the price block (as on Eneba); this backdrop keeps the text
+   underneath from showing through. */
+.info::after {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: calc(15px + 2 * var(--button-height-small) + 8px + 12px);
+  background: var(--color-bg-panel);
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.wrap:hover .info::after {
+  opacity: 1;
+}
+
+.hoverCta,
+.quickAdd {
+  z-index: 2;
+}
+
+@media (hover: none) {
+  .info::after {
+    display: none;
+  }
+}
+
+/* "Add to cart" sits above "View offers" on hover (outside the link: a button can't be inside one). */
+.quickAdd {
+  position: absolute;
+  right: 15px;
+  bottom: calc(15px + var(--button-height-small) + 8px);
+  left: 15px;
+  height: var(--button-height-small);
+  border: 0;
+  background: var(--color-cta);
+  color: var(--color-cta-text);
+  font-size: var(--font-size-button);
+  font-weight: var(--font-weight-extrabold);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.wrap:hover .quickAdd,
+.quickAdd:focus-visible {
+  opacity: 1;
+}
+
+.wrap:hover .hoverCta,
 .card:focus-visible .hoverCta {
   opacity: 1;
 }
 
 @media (hover: none) {
-  .hoverCta {
+  .hoverCta,
+  .quickAdd {
     display: none;
   }
 }

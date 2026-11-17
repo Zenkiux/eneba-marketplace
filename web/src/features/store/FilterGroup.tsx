@@ -1,6 +1,7 @@
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useId, useState } from 'react'
 import type { FacetValue } from '../../api/types'
+import { useI18n } from '../../i18n/useI18n'
 import styles from './StorePage.module.css'
 
 interface Props {
@@ -11,9 +12,16 @@ interface Props {
 }
 
 /** Collapsible checkbox list with result counts (counts come from the API's facets). */
+const VISIBLE = 8
+
 export function FilterGroup({ title, values, selected, onToggle }: Props) {
   const [open, setOpen] = useState(true)
+  const [all, setAll] = useState(false)
   const id = useId()
+  const { t } = useI18n()
+  const list = values ?? []
+  // Like Eneba: the first values, then "N more"; selected values always stay visible.
+  const shown = all ? list : list.filter((v, i) => i < VISIBLE || selected.includes(v.slug))
   return (
     <fieldset className={styles.group}>
       <legend className={styles.groupLegend}>
@@ -25,7 +33,7 @@ export function FilterGroup({ title, values, selected, onToggle }: Props) {
       </legend>
       {open && (
         <div id={id} className={styles.options}>
-          {(values ?? []).map((v) => {
+          {shown.map((v) => {
             const checked = selected.includes(v.slug)
             return (
               <label key={v.slug} className={v.count === 0 && !checked ? `${styles.option} ${styles.optionEmpty}` : styles.option}>
@@ -35,6 +43,11 @@ export function FilterGroup({ title, values, selected, onToggle }: Props) {
               </label>
             )
           })}
+          {list.length > VISIBLE && (
+            <button type="button" className={styles.moreValues} onClick={() => setAll((a) => !a)} aria-expanded={all}>
+              {all ? t('Show less') : t('{n} more', { n: list.length - shown.length })}
+            </button>
+          )}
         </div>
       )}
     </fieldset>

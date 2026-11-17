@@ -3,13 +3,16 @@ import { eurosToCents, parseStoreParams, toApiQuery, toggle, toUrlParams } from 
 
 describe('store URL state', () => {
   it('round-trips every filter through the URL', () => {
-    const url = new URLSearchParams('q=star&platform=steam,gog&region=global&type=game&min_price=500&max_price=4000&sort=price_asc&page=3')
+    const url = new URLSearchParams(
+      'q=star&platform=steam,gog&region=global&type=game&genre=RPG,Action&os_filter=mac&country=LT&min_price=500&max_price=4000&sort=price_asc&page=3',
+    )
     const state = parseStoreParams(url)
     expect(state).toEqual({
       works: false,
-      q: 'star', platform: ['steam', 'gog'], region: ['global'], type: ['game'],
+      q: 'star', platform: ['steam', 'gog'], region: ['global'], type: ['game'], genre: ['RPG', 'Action'], os: ['mac'], country: 'LT',
       minPrice: 500, maxPrice: 4000, sort: 'price_asc', page: 3,
     })
+    expect(parseStoreParams(new URLSearchParams('country=lithuania')).country).toBe('')
     expect(parseStoreParams(toUrlParams(state))).toEqual(state)
   })
 

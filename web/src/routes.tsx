@@ -5,6 +5,8 @@ import { LibraryPage, LoginHistoryPage, OrdersPage, OverviewPage, TicketsPage } 
 import { AddFundsPage, BonusPage, CashbackPage, RedeemPage, TransactionsPage, WalletPage } from './features/account/BalancePages'
 import { ConnectedAppsPage, MfaPage, PasswordPage, PersonalInfoPage } from './features/account/SettingsPages'
 import { WishlistPage } from './features/wishlist/WishlistPage'
+import { HelpPage } from './features/help/HelpPage'
+import { SellerPage } from './features/seller/SellerPage'
 import { LoginPage } from './features/auth/LoginPage'
 import { RegisterPage } from './features/auth/RegisterPage'
 import { RequireAuth } from './features/auth/RequireAuth'
@@ -33,6 +35,8 @@ export const routes: RouteObject[] = [
       { path: 'checkout/:id/pay', element: <RequireAuth><PaymentPage /></RequireAuth> },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
+      { path: 'help', element: <HelpPage /> },
+      { path: 'seller/:slug', element: <SellerPage /> },
       { path: 'wishlist', element: <RequireAuth><WishlistPage /></RequireAuth> },
       { path: 'orders/:id', element: <RequireAuth><OrderPage /></RequireAuth> },
       { path: '*', element: <NotFoundPage /> },

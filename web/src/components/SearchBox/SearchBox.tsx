@@ -1,7 +1,8 @@
-import { Search, X } from 'lucide-react'
+import { Search, TrendingUp, X } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router'
-import { useSuggestions } from '../../api/catalog'
+import { useSuggestions, useTrending } from '../../api/catalog'
+import type { ProductCard } from '../../api/types'
 import { useI18n } from '../../i18n/useI18n'
 import styles from './SearchBox.module.css'
 
@@ -29,7 +30,19 @@ export function SearchBox({ autoFocus = false, onDone }: { autoFocus?: boolean; 
   const [active, setActive] = useState(-1)
   const debounced = useDebounced(text.trim(), 200)
   const { data, isFetching } = useSuggestions(debounced)
-  const items = debounced.length >= 2 ? (data?.items ?? []) : []
+  const typing = debounced.length >= 2
+  const trending = useTrending(open && !text.trim())
+  // One keyboard-navigable list, like Eneba's: phrase completions, then products; trending
+  // searches when the box is empty.
+  type Opt = { kind: 'phrase'; text: string } | { kind: 'product'; product: ProductCard }
+  const items: Opt[] = !text.trim()
+    ? (trending.data?.items ?? []).map((q) => ({ kind: 'phrase' as const, text: q }))
+    : typing
+      ? [
+          ...(data?.phrases ?? []).map((q) => ({ kind: 'phrase' as const, text: q })),
+          ...(data?.items ?? []).map((p) => ({ kind: 'product' as const, product: p })),
+        ]
+      : []
   const listId = useId()
   const wrapRef = useRef<HTMLDivElement>(null)
 
@@ -49,8 +62,9 @@ export function SearchBox({ autoFocus = false, onDone }: { autoFocus?: boolean; 
     return () => document.removeEventListener('mousedown', onDocClick)
   }, [])
 
-  function goToResults() {
-    const q = text.trim()
+  function goToResults(query?: string) {
+    const q = (query ?? text).trim()
+    if (query) setText(query)
     setOpen(false)
     onDone?.()
     navigate(q ? `/store?q=${encodeURIComponent(q)}` : '/store')
@@ -60,6 +74,11 @@ export function SearchBox({ autoFocus = false, onDone }: { autoFocus?: boolean; 
     setOpen(false)
     onDone?.()
     navigate(`/p/${slug}`)
+  }
+
+  function choose(o: Opt) {
+    if (o.kind === 'product') goToProduct(o.product.slug)
+    else goToResults(o.text)
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -85,7 +104,7 @@ export function SearchBox({ autoFocus = false, onDone }: { autoFocus?: boolean; 
         onSubmit={(e) => {
           e.preventDefault()
           const chosen = active >= 0 ? items[active] : undefined
-          if (showList && chosen) goToProduct(chosen.slug)
+          if (showList && chosen) choose(chosen)
           else goToResults()
         }}
       >
@@ -121,37 +140,70 @@ export function SearchBox({ autoFocus = false, onDone }: { autoFocus?: boolean; 
       </form>
       {showList && (
         <ul id={listId} role="listbox" className={styles.list} aria-label={t('Suggestions')} aria-busy={isFetching}>
-          {items.map((p, i) => (
-            <li
-              key={p.id}
-              id={`${listId}-${i}`}
-              role="option"
-              aria-selected={i === active}
-              className={i === active ? `${styles.option} ${styles.active}` : styles.option}
-              onMouseEnter={() => setActive(i)}
-              onMouseDown={(e) => {
-                e.preventDefault()
-                goToProduct(p.slug)
-              }}
-            >
-              <img referrerPolicy="no-referrer" src={p.coverUrl} alt="" width={36} height={54} />
-              <span className={styles.optTitle}>{p.title}</span>
-              <span className={styles.optPrice}>
-                {p.minPriceCents === null ? t('Sold out') : money(p.minPriceCents)}
-              </span>
+          {!text.trim() && (
+            <li role="presentation" className={styles.groupLabel}>
+              {t('Trending searches')}
             </li>
-          ))}
-          <li role="presentation" className={styles.all}>
-            <button
-              type="button"
-              onMouseDown={(e) => {
+          )}
+          {items.map((o, i) => {
+            const cls = i === active ? `${styles.option} ${styles.active}` : styles.option
+            const common = {
+              id: `${listId}-${i}`,
+              role: 'option' as const,
+              'aria-selected': i === active,
+              onMouseEnter: () => setActive(i),
+              onMouseDown: (e: React.MouseEvent) => {
                 e.preventDefault()
-                goToResults()
-              }}
-            >
-              {t('See all results for “{q}”', { q: text.trim() })}
-            </button>
-          </li>
+                choose(o)
+              },
+            }
+            if (o.kind === 'phrase') {
+              return (
+                <li key={`q-${o.text}`} {...common} className={`${cls} ${styles.phrase}`}>
+                  {!text.trim() ? <TrendingUp size={16} aria-hidden="true" /> : <Search size={16} aria-hidden="true" />}
+                  <span>{o.text}</span>
+                </li>
+              )
+            }
+            const p = o.product
+            const discounted = p.minPriceCents !== null && p.listPriceCents > p.minPriceCents
+            return (
+              <li key={p.id} {...common} className={cls}>
+                <img referrerPolicy="no-referrer" src={p.coverUrl} alt="" width={36} height={54} />
+                <span className={styles.optText}>
+                  <span className={styles.optKind}>
+                    {t('Digital good')}
+                    {p.type.slug !== 'game' && <strong>{p.type.name}</strong>}
+                  </span>
+                  <span className={styles.optTitle}>{p.title}</span>
+                </span>
+                <span className={styles.optPrice}>
+                  {p.minPriceCents === null ? (
+                    t('Sold out')
+                  ) : (
+                    <>
+                      <small>{t('From')}</small>
+                      {discounted && <s>{money(p.listPriceCents)}</s>}
+                      {money(p.minPriceCents)}
+                    </>
+                  )}
+                </span>
+              </li>
+            )
+          })}
+          {typing && (
+            <li role="presentation" className={styles.all}>
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  goToResults()
+                }}
+              >
+                {data?.total ? t('Show all {n} results', { n: data.total }) : t('See all results for “{q}”', { q: text.trim() })}
+              </button>
+            </li>
+          )}
         </ul>
       )}
     </div>

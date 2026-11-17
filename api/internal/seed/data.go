@@ -181,8 +181,12 @@ type sectionSeed struct {
 var sections = []sectionSeed{
 	{"hero", "banner", "", `{}`},
 	{"categories", "category_strip", "", `{}`},
-	{"top-games", "bestsellers", "Top games", `{"limit": 10, "type": "game", "titles": {"lt": "Populiariausi žaidimai", "de": "Top-Spiele", "pl": "Najpopularniejsze gry"}}`},
-	{"deals", "deals", "Best deals right now", `{"limit": 10, "titles": {"lt": "Geriausi pasiūlymai dabar", "de": "Die besten Angebote", "pl": "Najlepsze okazje teraz"}}`},
-	{"new-releases", "new_releases", "New releases", `{"limit": 10, "titles": {"lt": "Naujienos", "de": "Neuerscheinungen", "pl": "Nowości"}}`},
+	{"recently-viewed", "recently_viewed", "Recently viewed", `{"limit": 10, "titles": {"lt": "Neseniai peržiūrėti", "de": "Zuletzt angesehen", "pl": "Ostatnio oglądane"}}`},
+	{"recommended", "recommended", "Recommended for you", `{"limit": 10, "more": "/store?sort=popular", "titles": {"lt": "Rekomenduojama jums", "de": "Für dich empfohlen", "pl": "Polecane dla Ciebie"}}`},
+	{"top-games", "bestsellers", "Top games", `{"limit": 10, "type": "game", "more": "/store?type=game&sort=popular", "titles": {"lt": "Populiariausi žaidimai", "de": "Top-Spiele", "pl": "Najpopularniejsze gry"}}`},
+	{"deals", "deals", "Best deals right now", `{"limit": 10, "more": "/store?sort=discount", "titles": {"lt": "Geriausi pasiūlymai dabar", "de": "Die besten Angebote", "pl": "Najlepsze okazje teraz"}}`},
+	{"new-releases", "new_releases", "New releases", `{"limit": 10, "more": "/store?sort=newest", "titles": {"lt": "Naujienos", "de": "Neuerscheinungen", "pl": "Nowości"}}`},
+	{"gift-cards", "bestsellers", "Best selling gift cards", `{"limit": 10, "type": "gift-card", "more": "/store?type=gift-card", "titles": {"lt": "Perkamiausios dovanų kortelės", "de": "Meistverkaufte Geschenkkarten", "pl": "Najlepiej sprzedające się karty podarunkowe"}}`},
 	{"upcoming", "upcoming", "Upcoming games", `{"limit": 10, "titles": {"lt": "Greitai pasirodysiantys žaidimai", "de": "Kommende Spiele", "pl": "Nadchodzące gry"}}`},
+	{"genres", "genres", "Categories", `{"limit": 12, "titles": {"lt": "Kategorijos", "de": "Kategorien", "pl": "Kategorie"}}`},
 }

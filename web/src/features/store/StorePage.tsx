@@ -5,6 +5,7 @@ import { useProducts } from '../../api/catalog'
 import type { FacetValue } from '../../api/types'
 import { Container } from '../../components/Container'
 import { worksParams } from '../compat/device'
+import { COUNTRIES } from '../compat/regions'
 import { useDevice } from '../compat/useDevice'
 import { ProposalNote } from '../proposal/ProposalNote'
 import { ProductCard, ProductCardSkeleton } from '../../components/ProductCard'
@@ -35,6 +36,9 @@ export function StorePage() {
     ...state.type.map((v) => ({ label: facetName(data?.facets.types, v), remove: () => update(toggle(state, 'type', v)) })),
     ...state.platform.map((v) => ({ label: facetName(data?.facets.platforms, v), remove: () => update(toggle(state, 'platform', v)) })),
     ...state.region.map((v) => ({ label: facetName(data?.facets.regions, v), remove: () => update(toggle(state, 'region', v)) })),
+    ...state.genre.map((v) => ({ label: v, remove: () => update(toggle(state, 'genre', v)) })),
+    ...state.os.map((v) => ({ label: facetName(data?.facets.os, v), remove: () => update(toggle(state, 'os', v)) })),
+    ...(state.country ? [{ label: t(COUNTRIES.find((c) => c.code === state.country)?.name ?? state.country), remove: () => update({ ...state, country: '', page: 1 }) }] : []),
     ...(state.works ? [{ label: t('Works for me'), remove: () => update({ ...state, works: false, page: 1 }) }] : []),
     ...(state.minPrice !== null || state.maxPrice !== null
       ? [{ label: t('Price'), remove: () => update({ ...state, minPrice: null, maxPrice: null, page: 1 }) }]
@@ -88,8 +92,21 @@ export function StorePage() {
             max={state.maxPrice}
             onApply={(minPrice, maxPrice) => update({ ...state, minPrice, maxPrice, page: 1 })}
           />
-          <FilterGroup title={t('Type')} values={data?.facets.types} selected={state.type} onToggle={(v) => update(toggle(state, 'type', v))} />
+          <label className={styles.countryFilter}>
+            <span>{t('Country')}</span>
+            <select value={state.country} onChange={(e) => update({ ...state, country: e.target.value, page: 1 })}>
+              <option value="">{t('All countries')}</option>
+              {COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {t(c.name)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <FilterGroup title={t('Product type')} values={data?.facets.types} selected={state.type} onToggle={(v) => update(toggle(state, 'type', v))} />
+          <FilterGroup title={t('Operating system')} values={data?.facets.os} selected={state.os} onToggle={(v) => update(toggle(state, 'os', v))} />
           <FilterGroup title={t('Platforms')} values={data?.facets.platforms} selected={state.platform} onToggle={(v) => update(toggle(state, 'platform', v))} />
+          <FilterGroup title={t('Genres')} values={data?.facets.genres} selected={state.genre} onToggle={(v) => update(toggle(state, 'genre', v))} />
           <FilterGroup title={t('Regions')} values={data?.facets.regions} selected={state.region} onToggle={(v) => update(toggle(state, 'region', v))} />
           <button type="button" className={styles.showResults} onClick={() => setFiltersOpen(false)}>
             {data ? t('Show {n} results', { n: data.total }) : t('Show results')}

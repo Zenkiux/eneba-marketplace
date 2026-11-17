@@ -101,7 +101,9 @@ func Run(ctx context.Context, pool *pgxpool.Pool, box *keys.Box, opt Options) (S
 		return seedDemoUser(ctx, tx)
 	})
 	if err == nil {
-		_, err = search.Refresh(ctx, pool)
+		if err = compat.FillWorksOn(ctx, pool); err == nil {
+			_, err = search.Refresh(ctx, pool)
+		}
 	}
 	return st, err
 }

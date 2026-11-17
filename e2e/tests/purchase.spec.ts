@@ -7,8 +7,9 @@ import { addChosenOffer, checkoutAsNewUser, uniqueEmail } from './helpers'
 test('homepage → product → chosen seller → cart → sign-in → payment → key → order history', async ({ page }) => {
   await page.goto('/')
   const firstRow = page.locator('section').filter({ has: page.getByRole('heading', { level: 2 }) }).first()
-  await expect(firstRow.getByRole('link').first()).toBeVisible()
-  await firstRow.getByRole('link').first().click()
+  const firstProduct = firstRow.locator('a[href^="/p/"]').first()
+  await expect(firstProduct).toBeVisible()
+  await firstProduct.click()
   await expect(page).toHaveURL(/\/p\//)
 
   const { seller, title } = await addChosenOffer(page)
@@ -39,7 +40,7 @@ test('search with a typo from the header → product → purchase', async ({ pag
   await page.goto('/')
   const search = page.getByRole('combobox', { name: 'Search products' })
   await search.fill('starfal odysey')
-  await expect(page.getByRole('option').first()).toContainText('Starfall Odyssey')
+  await expect(page.getByRole('option').filter({ has: page.locator('img') }).first()).toContainText('Starfall Odyssey')
   await search.press('Enter')
   await expect(page).toHaveURL(/\/store\?q=starfal/)
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Results for “starfal odysey”')

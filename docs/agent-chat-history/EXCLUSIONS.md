@@ -93,6 +93,12 @@
 | 2026-11-17T03:44:54.698Z | Read toolu_01UVeRSdBic2AF7WmXFPF3WM | image image/png, 620,352 base64 chars | binary payload (screenshot / PDF page images) |
 | 2026-11-17T03:45:51.310Z | Read toolu_01VSbmqWXiGD1kYmwKnCdWjH | image image/png, 58,000 base64 chars | binary payload (screenshot / PDF page images) |
 | 2026-11-17T03:45:53.049Z | Read toolu_01TkTJSdaeEJCjJJdchi6BmE | image image/png, 35,808 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T04:19:09.289Z | Read toolu_01RktboD5zd8RJUe3DMwZPT8 | image image/png, 313,560 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T04:19:11.164Z | Read toolu_013KgpDxTPmhZ1bdDuKymPu4 | image image/png, 115,296 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T04:19:12.860Z | Read toolu_013CrZCQbA9EPHXzGFR2UcjP | image image/png, 551,220 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T04:19:18.878Z | Read toolu_01J19A7dDdYvt7DsTj8KgwKi | image image/png, 247,344 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T04:19:19.317Z | Read toolu_01HSymYYEywx4HnPSuoCgCCc | image image/png, 144,492 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T04:19:20.922Z | Read toolu_01HyQ3RafbGU6SpEvFv4qNVA | image image/png, 473,652 base64 chars | binary payload (screenshot / PDF page images) |
 | 2026-11-17T02:21:02.401Z | mcp__Claude_Browser__browser_batch toolu_01DP6X4mRRjVdKPZqE1wR7pj | image image/jpeg, 28,816 base64 chars | binary payload (screenshot / PDF page images) |
 | 2026-11-17T02:21:02.401Z | mcp__Claude_Browser__browser_batch toolu_01DP6X4mRRjVdKPZqE1wR7pj | mcp-Claude_Browser-blob-1794882062392-3j2a4y.jpg (21,612 bytes) | binary file stored by Claude Code (screenshot) |
 | 2026-11-17T02:21:24.817Z | mcp__Claude_Browser__browser_batch toolu_01Tp7auAWQ6DYwoejpcaNqjd | image image/jpeg, 31,420 base64 chars | binary payload (screenshot / PDF page images) |
@@ -108,20 +114,20 @@
 
 | Record type | Count |
 |---|---|
-| `agent-name` | 314 |
-| `api-request` | 655 |
-| `api-request-blob` | 473 |
+| `agent-name` | 374 |
+| `api-request` | 788 |
+| `api-request-blob` | 565 |
 | `api-request-shape` | 6 |
-| `atis-latch` | 314 |
+| `atis-latch` | 374 |
 | `attachment:agent_listing_delta` | 4 |
 | `attachment:auto_mode` | 4 |
 | `attachment:compact_file_reference` | 1 |
 | `attachment:credential_org` | 4 |
 | `attachment:date` | 4 |
 | `attachment:deferred_tools_delta` | 8 |
-| `attachment:deferred_tools_record` | 241 |
-| `attachment:edited_text_file` | 20 |
-| `attachment:environment` | 99 |
+| `attachment:deferred_tools_record` | 314 |
+| `attachment:edited_text_file` | 21 |
+| `attachment:environment` | 128 |
 | `attachment:file` | 4 |
 | `attachment:hook_additional_context` | 2 |
 | `attachment:mcp_instructions_delta` | 5 |
@@ -132,17 +138,17 @@
 | `attachment:prompt_snapshot` | 8 |
 | `attachment:remote_session_change` | 4 |
 | `attachment:session_context` | 4 |
-| `attachment:silent_turn_reminder` | 31 |
+| `attachment:silent_turn_reminder` | 37 |
 | `attachment:skill_listing` | 4 |
 | `attachment:thinking_drop` | 1 |
-| `custom-title` | 315 |
+| `custom-title` | 375 |
 | `file-history-delta` | 31 |
-| `file-history-snapshot` | 21 |
-| `last-prompt` | 314 |
-| `queue-operation` | 70 |
-| `relocated` | 314 |
+| `file-history-snapshot` | 23 |
+| `last-prompt` | 374 |
+| `queue-operation` | 78 |
+| `relocated` | 374 |
 | `tools-used` | 25 |
 
-Reasoning steps stored without text: 479
+Reasoning steps stored without text: 564
 
 Also omitted: `toolUseResult` fields (a structured duplicate of each tool result shown in the main file) and `<system-reminder>` blocks injected by the harness into user messages.

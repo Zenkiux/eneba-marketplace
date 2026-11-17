@@ -31,7 +31,7 @@ export async function checkoutAsNewUser(page: Page, email: string) {
   await expect(page).toHaveURL(/\/register\?next=%2Fcheckout/)
   // Wait for the register form itself: the login form (same field labels) may still be on screen.
   await expect(page.getByRole('heading', { name: 'Create account' })).toBeVisible()
-  await page.getByLabel('E-mail').fill(email)
+  await page.getByLabel('E-mail', { exact: true }).fill(email)
   await page.getByLabel('Password', { exact: true }).fill('e2e-password-123')
   await page.getByRole('button', { name: 'Create account' }).click()
 
