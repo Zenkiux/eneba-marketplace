@@ -6,7 +6,13 @@
 | API | Render free web service | Go native build from `api/`; health check `/api/healthz`; sleeps after ~15 min idle (cold start up to about a minute) |
 | Database | Neon free Postgres | Persistent; chosen because Render's free Postgres expires |
 
-Current free-tier limits are re-checked on the providers' pages before setup and recorded here.
+### Free-tier terms (checked 2026-11-17 on the providers' docs)
+
+- **Render free web service** (render.com/docs/free): spins down after 15 minutes without traffic; spin-up takes about a minute, and Render shows its own loading page to browsers meanwhile. Filesystem is ephemeral (we store nothing locally). Render's free Postgres expires 30 days after creation, which is why the database is on Neon.
+- **Neon Free** (neon.com/docs/introduction/plans): $0/month, 100 CU-hours per project per month, 1 GB storage per project, compute scales to zero after 5 minutes idle, 6-hour restore window. Our seeded data is a few MB.
+- **Vercel Hobby**: free for personal, non-commercial projects; supports rewrites to external URLs, which we use for `/api`.
+
+Consequence for the app: a request that arrives while Render is asleep can take ~1 minute or return Render's HTML loading page instead of JSON. The API client treats a non-JSON response as "server waking up" and retries with a visible notice.
 
 ## Steps (day 2)
 
