@@ -110,3 +110,9 @@ Automated:
 - Playwright (local, 15 passed): + compat (product panel reasons on a Mac, PSN key without a PlayStation, "Works for me" filter + chip + badges, setup page detect/save/matches/check-any-game, proposal notes + /proposal), search (numeral, acronym, typo; Eneba catalog "gta 6", "gta6", "GTA VI", "grand theft auto vi", "gta" → Grand Theft Auto VI).
 
 Manual (browser): detection on this Mac recognised macOS and "Apple M3" from WebGL, estimated CPU from 8 threads, warned about the 8 GB browser memory cap; verdict list for "kingdom forge" explained each failure (OS, region, console). Lithuanian + USD: product page fully translated, €35.59 shown as 38,44 USD. Category bar overflow between 901–1100 px (reported by the translation sub-agent, pre-existing) fixed by horizontal scrolling.
+
+## 2026-11-17 — expanded Eneba catalog, production check
+
+- Scraper v2 (one clean run + a top-up for PlayStation/Nintendo page 3): 282 products in the snapshot, types from schema.org breadcrumbs, 70+ with official system requirements. Bug found during the first v2 run: types came from all `nav a` links (the header nav contains "Software"), so games were labelled software — switched to the page's `BreadcrumbList` JSON-LD. A stop signal didn't end the first run, so two runs wrote the same files; both were stopped (`pkill -9`), the snapshot's derived fields reset and a single clean run made.
+- Import (local and production): 282 products, 1186 offers. Per tab with the Eneba catalog on (local = production): Games 128, DLC 49, Gift cards 41, Subscriptions 34, Software 30, Steam 76, Xbox 62, PlayStation 33, Nintendo 33 (page size 24). Added the missing "Software" nav tab.
+- Playwright against https://keyshop.zenkiux.com: first run 14/15 — the product-page compatibility test failed because the production demo catalog was seeded before requirements existed (seed only runs on an empty DB). Re-applied the idempotent seed (`deploy.sh seed`, new) → **15/15 passed**.

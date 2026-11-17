@@ -5,6 +5,7 @@
 #   scripts/mac-host/deploy.sh            build + install + (re)start the API service
 #   scripts/mac-host/deploy.sh tunnel     install/restart the cloudflared tunnel service
 #   scripts/mac-host/deploy.sh status     show both services and a health check
+#   scripts/mac-host/deploy.sh seed       re-apply the (idempotent) demo seed to production after data changes
 #
 # Secrets live in ~/.keyshop/prod.env (chmod 600, never in git).
 set -eu
@@ -55,9 +56,12 @@ tunnel)
   plist "$TUNNEL_LABEL" "exec cloudflared --no-autoupdate tunnel run keyshop" > "$AGENTS/$TUNNEL_LABEL.plist"
   restart "$TUNNEL_LABEL"
   echo "tunnel service (re)started" ;;
+seed)
+  (cd "$REPO/api" && go build -o "$HOME_DIR/bin/seed" ./cmd/seed)
+  (set -a; . "$HOME_DIR/prod.env"; "$HOME_DIR/bin/seed") ;;
 status)
   launchctl print "gui/$UID_NUM/$API_LABEL" 2>/dev/null | grep -E "state =|pid =" | head -2 || echo "api: not loaded"
   launchctl print "gui/$UID_NUM/$TUNNEL_LABEL" 2>/dev/null | grep -E "state =|pid =" | head -2 || echo "tunnel: not loaded"
   curl -s http://127.0.0.1:8090/api/healthz; echo ;;
-*) echo "usage: $0 [deploy|tunnel|status]"; exit 2 ;;
+*) echo "usage: $0 [deploy|tunnel|status|seed]"; exit 2 ;;
 esac

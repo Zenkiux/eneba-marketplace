@@ -1,5 +1,6 @@
 // pl translations, keyed by the English source text.
 const dict: Record<string, string> = {
+  Software: 'Oprogramowanie',
   // UI text (t('…') literals in components)
   '+1 offer from other sellers': '+1 oferta od innych sprzedawców',
   '+{n} offers from other sellers': '+{n} ofert od innych sprzedawców',

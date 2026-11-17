@@ -17,6 +17,7 @@ const navLinks = [
   { to: '/store?type=dlc', label: 'DLC' },
   { to: '/store?type=gift-card', label: 'Gift Cards' },
   { to: '/store?type=subscription', label: 'Subscriptions' },
+  { to: '/store?type=software', label: 'Software' },
   { to: '/store?platform=steam', label: 'Steam' },
   { to: '/store?platform=xbox', label: 'Xbox' },
   { to: '/store?platform=psn', label: 'PlayStation' },
