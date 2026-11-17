@@ -67,26 +67,28 @@ Independent re-check of every row against the PDF, with evidence. "Done (local)"
 | ID | Status | Evidence |
 |---|---|---|
 | R0 | in progress | Deadline 2026-11-23 16:48 EET tracked in `implementation-plan.md`; submission e-mail not yet drafted (needs live URL). |
-| R1 | done (local) | `scripts/transcripts/transcripts.py` export+verify pass on all session files incl. sub-agents; tamper tests fail as expected (`testing.md`, transcript section); Stop hook re-exports each turn. Final `--final` run pending (ChatGPT link). |
+| R1 | done | `scripts/transcripts/transcripts.py` export+verify pass on all session files incl. sub-agents; tamper tests fail as expected (`testing.md`, transcript section); Stop hook re-exports each turn. Final `--final` run pending (link now present; run once more before sending). |
 | R1b | done | ChatGPT planning conversation: https://chatgpt.com/share/6afb8cee-cbcc-83ed-b0cd-8dc72839ec88 (opens without login); linked from the transcript header, README and `agent-logging-plan.md`. |
 | R2 | done | README "How AI was used"; `decisions.md` (23 decisions); unedited transcript. |
 | R3 | done | `interview-preparation.md` (walkthroughs with file pointers, trade-offs, demo script). |
 | R4 | done | `scope-decisions.md`. |
-| R5 | done (local) | Visual reviews #1–#3 in `docs/design/visual-review.md`, no open high items; `e2e/tests/style.spec.ts` asserts measured tokens. |
-| R6 | done (local) | `catalog_test.go` (totals vs independent SQL for 9 filter combinations, all 8 sorts paginate every product once, facets, bad params); `purchase.spec.ts` store test (filter → URL → count = API total, sort, back). |
-| R7 | done (local) | `home_test.go` (reorder/rename/disable/add sections, banner edits/expiry, best sellers follow paid orders, deals follow prices); `home-db.spec.ts` (DB edit changes rendered page). No product/campaign data in React code (`web/src/features/home`). |
-| R8 | done (local) | Header search on every page (`SearchBox.tsx`); `TestSearch` matrix (exact, prefix, substring, case, 2-typo, missing/swapped/wrong letter, nonsense, `%`/`_`/`\`, SQL-looking text, empty, >100 chars); mutation check of escaping; `purchase.spec.ts` typo journey "starfal odysey". |
-| R9 | done (local) | `TestProductPageOffersAndNoKeyLeak`; Playwright journeys buy the most expensive in-stock offer and assert `Seller: <chosen>` on the order. |
-| R10 | done (local) | `orders_test.go` 16 tests incl. 50-buyer race, concurrent duplicates/pays, fault injection, mixed stress with invariant checks (10 consecutive `-race` runs); `orders_test.go` (app) HTTP codes; both Playwright journeys end with a `DEMO-` key, also shown again in order history. |
-| R11 | done (local) | `auth_test.go` (7 tests: cookies, hashing, expiry, generic errors, cross-site 403, form 415, rate limit, prod cookie flags); cart/order endpoints 401 when signed out; other user's order 404; `purchase.spec.ts` sign-in redirects. |
-| R12 | done (local) | Tokens from measurements (`eneba-design-reference.md`, `tokens.css`); stylelint bans raw hex and rounded corners; style assertions in Playwright. |
+| R5 | verified on production | Visual reviews #1–#3 in `docs/design/visual-review.md`, no open high items; `e2e/tests/style.spec.ts` asserts measured tokens. |
+| R6 | verified on production | `catalog_test.go` (totals vs independent SQL for 9 filter combinations, all 8 sorts paginate every product once, facets, bad params); `purchase.spec.ts` store test (filter → URL → count = API total, sort, back). |
+| R7 | verified on production | `home_test.go` (reorder/rename/disable/add sections, banner edits/expiry, best sellers follow paid orders, deals follow prices); `home-db.spec.ts` (DB edit changes rendered page). No product/campaign data in React code (`web/src/features/home`). |
+| R8 | verified on production | Header search on every page (`SearchBox.tsx`); `TestSearch` matrix (exact, prefix, substring, case, 2-typo, missing/swapped/wrong letter, nonsense, `%`/`_`/`\`, SQL-looking text, empty, >100 chars); mutation check of escaping; `purchase.spec.ts` typo journey "starfal odysey". |
+| R9 | verified on production | `TestProductPageOffersAndNoKeyLeak`; Playwright journeys buy the most expensive in-stock offer and assert `Seller: <chosen>` on the order. |
+| R10 | verified on production | `orders_test.go` 16 tests incl. 50-buyer race, concurrent duplicates/pays, fault injection, mixed stress with invariant checks (10 consecutive `-race` runs); `orders_test.go` (app) HTTP codes; both Playwright journeys end with a `DEMO-` key, also shown again in order history. |
+| R11 | verified on production | `auth_test.go` (7 tests: cookies, hashing, expiry, generic errors, cross-site 403, form 415, rate limit, prod cookie flags); cart/order endpoints 401 when signed out; other user's order 404; `purchase.spec.ts` sign-in redirects. |
+| R12 | verified on production | Tokens from measurements (`eneba-design-reference.md`, `tokens.css`); stylelint bans raw hex and rounded corners; style assertions in Playwright. |
 | R13 | verified on production | Two Playwright journeys follow the diagram exactly (Homepage / Search → Product → Cart → Checkout with sign-in → Payment → Order and key); both pass against https://keyshop.zenkiux.com. |
 | T1 | done | React 19 + TypeScript strict; `tsc -b` in CI. |
 | T2 | done | Go REST API (`api/`). |
 | T3 | done | PostgreSQL, migrations `api/migrations/` applied on start and in CI. |
 | T4 | done | `architecture.md`, `scope-decisions.md`. |
 | D1 | done | Public repo github.com/Zenkiux/eneba-marketplace (opened logged-out: 200). |
-| D2 | done | https://keyshop.zenkiux.com — Go server + PostgreSQL on the always-on Mac, published via Cloudflare Tunnel (free plan); see `deployment-plan.md`. Playwright suite 7/7 against the public URL. |
+| D2 | done | https://keyshop.zenkiux.com — Go server + PostgreSQL on the always-on Mac, published via Cloudflare Tunnel (free plan); see `deployment-plan.md`. Playwright suite 24/24 against the public URL (2026-11-17). |
 | D3 | done (re-export before sending) | `docs/agent-chat-history.md` + linked result files; `transcripts.py verify --final` passes (all sessions, exact content, links, no private strings, ChatGPT link present). Run export + verify once more right before sending, so the last messages are included. |
+
+Re-checked 2026-11-17 after the Eneba-parity work: R5–R12 verified on production (Playwright 24/24 on https://keyshop.zenkiux.com; Go and Vitest suites pass). Extra scope beyond the PDF (account area, reviews, favourites, seller pages, "Will it work for me?") is listed in `decisions.md` #27–#37 and does not change any required flow.
 
 Remaining before submission: final transcript export right before sending, submission e-mail (R0).

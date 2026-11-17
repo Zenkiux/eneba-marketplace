@@ -198,10 +198,32 @@ for (const [slug, old] of known) {
   }
   await sleep(PAUSE_MS)
 }
+// Same game on another platform/region shares genres and "Other details": visit one listing per
+// game and copy the result to its siblings (far fewer page loads).
+const baseName = (n) =>
+  n.replace(/\s*\(.*?\)/g, '').split(/\s+(?:steam|xbox|psn|nintendo|gog|epic|ea app|origin|ubisoft|rockstar|battle\.net|windows|microsoft|pc)\b/i)[0].toLowerCase().replace(/^[\s:-]+|[\s:-]+$/g, '')
+const hasGenres = (p) => p.details && Array.isArray(p.details.genres) && p.details.genres.length > 0
+function shareDetails() {
+  const byName = new Map()
+  for (const p of known.values()) if (hasGenres(p) && !byName.has(baseName(p.name))) byName.set(baseName(p.name), p.details)
+  let copied = 0
+  for (const [slug, p] of known) {
+    const d = byName.get(baseName(p.name))
+    if (d && !hasGenres(p)) {
+      known.set(slug, { ...p, details: { ...d, rating: p.details?.rating ?? d.rating } })
+      copied++
+    }
+  }
+  return copied
+}
 if (detailsOnly) {
   let n = 0
-  for (const [slug, old] of known) {
-    if (old.details && old.details.genres !== null) continue // genres null = selector failed earlier; revisit
+  shareDetails()
+  for (const [slug, old0] of known) {
+    const old = known.get(slug) ?? old0
+    if (!['game', 'dlc'].includes(old.type) && old.details) continue // gift cards, software: no genres on Eneba
+    if (hasGenres(old)) continue
+    if ([...known.values()].some((p) => p !== old && hasGenres(p) && baseName(p.name) === baseName(old.name))) continue
     try {
       const p = await product(slug, old.type ?? 'game')
       if (p) {
@@ -213,11 +235,13 @@ if (detailsOnly) {
     } catch (e) {
       console.log(`[details] skip ${slug}: ${e.message.split('\n')[0]}`)
     }
+    shareDetails()
     // save progress every 20 products so an interrupted run isn't lost
     if (n % 20 === 0) writeFileSync(OUT, JSON.stringify({ source: 'https://www.eneba.com', scrapedAt: previous.scrapedAt, products: [...known.values()] }, null, 1))
     await sleep(PAUSE_MS)
   }
 }
+if (detailsOnly) console.log(`copied details to ${shareDetails()} sibling listings`)
 await browser.close()
 
 // Older entries (first snapshot) had no type: they came from the games listing.
