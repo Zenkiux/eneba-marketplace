@@ -1,3 +1,5 @@
+import { AuthPage } from './AuthPage'
+
 export function LoginPage() {
-  return <h1>Log in</h1>
+  return <AuthPage mode="login" />
 }

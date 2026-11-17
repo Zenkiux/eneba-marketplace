@@ -13,11 +13,9 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/Zenkiux/eneba-marketplace/api/internal/catalog"
+	"github.com/Zenkiux/eneba-marketplace/api/internal/app"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/config"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/db"
-	"github.com/Zenkiux/eneba-marketplace/api/internal/home"
-	"github.com/Zenkiux/eneba-marketplace/api/internal/httpx"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/keys"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/seed"
 )
@@ -54,7 +52,7 @@ func run() error {
 		}
 	}
 
-	handler, err := newRouter(cfg, pool)
+	handler, err := app.NewRouter(cfg, pool)
 	if err != nil {
 		return err
 	}
@@ -97,51 +95,4 @@ func seedIfEmpty(ctx context.Context, pool *pgxpool.Pool, cfg config.Config) err
 	}
 	slog.Info("seeded empty database", "products", st.Products, "offers", st.Offers, "keys", st.KeysAdded)
 	return nil
-}
-
-// newRouter wires every module's routes. Modules register their own handlers here as they are built.
-func newRouter(cfg config.Config, pool *pgxpool.Pool) (http.Handler, error) {
-	mux := http.NewServeMux()
-	mux.Handle("GET /api/healthz", httpx.Handler(func(w http.ResponseWriter, r *http.Request) error {
-		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
-		defer cancel()
-		if err := pool.Ping(ctx); err != nil {
-			return httpx.NewError(http.StatusServiceUnavailable, "db_unavailable", "Database unavailable")
-		}
-		httpx.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
-		return nil
-	}))
-	catalog.NewHandler(catalog.NewStore(pool)).Register(mux)
-	home.NewHandler(pool).Register(mux)
-	mux.Handle("/api/", httpx.Handler(func(w http.ResponseWriter, r *http.Request) error { return httpx.ErrNotFound }))
-
-	// Cross-site request protection for every state-changing request (Go 1.25+):
-	// rejects non-GET/HEAD/OPTIONS requests whose Sec-Fetch-Site / Origin show a different origin,
-	// unless the origin is explicitly trusted.
-	cop := http.NewCrossOriginProtection()
-	for _, o := range cfg.TrustedOrigins {
-		if err := cop.AddTrustedOrigin(o); err != nil {
-			return nil, err
-		}
-	}
-	cop.SetDenyHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		httpx.Fail(w, r, httpx.NewError(http.StatusForbidden, "cross_origin", "Cross-origin request blocked"))
-	}))
-	return logRequests(cop.Handler(mux)), nil
-}
-
-type statusWriter struct {
-	http.ResponseWriter
-	status int
-}
-
-func (s *statusWriter) WriteHeader(code int) { s.status = code; s.ResponseWriter.WriteHeader(code) }
-
-func logRequests(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		sw := &statusWriter{ResponseWriter: w, status: http.StatusOK}
-		next.ServeHTTP(sw, r)
-		slog.Info("http", "method", r.Method, "path", r.URL.Path, "status", sw.status, "ms", time.Since(start).Milliseconds())
-	})
 }

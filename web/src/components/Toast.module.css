@@ -1,0 +1,16 @@
+.region {
+  position: fixed;
+  z-index: 60;
+  right: 20px;
+  bottom: 20px;
+  max-width: min(420px, calc(100vw - 40px));
+}
+
+.toast {
+  padding: 14px 18px;
+  border-left: 4px solid var(--color-positive);
+  background: var(--color-bg-panel);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 40%);
+  font-size: var(--font-size-nav);
+  font-weight: var(--font-weight-semibold);
+}

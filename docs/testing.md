@@ -47,3 +47,15 @@ Manual (browser, local dev servers):
 - Homepage renders only what `/api/home` lists; each block loads separately (banners, category strip, 4 product rows).
 - Header search, typo "hollow crwn": dropdown shows 5 Hollow Crown listings with prices; Enter → `/store?q=hollow%20crwn`, H1 "Results for “hollow crwn”", 5 results, top result Hollow Crown (PC) Steam GLOBAL.
 - Visual review #1 (home, store; desktop + mobile): see `docs/design/visual-review.md` — 2 high, 2 medium issues found and fixed.
+
+## 2026-11-17 — day 4 (part 1): product page, auth, cart
+
+Automated (`go test -count=1 ./...`, all packages pass):
+- app/auth (7 tests, full router + real DB): register → cookie (`sid`, HttpOnly, SameSite=Lax, Path=/) → `/me` → logout → `/me` 401 → replayed old token 401 → login issues a new token; bcrypt cost 12 stored, session stored as sha256(token); validation (bad e-mail ×2, short and 73-byte password → 422 with field); duplicate e-mail (case-insensitive) → 409; wrong password and unknown e-mail give identical 401 and no cookie; absolute and idle expiry → 401; cross-site POST → 403 `cross_origin`, same-origin and trusted dev origin allowed, cross-site GET allowed, form-encoded POST → 415; 6th login attempt for one e-mail → 429; prod cookie `__Host-sid` with Secure/HttpOnly/SameSite=Lax/Path=/ and no Domain; `Cache-Control: no-store`, `nosniff`.
+- app/cart (6 tests): all cart endpoints 401 when signed out; PUT/GET/DELETE with totals; PUT sets exact quantity; price change shows immediately; quantity 0/-1/11 → 422; more than stock → 409 `insufficient_stock`; unknown/inactive offer → 404; sold-out → 409; carts isolated between users; merge sums quantities capped at 10 and skips unknown offers; guest lookup keeps order/quantities, rejects malformed input, contains no key codes.
+- web (vitest, 19 tests): + guest cart (4: same offer increments, caps at stock and 10, stores only ids/quantities, remove/clamp) + `safeNext` open-redirect guard.
+
+Manual (browser, local):
+- Product page: featured offer = cheapest in-stock offer; "N offers" list with seller, rating, stock, price and per-offer buttons.
+- Guest adds the **non-cheapest** offer (KeyHarbor) → cart shows KeyHarbor €42.79 → "Log in and checkout" → `/login?next=%2Fcheckout` → demo login → lands on `/checkout`; `/api/cart` now holds KeyHarbor ×1, browser cart emptied, header shows "Demo Buyer | Log out", `document.cookie` is empty (HttpOnly).
+- Visual review #2 (product, login, cart): 1 high + 2 low fixed, see `docs/design/visual-review.md`.

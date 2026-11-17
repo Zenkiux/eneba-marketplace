@@ -39,24 +39,32 @@
 | 2026-11-17T00:27:59.048Z | Read toolu_016pmmHZn9Ub2hU7rsdNBurb | image image/png, 431,920 base64 chars | binary payload (screenshot / PDF page images) |
 | 2026-11-17T00:28:12.855Z | mcp__Claude_Browser__browser_batch toolu_01UsZv5sCaSh3QUzFomwL4gn | image image/jpeg, 45,148 base64 chars | binary payload (screenshot / PDF page images) |
 | 2026-11-17T00:28:12.855Z | mcp__Claude_Browser__browser_batch toolu_01UsZv5sCaSh3QUzFomwL4gn | mcp-Claude_Browser-blob-1794875292846-lgmj5y.jpg (33,861 bytes) | binary file stored by Claude Code (screenshot) |
+| 2026-11-17T00:31:19.167Z | Read toolu_01VmKiXNg5wBrNjcdZfAtvSe | image image/png, 498,860 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T00:33:33.532Z | Read toolu_01ARhVirNKwXaCFqJ5zvRwFY | image image/png, 98,836 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T00:33:33.536Z | Read toolu_01XuhT5fYRvGM7fonjrW492W | image image/png, 218,764 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T00:40:09.399Z | mcp__Claude_Browser__browser_batch toolu_01MeLvZrEjHmv3PCLCXx5reD | image image/jpeg, 25,024 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T00:40:09.399Z | mcp__Claude_Browser__browser_batch toolu_01MeLvZrEjHmv3PCLCXx5reD | mcp-Claude_Browser-blob-1794876009390-7vq1ob.jpg (18,768 bytes) | binary file stored by Claude Code (screenshot) |
+| 2026-11-17T00:41:02.022Z | Read toolu_018NKSmW2PWVHBLTEx4LGeuG | image image/png, 80,052 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T00:41:02.028Z | Read toolu_016UosC7TbATp7e5uDxPL2MP | image image/png, 87,852 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T00:41:02.028Z | Read toolu_01K43sXZ92oEaL2CwZ6TYQde | image image/png, 78,736 base64 chars | binary payload (screenshot / PDF page images) |
 
 ## Harness bookkeeping records (not conversation)
 
 | Record type | Count |
 |---|---|
-| `agent-name` | 106 |
-| `api-request` | 201 |
-| `api-request-blob` | 165 |
+| `agent-name` | 126 |
+| `api-request` | 237 |
+| `api-request-blob` | 191 |
 | `api-request-shape` | 4 |
-| `atis-latch` | 106 |
+| `atis-latch` | 126 |
 | `attachment:agent_listing_delta` | 2 |
 | `attachment:auto_mode` | 2 |
 | `attachment:credential_org` | 2 |
 | `attachment:date` | 2 |
 | `attachment:deferred_tools_delta` | 4 |
-| `attachment:deferred_tools_record` | 70 |
+| `attachment:deferred_tools_record` | 84 |
 | `attachment:edited_text_file` | 8 |
-| `attachment:environment` | 20 |
+| `attachment:environment` | 27 |
 | `attachment:mcp_instructions_delta` | 3 |
 | `attachment:model` | 2 |
 | `attachment:plan_mode` | 1 |
@@ -66,14 +74,14 @@
 | `attachment:session_context` | 2 |
 | `attachment:silent_turn_reminder` | 15 |
 | `attachment:skill_listing` | 2 |
-| `custom-title` | 107 |
-| `file-history-delta` | 20 |
-| `file-history-snapshot` | 7 |
-| `last-prompt` | 106 |
-| `queue-operation` | 26 |
-| `relocated` | 106 |
-| `tools-used` | 20 |
+| `custom-title` | 127 |
+| `file-history-delta` | 22 |
+| `file-history-snapshot` | 8 |
+| `last-prompt` | 126 |
+| `queue-operation` | 28 |
+| `relocated` | 126 |
+| `tools-used` | 23 |
 
-Reasoning steps stored without text: 142
+Reasoning steps stored without text: 164
 
 Also omitted: `toolUseResult` fields (a structured duplicate of each tool result shown in the main file) and `<system-reminder>` blocks injected by the harness into user messages.

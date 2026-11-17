@@ -3,7 +3,9 @@ import { Layout } from './components/Layout'
 import { OrdersPage } from './features/account/OrdersPage'
 import { LoginPage } from './features/auth/LoginPage'
 import { RegisterPage } from './features/auth/RegisterPage'
+import { RequireAuth } from './features/auth/RequireAuth'
 import { CartPage } from './features/cart/CartPage'
+import { CheckoutPage } from './features/checkout/CheckoutPage'
 import { HomePage } from './features/home/HomePage'
 import { NotFoundPage } from './features/not-found/NotFoundPage'
 import { OrderPage } from './features/orders/OrderPage'
@@ -18,10 +20,11 @@ export const routes: RouteObject[] = [
       { path: 'store', element: <StorePage /> },
       { path: 'p/:slug', element: <ProductPage /> },
       { path: 'cart', element: <CartPage /> },
+      { path: 'checkout', element: <RequireAuth><CheckoutPage /></RequireAuth> },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
-      { path: 'account/orders', element: <OrdersPage /> },
-      { path: 'orders/:id', element: <OrderPage /> },
+      { path: 'account/orders', element: <RequireAuth><OrdersPage /></RequireAuth> },
+      { path: 'orders/:id', element: <RequireAuth><OrderPage /></RequireAuth> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

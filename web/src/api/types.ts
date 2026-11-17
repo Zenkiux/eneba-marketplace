@@ -83,3 +83,20 @@ export interface Category {
   name: string
   count: number
 }
+
+export interface CartLine {
+  offerId: number
+  quantity: number
+  priceCents: number
+  currency: string
+  stock: number
+  available: boolean
+  seller: { slug: string; name: string; rating: number; verified: boolean }
+  product: { slug: string; title: string; coverUrl: string; platform: Named; region: Named }
+}
+
+export interface Cart {
+  lines: CartLine[]
+  totalCents: number
+  count: number
+}

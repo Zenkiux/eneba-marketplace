@@ -22,3 +22,16 @@ Measured on eneba.com for this review (added to `tokens.css`): category nav `rgb
 Result: home and store accepted (no open high items).
 
 Screenshots after fixes: [home desktop](app/home-desktop.png), [home mobile](app/home-mobile.png), [store desktop](app/store-desktop.png), [store mobile](app/store-mobile.png).
+
+## Review #2 — 2026-11-17 (product, login, cart)
+
+| ID | Screen | Viewport | Difference vs Eneba | Severity | Fix | Status |
+|---|---|---|---|---|---|---|
+| V9 | Product | mobile | Price box and buy buttons came after the long fact list (needed scrolling to buy) | high | Featured offer moved above the facts on narrow screens | fixed |
+| V10 | Login | desktop | Greeting smaller than Eneba's (≈80px) and broken in different places | low | 8rem, line breaks after "Hi!" like Eneba | fixed |
+| V11 | Login | desktop | Demo credentials rendered in a monospace font | low | Use the site font | fixed |
+| V12 | Login | both | Eneba's login page has no site header (separate my.eneba.com domain) and offers social/magic-link sign-in | low | Kept our header for consistent navigation; e-mail + password only (scope-decisions.md) | won't fix |
+| V13 | Product | desktop | Eneba shows Trustpilot score, video/screenshot gallery, reviews and system requirements | low | Out of scope; product details + offers comparison implemented | won't fix |
+| V14 | Cart | both | No Eneba reference captured (cart needs items; not inspected) | — | Built from measured components (offer-row background, featured-offer panel, yellow CTA) | noted |
+
+Result: product, login and cart accepted (no open high items). Screenshots: [product desktop](app/product-desktop.png), [product mobile](app/product-mobile.png), [login desktop](app/login-desktop.png), [login mobile](app/login-mobile.png).

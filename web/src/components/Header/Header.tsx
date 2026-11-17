@@ -1,6 +1,8 @@
 import { Heart, Menu, Search, ShoppingCart, User, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link, NavLink } from 'react-router'
+import { useLogout, useMe } from '../../api/auth'
+import { useCart } from '../../features/cart/useCart'
 import { SearchBox } from '../SearchBox'
 import { Logo } from './Logo'
 import styles from './Header.module.css'
@@ -20,6 +22,9 @@ const navLinks = [
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const { count } = useCart()
+  const me = useMe()
+  const logout = useLogout()
 
   return (
     <header className={styles.header}>
@@ -56,15 +61,30 @@ export function Header() {
           <span className={`${styles.iconButton} ${styles.disabled}`} title="Wishlist is not part of this demo">
             <Heart size={24} aria-label="Wishlist (not available in this demo)" />
           </span>
-          <Link to="/cart" className={styles.iconButton} aria-label="Cart">
+          <Link to="/cart" className={`${styles.iconButton} ${styles.cart}`} aria-label={`Cart, ${count} ${count === 1 ? 'item' : 'items'}`}>
             <ShoppingCart size={24} />
+            {count > 0 && <span className={styles.cartCount}>{count}</span>}
           </Link>
-          <Link to="/login" className={styles.account}>
-            <User size={24} aria-hidden="true" />
-            <span className={styles.accountText}>
-              Log in <span aria-hidden="true">|</span> Register
-            </span>
-          </Link>
+          {me.data ? (
+            <div className={styles.account}>
+              <Link to="/account/orders" className={styles.iconButton} aria-label="My orders">
+                <User size={24} />
+              </Link>
+              <span className={styles.accountText}>
+                <Link to="/account/orders">{me.data.displayName}</Link> <span aria-hidden="true">|</span>{' '}
+                <button type="button" className={styles.linkButton} onClick={() => logout.mutate()}>
+                  Log out
+                </button>
+              </span>
+            </div>
+          ) : (
+            <Link to="/login" className={styles.account}>
+              <User size={24} aria-hidden="true" />
+              <span className={styles.accountText}>
+                Log in <span aria-hidden="true">|</span> Register
+              </span>
+            </Link>
+          )}
         </div>
       </div>
       {searchOpen && (
