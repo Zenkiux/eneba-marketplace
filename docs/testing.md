@@ -87,3 +87,7 @@ Manual (browser): demo account checkout of the KeyHarbor offer → payment page 
 - Go test `TestCatalogSwitchIsolatesProducts`: default and malformed `X-Catalog` → demo catalog only; `X-Catalog: eneba` → snapshot products only; demo search doesn't find snapshot products; `/api/catalogs` lists both; responses carry `Vary: X-Catalog`.
 - Manual (browser): switch appears only when a snapshot is imported; on → banner "Showing a snapshot of eneba.com listings from 2026-11-17 …", homepage rows show real titles/covers/prices (e.g. Minecraft Java & Bedrock €15.30); off → our catalog returns, banner hidden. First attempt kept stale rows on screen (`removeQueries` doesn't refetch mounted queries) → switched to `resetQueries`.
 - Full suites after the change: Go all packages pass; vitest 19 passed; Playwright 7 passed (tests run with the switch off).
+
+## 2026-11-17 — CI with Playwright
+
+- GitHub Actions run on f53bb06 (Linux): api (gofmt, vet, `go test -race`), web (typecheck, lint, stylelint, vitest, build), e2e (fresh Postgres → seed → API + Vite → all Playwright tests incl. the database-driven homepage test) and transcript link check — all succeeded.
