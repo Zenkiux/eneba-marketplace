@@ -107,8 +107,10 @@ var sorts = map[string]string{
 	"price_desc": "s.min_price DESC NULLS LAST",
 	"newest":     "p.release_date DESC NULLS LAST",
 	"oldest":     "p.release_date ASC NULLS LAST",
-	"alpha_asc":  "lower(p.title) ASC",
-	"alpha_desc": "lower(p.title) DESC",
+	// COLLATE "C": byte order, identical on every OS. Locale collations differ between macOS
+	// and Linux (glibc ignores punctuation), which made A–Z order depend on the server.
+	"alpha_asc":  `lower(p.title) COLLATE "C" ASC`,
+	"alpha_desc": `lower(p.title) COLLATE "C" DESC`,
 	"discount":   "(CASE WHEN s.min_price IS NULL THEN -1 ELSE (p.list_price_cents - s.min_price)::float / p.list_price_cents END) DESC",
 	// relevance: exact > prefix > substring > fuzzy, then similarity score.
 	"relevance": `(CASE WHEN lower(p.title) = lower(@q) THEN 0
