@@ -556,7 +556,9 @@ def verify(final: bool) -> int:
 
     # 3. Counts per kind.
     exp_counts = Counter(k for _, k, _ in expected)
-    got_counts = Counter(k for k, _ in found.values())
+    # Count every block in the markdown, not unique ids: a session continued after a context
+    # limit repeats a few records (same uuid, same content) from the session before it.
+    got_counts = Counter(m.group(2) for m in BLOCK_RE.finditer(md))
     for k in exp_counts:
         file_backed = sum(1 for e in expected if e[1] == k and by_id.get(e[0], {}).get("file"))
         if exp_counts[k] != got_counts.get(k, 0) + file_backed:

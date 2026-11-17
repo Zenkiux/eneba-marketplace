@@ -114,41 +114,41 @@
 
 | Record type | Count |
 |---|---|
-| `agent-name` | 379 |
-| `api-request` | 804 |
-| `api-request-blob` | 569 |
-| `api-request-shape` | 6 |
-| `atis-latch` | 379 |
-| `attachment:agent_listing_delta` | 4 |
-| `attachment:auto_mode` | 4 |
-| `attachment:compact_file_reference` | 1 |
-| `attachment:credential_org` | 4 |
-| `attachment:date` | 4 |
-| `attachment:deferred_tools_delta` | 8 |
-| `attachment:deferred_tools_record` | 316 |
+| `agent-name` | 393 |
+| `api-request` | 823 |
+| `api-request-blob` | 596 |
+| `api-request-shape` | 9 |
+| `atis-latch` | 393 |
+| `attachment:agent_listing_delta` | 7 |
+| `attachment:auto_mode` | 7 |
+| `attachment:compact_file_reference` | 3 |
+| `attachment:credential_org` | 7 |
+| `attachment:date` | 7 |
+| `attachment:deferred_tools_delta` | 14 |
+| `attachment:deferred_tools_record` | 323 |
 | `attachment:edited_text_file` | 21 |
-| `attachment:environment` | 132 |
-| `attachment:file` | 4 |
+| `attachment:environment` | 137 |
+| `attachment:file` | 12 |
 | `attachment:hook_additional_context` | 2 |
-| `attachment:mcp_instructions_delta` | 5 |
-| `attachment:model` | 4 |
-| `attachment:plan_file_reference` | 1 |
+| `attachment:mcp_instructions_delta` | 10 |
+| `attachment:model` | 7 |
+| `attachment:plan_file_reference` | 3 |
 | `attachment:plan_mode` | 1 |
 | `attachment:plan_mode_exit` | 1 |
-| `attachment:prompt_snapshot` | 8 |
-| `attachment:remote_session_change` | 4 |
-| `attachment:session_context` | 4 |
-| `attachment:silent_turn_reminder` | 37 |
-| `attachment:skill_listing` | 4 |
+| `attachment:prompt_snapshot` | 12 |
+| `attachment:remote_session_change` | 7 |
+| `attachment:session_context` | 7 |
+| `attachment:silent_turn_reminder` | 38 |
+| `attachment:skill_listing` | 7 |
 | `attachment:thinking_drop` | 1 |
-| `custom-title` | 380 |
-| `file-history-delta` | 31 |
-| `file-history-snapshot` | 28 |
-| `last-prompt` | 379 |
-| `queue-operation` | 90 |
-| `relocated` | 379 |
-| `tools-used` | 25 |
+| `custom-title` | 397 |
+| `file-history-delta` | 32 |
+| `file-history-snapshot` | 35 |
+| `last-prompt` | 394 |
+| `queue-operation` | 100 |
+| `relocated` | 383 |
+| `tools-used` | 30 |
 
-Reasoning steps stored without text: 574
+Reasoning steps stored without text: 581
 
 Also omitted: `toolUseResult` fields (a structured duplicate of each tool result shown in the main file) and `<system-reminder>` blocks injected by the harness into user messages.
