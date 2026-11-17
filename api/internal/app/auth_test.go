@@ -28,7 +28,7 @@ type stack struct {
 func newStack(t *testing.T, env string) *stack {
 	t.Helper()
 	pool := testdb.New(t)
-	h, err := app.NewRouter(config.Config{Env: env, TrustedOrigins: []string{"http://localhost:5173"}}, pool)
+	h, _, err := app.NewRouter(config.Config{Env: env, TrustedOrigins: []string{"http://localhost:5173"}, KeyEncryption: testdb.Key}, pool)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -52,10 +52,11 @@ func run() error {
 		}
 	}
 
-	handler, err := app.NewRouter(cfg, pool)
+	handler, orderSvc, err := app.NewRouter(cfg, pool)
 	if err != nil {
 		return err
 	}
+	go orderSvc.RunSweeper(ctx, time.Minute)
 	srv := &http.Server{
 		Addr:              cfg.Addr,
 		Handler:           handler,

@@ -16,9 +16,13 @@ import (
 	"github.com/Zenkiux/eneba-marketplace/api/internal/config"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/home"
 	"github.com/Zenkiux/eneba-marketplace/api/internal/httpx"
+	"github.com/Zenkiux/eneba-marketplace/api/internal/keys"
+	"github.com/Zenkiux/eneba-marketplace/api/internal/orders"
 )
 
-func NewRouter(cfg config.Config, pool *pgxpool.Pool) (http.Handler, error) {
+// NewRouter builds the HTTP handler. The order service is returned too so main can run its
+// background sweeper.
+func NewRouter(cfg config.Config, pool *pgxpool.Pool) (http.Handler, *orders.Service, error) {
 	mux := http.NewServeMux()
 	mux.Handle("GET /api/healthz", httpx.Handler(func(w http.ResponseWriter, r *http.Request) error {
 		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
@@ -34,6 +38,12 @@ func NewRouter(cfg config.Config, pool *pgxpool.Pool) (http.Handler, error) {
 	authHandler.Register(mux)
 	catalog.NewHandler(catalog.NewStore(pool)).Register(mux)
 	cart.NewHandler(cart.NewStore(pool)).Register(mux)
+	box, err := keys.NewBox(cfg.KeyEncryption)
+	if err != nil {
+		return nil, nil, err
+	}
+	orderSvc := orders.NewService(pool, box)
+	orders.NewHandler(orderSvc).Register(mux)
 	home.NewHandler(pool).Register(mux)
 	mux.Handle("/api/", httpx.Handler(func(w http.ResponseWriter, r *http.Request) error { return httpx.ErrNotFound }))
 
@@ -44,13 +54,13 @@ func NewRouter(cfg config.Config, pool *pgxpool.Pool) (http.Handler, error) {
 	cop := http.NewCrossOriginProtection()
 	for _, o := range cfg.TrustedOrigins {
 		if err := cop.AddTrustedOrigin(o); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	cop.SetDenyHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		httpx.Fail(w, r, httpx.NewError(http.StatusForbidden, "cross_origin", "Cross-origin request blocked"))
 	}))
-	return securityHeaders(logRequests(cop.Handler(authHandler.Middleware(mux)))), nil
+	return securityHeaders(logRequests(cop.Handler(authHandler.Middleware(mux)))), orderSvc, nil
 }
 
 func securityHeaders(next http.Handler) http.Handler {
