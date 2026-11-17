@@ -6,7 +6,7 @@ Submission for the **Eneba Intern Assignment 2027**: a marketplace web app in En
 |---|---|
 | **Live app** | **https://keyshop.zenkiux.com** |
 | **Demo account** | `demo@example.test` / `demo-password-2027` (or create your own) |
-| **AI conversation history** | [docs/agent-chat-history.md](docs/agent-chat-history.md) (Claude Code, complete) · ChatGPT planning chat: CHATGPT_TRANSCRIPT_URL |
+| **AI conversation history** | [docs/agent-chat-history.md](docs/agent-chat-history.md) (Claude Code, complete) · ChatGPT planning chat: https://chatgpt.com/share/6afb8cee-cbcc-83ed-b0cd-8dc72839ec88 |
 
 > All games, studios, sellers, ratings and keys are **fictional demo data**. Payment is simulated: **no real money is involved**. This is a student project and is not affiliated with Eneba.
 

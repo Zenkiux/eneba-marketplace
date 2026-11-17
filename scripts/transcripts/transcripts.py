@@ -577,7 +577,8 @@ def verify(final: bool) -> int:
         warnings.append(f"{PRIVATE_FILE.name} missing or empty: personal strings (e-mail) are not being redacted")
 
     # 6. ChatGPT link.
-    if CHATGPT_PLACEHOLDER in md:
+    # Only the generated header counts: earlier messages may quote the placeholder verbatim.
+    if CHATGPT_PLACEHOLDER in md.split("\n## Sessions", 1)[0]:
         (errors if final else warnings).append("ChatGPT transcript link is still a placeholder")
 
     for w in warnings:

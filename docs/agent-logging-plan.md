@@ -6,7 +6,7 @@ Eneba requires the **full** agent chat history (prompts and responses). This is 
 
 | Tool | Used for | Where the history is |
 |---|---|---|
-| ChatGPT | Analysing the assignment; writing the original Claude Code Plan Mode prompt (the first user message in the Claude transcript); reviewing revision 1 of the plan | Shared link: CHATGPT_TRANSCRIPT_URL (to be filled in) |
+| ChatGPT | Analysing the assignment; writing the original Claude Code Plan Mode prompt (the first user message in the Claude transcript); reviewing revision 1 of the plan | Shared link: https://chatgpt.com/share/6afb8cee-cbcc-83ed-b0cd-8dc72839ec88 (to be filled in) |
 | Claude Code (desktop app, Opus 5.5) | Planning, research of eneba.com, all implementation, testing, deployment | `docs/agent-chat-history.md` |
 
 ## Where Claude Code keeps conversations (verified 2026-11-17)

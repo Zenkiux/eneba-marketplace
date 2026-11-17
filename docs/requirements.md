@@ -68,7 +68,7 @@ Independent re-check of every row against the PDF, with evidence. "Done (local)"
 |---|---|---|
 | R0 | in progress | Deadline 2026-11-23 16:48 EET tracked in `implementation-plan.md`; submission e-mail not yet drafted (needs live URL). |
 | R1 | done (local) | `scripts/transcripts/transcripts.py` export+verify pass on all session files incl. sub-agents; tamper tests fail as expected (`testing.md`, transcript section); Stop hook re-exports each turn. Final `--final` run pending (ChatGPT link). |
-| R1b | open | ChatGPT link placeholder `CHATGPT_TRANSCRIPT_URL` in transcript header, README and `agent-logging-plan.md`. |
+| R1b | done | ChatGPT planning conversation: https://chatgpt.com/share/6afb8cee-cbcc-83ed-b0cd-8dc72839ec88 (opens without login); linked from the transcript header, README and `agent-logging-plan.md`. |
 | R2 | done | README "How AI was used"; `decisions.md` (23 decisions); unedited transcript. |
 | R3 | done | `interview-preparation.md` (walkthroughs with file pointers, trade-offs, demo script). |
 | R4 | done | `scope-decisions.md`. |
@@ -87,6 +87,6 @@ Independent re-check of every row against the PDF, with evidence. "Done (local)"
 | T4 | done | `architecture.md`, `scope-decisions.md`. |
 | D1 | done | Public repo github.com/Zenkiux/eneba-marketplace (opened logged-out: 200). |
 | D2 | done | https://keyshop.zenkiux.com — Go server + PostgreSQL on the always-on Mac, published via Cloudflare Tunnel (free plan); see `deployment-plan.md`. Playwright suite 7/7 against the public URL. |
-| D3 | in progress | `docs/agent-chat-history.md` complete and verified so far; final export, `--final` verify and ChatGPT link pending. |
+| D3 | done (re-export before sending) | `docs/agent-chat-history.md` + linked result files; `transcripts.py verify --final` passes (all sessions, exact content, links, no private strings, ChatGPT link present). Run export + verify once more right before sending, so the last messages are included. |
 
-Remaining before submission: ChatGPT link (R1b, D3), final transcript export, submission e-mail (R0).
+Remaining before submission: final transcript export right before sending, submission e-mail (R0).
