@@ -55,4 +55,8 @@ jobs:
       - name: Transcript files are present and linked
         run: |
           test -s docs/agent-chat-history.md
-          grep -o '](agent-chat-history/[^)]*)' docs/agent-chat-history.md | sed 's/](//; s/)$//' | while read f; do test -f "docs/$f" || { echo "missing $f"; exit 1; }; done
+          # Only real markdown links: path characters exclude brackets, so quoted regexes don't count.
+          grep -oE '\]\(agent-chat-history/[A-Za-z0-9._/-]+\)' docs/agent-chat-history.md | sed 's/^](//; s/)$//' | sort -u > links.txt
+          test -s links.txt
+          while read f; do test -f "docs/$f" || { echo "missing $f"; exit 1; }; done < links.txt
+          echo "$(wc -l < links.txt) linked files present"

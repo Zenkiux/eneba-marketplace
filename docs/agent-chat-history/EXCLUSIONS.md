@@ -29,19 +29,19 @@
 
 | Record type | Count |
 |---|---|
-| `agent-name` | 76 |
-| `api-request` | 148 |
-| `api-request-blob` | 124 |
+| `agent-name` | 78 |
+| `api-request` | 153 |
+| `api-request-blob` | 129 |
 | `api-request-shape` | 4 |
-| `atis-latch` | 76 |
+| `atis-latch` | 78 |
 | `attachment:agent_listing_delta` | 2 |
 | `attachment:auto_mode` | 2 |
 | `attachment:credential_org` | 2 |
 | `attachment:date` | 2 |
 | `attachment:deferred_tools_delta` | 4 |
-| `attachment:deferred_tools_record` | 48 |
-| `attachment:edited_text_file` | 7 |
-| `attachment:environment` | 11 |
+| `attachment:deferred_tools_record` | 52 |
+| `attachment:edited_text_file` | 8 |
+| `attachment:environment` | 12 |
 | `attachment:mcp_instructions_delta` | 3 |
 | `attachment:model` | 2 |
 | `attachment:plan_mode` | 1 |
@@ -49,16 +49,16 @@
 | `attachment:prompt_snapshot` | 4 |
 | `attachment:remote_session_change` | 2 |
 | `attachment:session_context` | 2 |
-| `attachment:silent_turn_reminder` | 14 |
+| `attachment:silent_turn_reminder` | 15 |
 | `attachment:skill_listing` | 2 |
-| `custom-title` | 77 |
+| `custom-title` | 79 |
 | `file-history-delta` | 20 |
 | `file-history-snapshot` | 6 |
-| `last-prompt` | 76 |
+| `last-prompt` | 78 |
 | `queue-operation` | 18 |
-| `relocated` | 76 |
+| `relocated` | 78 |
 | `tools-used` | 16 |
 
-Reasoning steps stored without text: 108
+Reasoning steps stored without text: 111
 
 Also omitted: `toolUseResult` fields (a structured duplicate of each tool result shown in the main file) and `<system-reminder>` blocks injected by the harness into user messages.
