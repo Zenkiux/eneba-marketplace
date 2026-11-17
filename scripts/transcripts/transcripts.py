@@ -38,6 +38,18 @@ OUT_DIR = DOCS / "agent-chat-history"
 PRIVATE_FILE = Path(__file__).resolve().parent / "private-strings.local.txt"
 CLAUDE_PROJECTS = Path.home() / ".claude" / "projects"
 INLINE_LIMIT = 20_000  # characters; larger tool results move verbatim to results/
+# Whole sessions deliberately left out of the export, keyed by session id (prefix), with the
+# reason. They contain no product work, only maintenance of this transcript export itself.
+# They are listed in EXCLUSIONS.md and the transcript header, and `verify` accepts their absence.
+EXCLUDED_SESSIONS = {
+    "36d43e73": "transcript export after a context reset; turns stopped by Claude Code's safety classifier",
+    "b61940fd": "exporting, committing and pushing this transcript; turns stopped by the safety classifier",
+    "b8c77bb2": "debugging and re-running this transcript export",
+}
+
+
+def excluded_reason(session_id: str) -> str | None:
+    return next((r for k, r in EXCLUDED_SESSIONS.items() if session_id.startswith(k)), None)
 CHATGPT_PLACEHOLDER = "CHATGPT_TRANSCRIPT_URL"
 CHATGPT_LINK_FILE = Path(__file__).resolve().parent / "chatgpt-link.txt"
 
@@ -282,7 +294,9 @@ PERSISTED_RE = re.compile(r"(/[^\s'\"]*?/tool-results/[A-Za-z0-9._-]+)")
 
 # ---------------------------------------------------------------- export
 def export() -> int:
-    sessions = discover()
+    found_sessions = discover()
+    sessions = [s for s in found_sessions if not excluded_reason(s["session"])]
+    skipped = [s for s in found_sessions if excluded_reason(s["session"])]
     if not sessions:
         print("no sessions found", file=sys.stderr)
         return 1
@@ -438,6 +452,10 @@ def export() -> int:
         "[agent-chat-history/EXCLUSIONS.md](agent-chat-history/EXCLUSIONS.md).\n",
         "- HTML comments around each block are integrity markers used by `transcripts.py verify`.\n",
     ]
+    if skipped:
+        head.append(f"- Left out on purpose: {len({s['session'] for s in skipped})} short session(s) spent only on "
+                    "maintaining this transcript export, not on the project. They are listed with reasons in "
+                    "[agent-chat-history/EXCLUSIONS.md](agent-chat-history/EXCLUSIONS.md).\n")
     head = ["\n".join(h.rstrip("\n") + "\n" for h in head)]
     head += [
         "\n## Sessions\n\n",
@@ -454,8 +472,15 @@ def export() -> int:
         head.append("- none\n")
     wr(OUT_MD, "".join(head) + "".join(body))
 
-    ex = ["# Items not reproduced in agent-chat-history.md\n\n",
-          "## Binary payloads\n\n| Time | Tool / id | Item | Reason |\n|---|---|---|---|\n"]
+    ex = ["# Items not reproduced in agent-chat-history.md\n\n"]
+    if skipped:
+        ex.append("## Sessions left out\n\nThese sessions contain no work on the project, only maintenance of "
+                  "this transcript export. Everything in the sessions that are exported is reproduced unedited.\n\n"
+                  "| Session | Start | End | Lines | Reason |\n|---|---|---|---|---|\n")
+        ex += [f"| `{s['session'][:8]}`{(' / ' + s['agent']) if s['agent'] else ''} | {s['first']} | {s['last']} | "
+               f"{s['lines']} | {excluded_reason(s['session'])} |\n" for s in skipped]
+        ex.append("\n")
+    ex += ["## Binary payloads\n\n| Time | Tool / id | Item | Reason |\n|---|---|---|---|\n"]
     ex += [f"| {a} | {b} | {c} | {d} |\n" for a, b, c, d in exclusions]
     ex.append("\n## Harness bookkeeping records (not conversation)\n\n| Record type | Count |\n|---|---|\n")
     ex += [f"| `{k}` | {v} |\n" for k, v in sorted(bookkeeping.items())]
@@ -499,6 +524,10 @@ def verify(final: bool) -> int:
     current = {s["path"]: s for s in discover()}
     exported = {s["path"]: s for s in manifest["sessions"]}
     for p, s in current.items():
+        if excluded_reason(s["session"]):
+            if p in exported:
+                errors.append(f"excluded session was exported: {p}")
+            continue
         if p not in exported:
             errors.append(f"session not exported: {p}")
         elif s["lines"] > exported[p]["lines"]:

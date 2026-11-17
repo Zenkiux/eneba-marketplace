@@ -6,7 +6,7 @@ Submission for the **Eneba Intern Assignment 2027**: a marketplace web app in En
 |---|---|
 | **Live app** | **https://keyshop-zenkiux.vercel.app** (Vercel + Render + Neon, free tiers). Mirror without cold starts: https://keyshop.zenkiux.com |
 | **Demo account** | `demo@example.test` / `demo-password-2027` (or create your own) |
-| **AI conversation history** | [docs/agent-chat-history.md](docs/agent-chat-history.md) (Claude Code, complete) · ChatGPT planning chat: https://chatgpt.com/share/6afb8cee-cbcc-83ed-b0cd-8dc72839ec88 |
+| **AI conversation history** | [docs/agent-chat-history.md](docs/agent-chat-history.md) (Claude Code, unedited; export-maintenance sessions listed in [EXCLUSIONS.md](docs/agent-chat-history/EXCLUSIONS.md)) · ChatGPT planning chat: https://chatgpt.com/share/6afb8cee-cbcc-83ed-b0cd-8dc72839ec88 |
 
 > All games, studios, sellers, ratings and keys are **fictional demo data**. Payment is simulated: **no real money is involved**. This is a student project and is not affiliated with Eneba.
 
@@ -117,4 +117,4 @@ This project was built with **Claude Code** (agentic coding) after planning the 
 2. Claude Code read the PDF, inspected eneba.com in a browser to measure its design, wrote the requirement matrix and plan, and — after my approval and corrections — implemented the app milestone by milestone: backend, tests, frontend, visual reviews.
 3. I reviewed every milestone, made the product decisions (scope, images, hosting, deadline handling) and steered changes; corrections I made are visible in the transcript.
 
-The complete, unedited Claude Code conversation (prompts, replies, tool calls and results) is in [docs/agent-chat-history.md](docs/agent-chat-history.md). It is exported from Claude Code's session files and checked block-by-block against them by [`scripts/transcripts/transcripts.py`](scripts/transcripts/transcripts.py). Details: [docs/agent-logging-plan.md](docs/agent-logging-plan.md).
+The Claude Code conversation (prompts, replies, tool calls and results) is in [docs/agent-chat-history.md](docs/agent-chat-history.md), unedited. Three short sessions spent only on maintaining this export, not on the project, are left out and listed in [EXCLUSIONS.md](docs/agent-chat-history/EXCLUSIONS.md). It is exported from Claude Code's session files and checked block-by-block against them by [`scripts/transcripts/transcripts.py`](scripts/transcripts/transcripts.py). Details: [docs/agent-logging-plan.md](docs/agent-logging-plan.md).

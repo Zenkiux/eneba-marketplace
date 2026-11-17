@@ -1,5 +1,15 @@
 # Items not reproduced in agent-chat-history.md
 
+## Sessions left out
+
+These sessions contain no work on the project, only maintenance of this transcript export. Everything in the sessions that are exported is reproduced unedited.
+
+| Session | Start | End | Lines | Reason |
+|---|---|---|---|---|
+| `36d43e73` | 2026-11-17T13:11:05.671Z | 2026-11-17T13:11:08.456Z | 68 | transcript export after a context reset; turns stopped by Claude Code's safety classifier |
+| `b61940fd` | 2026-11-17T13:11:42.425Z | 2026-11-17T13:17:12.541Z | 205 | exporting, committing and pushing this transcript; turns stopped by the safety classifier |
+| `b8c77bb2` | 2026-11-17T14:59:34.909Z | 2026-11-17T15:08:11.791Z | 307 | debugging and re-running this transcript export |
+
 ## Binary payloads
 
 | Time | Tool / id | Item | Reason |
@@ -115,42 +125,42 @@
 
 | Record type | Count |
 |---|---|
-| `agent-name` | 440 |
-| `api-request` | 938 |
-| `api-request-blob` | 675 |
-| `api-request-shape` | 12 |
-| `atis-latch` | 440 |
-| `attachment:agent_listing_delta` | 9 |
-| `attachment:auto_mode` | 9 |
-| `attachment:compact_file_reference` | 3 |
-| `attachment:credential_org` | 9 |
-| `attachment:date` | 9 |
-| `attachment:deferred_tools_delta` | 20 |
-| `attachment:deferred_tools_record` | 369 |
+| `agent-name` | 418 |
+| `api-request` | 901 |
+| `api-request-blob` | 634 |
+| `api-request-shape` | 9 |
+| `atis-latch` | 418 |
+| `attachment:agent_listing_delta` | 6 |
+| `attachment:auto_mode` | 6 |
+| `attachment:compact_file_reference` | 2 |
+| `attachment:credential_org` | 6 |
+| `attachment:date` | 6 |
+| `attachment:deferred_tools_delta` | 12 |
+| `attachment:deferred_tools_record` | 351 |
 | `attachment:edited_text_file` | 21 |
-| `attachment:environment` | 149 |
-| `attachment:file` | 12 |
+| `attachment:environment` | 145 |
+| `attachment:file` | 8 |
 | `attachment:hook_additional_context` | 2 |
-| `attachment:mcp_instructions_delta` | 15 |
-| `attachment:model` | 9 |
-| `attachment:plan_file_reference` | 3 |
+| `attachment:mcp_instructions_delta` | 8 |
+| `attachment:model` | 6 |
+| `attachment:plan_file_reference` | 2 |
 | `attachment:plan_mode` | 1 |
 | `attachment:plan_mode_exit` | 1 |
-| `attachment:prompt_snapshot` | 16 |
-| `attachment:remote_session_change` | 9 |
-| `attachment:session_context` | 9 |
-| `attachment:silent_turn_reminder` | 42 |
-| `attachment:skill_listing` | 9 |
+| `attachment:prompt_snapshot` | 11 |
+| `attachment:remote_session_change` | 6 |
+| `attachment:session_context` | 6 |
+| `attachment:silent_turn_reminder` | 41 |
+| `attachment:skill_listing` | 6 |
 | `attachment:thinking_drop` | 1 |
 | `attachment:unknown_command_fallback` | 1 |
-| `custom-title` | 446 |
-| `file-history-delta` | 35 |
-| `file-history-snapshot` | 48 |
-| `last-prompt` | 443 |
-| `queue-operation` | 136 |
+| `custom-title` | 420 |
+| `file-history-delta` | 33 |
+| `file-history-snapshot` | 39 |
+| `last-prompt` | 420 |
+| `queue-operation` | 122 |
 | `relocated` | 383 |
-| `tools-used` | 41 |
+| `tools-used` | 32 |
 
-Reasoning steps stored without text: 643
+Reasoning steps stored without text: 623
 
 Also omitted: `toolUseResult` fields (a structured duplicate of each tool result shown in the main file) and `<system-reminder>` blocks injected by the harness into user messages.

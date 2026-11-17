@@ -6,7 +6,7 @@ Eneba requires the **full** agent chat history (prompts and responses). This is 
 
 | Tool | Used for | Where the history is |
 |---|---|---|
-| ChatGPT | Analysing the assignment; writing the original Claude Code Plan Mode prompt (the first user message in the Claude transcript); reviewing revision 1 of the plan | Shared link: https://chatgpt.com/share/6afb8cee-cbcc-83ed-b0cd-8dc72839ec88 (to be filled in) |
+| ChatGPT | Analysing the assignment; writing the original Claude Code Plan Mode prompt (the first user message in the Claude transcript); reviewing revision 1 of the plan | Shared link: https://chatgpt.com/share/6afb8cee-cbcc-83ed-b0cd-8dc72839ec88 |
 | Claude Code (desktop app, Opus 5.5) | Planning, research of eneba.com, all implementation, testing, deployment | `docs/agent-chat-history.md` |
 
 ## Where Claude Code keeps conversations (verified 2026-11-17)
@@ -32,11 +32,12 @@ Eneba requires the **full** agent chat history (prompts and responses). This is 
 Export rules:
 - User prompts, Claude's replies and tool-call inputs are copied **verbatim and in full**. User prompts are in text fences so markup in pasted text stays visible.
 - Tool results up to 20,000 characters are inline; longer ones are copied verbatim to `docs/agent-chat-history/results/` and linked. Outputs Claude Code saved to separate text files are copied to `docs/agent-chat-history/persisted/` and linked. Nothing is truncated.
+- Sessions spent only on maintaining this export (no project work) are left out by id via `EXCLUDED_SESSIONS` in `transcripts.py`; each is listed with its reason in `docs/agent-chat-history/EXCLUSIONS.md`. Sessions that are exported are never trimmed.
 - Not reproduced, and listed in `docs/agent-chat-history/EXCLUSIONS.md`: binary payloads (screenshots, PDF page images), harness bookkeeping records, `<system-reminder>` context the harness injects into messages, and the `toolUseResult` duplicate of each tool result.
 - Redaction: strings in `scripts/transcripts/private-strings.local.txt` (gitignored; contains the owner's e-mail), connection strings, tokens and known secret variables become `[REDACTED:<kind>]`; the home directory becomes `~`. Counts are printed at the top of the transcript.
 
 Verification (`verify`) fails if:
-- a session file on disk is missing from the export;
+- a session file on disk is missing from the export (unless it is in `EXCLUDED_SESSIONS`), or an excluded session was exported;
 - any prompt, reply, tool input or tool result differs from the raw source (exact text comparison after the same redaction), or a linked file is missing, unlinked or changed;
 - block counts per kind differ, or blocks are out of order;
 - the first planning prompt is missing;

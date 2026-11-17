@@ -87,7 +87,7 @@ Independent re-check of every row against the PDF, with evidence. "Done (local)"
 | T4 | done | `architecture.md`, `scope-decisions.md`. |
 | D1 | done | Public repo github.com/Zenkiux/eneba-marketplace (opened logged-out: 200). |
 | D2 | verified on production | https://keyshop-zenkiux.vercel.app — Vercel (React build, `/api` rewrite) → Render free web service (Go API) → Neon free Postgres; Playwright 24/24 against it (2026-11-17). https://keyshop.zenkiux.com (Mac + Cloudflare Tunnel) stays as a mirror without cold starts. See `deployment-plan.md`. |
-| D3 | done (re-export before sending) | `docs/agent-chat-history.md` + linked result files; `transcripts.py verify --final` passes (all sessions, exact content, links, no private strings, ChatGPT link present). Run export + verify once more right before sending, so the last messages are included. |
+| D3 | done (re-export before sending) | `docs/agent-chat-history.md` + linked result files; `transcripts.py verify --final` passes (every project session; export-maintenance sessions listed in EXCLUSIONS.md; exact content, links, no private strings, ChatGPT link present). Run export + verify once more right before sending, so the last messages are included. |
 
 Re-checked 2026-11-17 after the Eneba-parity work: R5–R12 verified on production (Playwright 24/24 on https://keyshop.zenkiux.com; Go and Vitest suites pass). Extra scope beyond the PDF (account area, reviews, favourites, seller pages, "Will it work for me?") is listed in `decisions.md` #27–#37 and does not change any required flow.
 
