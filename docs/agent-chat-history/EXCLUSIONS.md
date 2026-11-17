@@ -23,24 +23,25 @@
 | 2026-11-16T23:52:11.464Z | Read toolu_01LdoHW62J7oX1KhyN4zD1sC | image image/jpeg, 314,188 base64 chars | binary payload (screenshot / PDF page images) |
 | 2026-11-16T23:52:29.931Z | Read toolu_01EXTWLcLHGrjYtdoQ9trNby | image image/jpeg, 314,496 base64 chars | binary payload (screenshot / PDF page images) |
 | 2026-11-16T23:52:33.215Z | Read toolu_014Rc6g1grp4v7TdYx8FfFrS | image image/jpeg, 55,812 base64 chars | binary payload (screenshot / PDF page images) |
+| 2026-11-17T00:01:37.391Z | Read toolu_01XqgLZXoWGafFQC7LpDDPSg | image image/jpeg, 295,452 base64 chars | binary payload (screenshot / PDF page images) |
 
 ## Harness bookkeeping records (not conversation)
 
 | Record type | Count |
 |---|---|
-| `agent-name` | 62 |
-| `api-request` | 124 |
-| `api-request-blob` | 97 |
+| `agent-name` | 65 |
+| `api-request` | 130 |
+| `api-request-blob` | 103 |
 | `api-request-shape` | 4 |
-| `atis-latch` | 62 |
+| `atis-latch` | 65 |
 | `attachment:agent_listing_delta` | 2 |
 | `attachment:auto_mode` | 2 |
 | `attachment:credential_org` | 2 |
 | `attachment:date` | 2 |
 | `attachment:deferred_tools_delta` | 4 |
-| `attachment:deferred_tools_record` | 38 |
+| `attachment:deferred_tools_record` | 40 |
 | `attachment:edited_text_file` | 5 |
-| `attachment:environment` | 6 |
+| `attachment:environment` | 8 |
 | `attachment:mcp_instructions_delta` | 3 |
 | `attachment:model` | 2 |
 | `attachment:plan_mode` | 1 |
@@ -50,14 +51,14 @@
 | `attachment:session_context` | 2 |
 | `attachment:silent_turn_reminder` | 12 |
 | `attachment:skill_listing` | 2 |
-| `custom-title` | 63 |
+| `custom-title` | 66 |
 | `file-history-delta` | 17 |
-| `file-history-snapshot` | 4 |
-| `last-prompt` | 62 |
-| `queue-operation` | 14 |
-| `relocated` | 62 |
+| `file-history-snapshot` | 5 |
+| `last-prompt` | 65 |
+| `queue-operation` | 16 |
+| `relocated` | 65 |
 | `tools-used` | 16 |
 
-Reasoning steps stored without text: 90
+Reasoning steps stored without text: 93
 
 Also omitted: `toolUseResult` fields (a structured duplicate of each tool result shown in the main file) and `<system-reminder>` blocks injected by the harness into user messages.
